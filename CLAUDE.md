@@ -4,35 +4,45 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**CineList** - A movie watchlist and recommendation SaaS with AI-powered mood-based discovery. Currently in early development (scaffolded from create-next-app, not yet built out).
+**Moodflix** - A movie watchlist and recommendation SaaS with AI-powered mood-based discovery. Currently in early development (scaffolded from create-next-app, not yet built out).
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | Next.js 16 (App Router), React 19, TypeScript |
-| Styling | Tailwind CSS v4, shadcn/ui |
-| Database | Supabase (PostgreSQL) with Row Level Security |
-| Auth | Supabase Auth (email/password, Google OAuth, Apple ID, Passkey) |
-| AI | Google Gemini via Vercel AI SDK |
-| Data Fetching | TanStack Query (client), Next.js fetch (server) |
-| Movie Data | TMDB API |
-| Rate Limiting | lru-cache (in-memory) |
+| Layer         | Technology                                                      |
+| ------------- | --------------------------------------------------------------- |
+| Framework     | Next.js 16 (App Router), React 19, TypeScript                   |
+| Styling       | Tailwind CSS v4, shadcn/ui                                      |
+| Database      | Supabase (PostgreSQL) with Row Level Security                   |
+| ORM           | Drizzle ORM with postgres-js driver                            |
+| Auth          | Supabase Auth (email/password, Google OAuth, Passkey)           |
+| AI            | Google Gemini via Vercel AI SDK                                 |
+| AI UI         | prompt-kit (shadcn/ui-based AI components)                      |
+| Data Fetching | TanStack Query (client), Next.js fetch (server)                 |
+| Movie Data    | TMDB API                                                        |
+| Rate Limiting | lru-cache (in-memory)                                           |
 
 ## Commands
 
 ```bash
-npm run dev      # Start dev server on localhost:3000
-npm run build    # Production build (also validates TypeScript)
-npm run lint     # ESLint with next/core-web-vitals + typescript configs
+npm run dev          # Start dev server on localhost:3000
+npm run build        # Production build (also validates TypeScript)
+npm run lint         # ESLint with next/core-web-vitals + typescript configs
+npm run db:generate  # Generate SQL migration files from schema changes
+npm run db:migrate   # Apply pending migrations to the database
+npm run db:push      # Push schema directly (prototyping only)
+npm run db:studio    # Open Drizzle Studio to browse/edit data
 ```
+
+See [DRIZZLE_GUIDE.md](./DRIZZLE_GUIDE.md) for the full migration workflow.
 
 ## Environment Variables
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=
+SUPABASE_SECRET_KEY=
+DATABASE_URL=           # Supabase transaction pooler (port 6543) for runtime
+DATABASE_URL_DIRECT=    # Supabase session pooler (port 5432) for Drizzle Kit migrations
 TMDB_API_KEY=
 GOOGLE_GENERATIVE_AI_API_KEY=
 ```
@@ -43,29 +53,62 @@ GOOGLE_GENERATIVE_AI_API_KEY=
 
 - `app/page.tsx` - Landing page
 - `app/(auth)/login|signup` - Auth pages (no shared layout nesting)
-- `app/(dashboard)/` - Protected area with shared sidebar/navbar layout
-  - `page.tsx` - Dashboard home
+- `app/(app)/` - Protected area with shared navbar layout
+  - `home/page.tsx` - Home (welcome + AI mood section + feature nav)
   - `discover/` - Browse/search movies via TMDB
   - `watchlist/` - User's personal watchlist
-  - `ai/` - Mood-based AI recommendations
 - `app/api/movies/` - TMDB proxy routes
 - `app/api/ai/recommend/` - AI recommendation endpoint (rate-limited)
 
 ### Key Directories
 
+- `drizzle/schema.ts` - Drizzle table definitions (profiles, watchlist, ai_recommendations)
+- `drizzle/index.ts` - Drizzle client (uses `DATABASE_URL` pooler with `prepare: false`)
+- `drizzle/migrations/` - Generated SQL migrations (managed by Drizzle Kit)
+- `drizzle/seed.sql` - Profile trigger SQL (run manually in Supabase Dashboard)
+- `drizzle/rls-policies.sql` - RLS policies SQL (run manually in Supabase Dashboard)
 - `components/ui/` - shadcn/ui components (auto-generated)
+- `components/landing/` - Landing page components
 - `components/movies/`, `components/watchlist/`, `components/ai/` - Feature components
 - `components/layout/` - Navbar, sidebar, footer
-- `lib/supabase/` - Supabase clients (`client.ts` for browser, `server.ts` for server)
+- `lib/supabase/` - Supabase clients (`client.ts` for browser, `server.ts` for server, `middleware.ts`)
 - `lib/tmdb.ts` - TMDB API client
 - `lib/ai.ts` - Vercel AI SDK config
 - `hooks/` - All TanStack Query hooks (`use-movies.ts`, `use-watchlist.ts`, `use-ai.ts`, `use-auth.ts`)
 - `types/` - All TypeScript types (centralized)
 - `actions/` - Server Actions for mutations
+- `middleware.ts` - Next.js middleware for auth session refresh + route protection
+
+**Note:** There is no `supabase/` root folder. Supabase CLI is not used — Drizzle Kit handles migrations, RLS is managed via Supabase Dashboard.
 
 ### Path Alias
 
 `@/*` maps to project root (e.g., `@/components/ui/button`, `@/lib/utils`, `@/types`).
+
+## Package Management
+
+### shadcn/ui Components
+
+Always use the shadcn CLI to add UI components — never install their underlying packages manually:
+
+```bash
+npx shadcn@latest add button    # Adds button component + auto-installs deps
+npx shadcn@latest add sonner    # Adds toast/sonner component
+```
+
+shadcn/ui `init` and `add` commands automatically install required peer dependencies (`lucide-react`, `clsx`, `tailwind-merge`, `class-variance-authority`, etc.). Only use `npm install` directly for packages that are NOT part of the shadcn/ui ecosystem (e.g., `framer-motion`, `drizzle-orm`, `@tanstack/react-query`).
+
+### prompt-kit (AI UI Components)
+
+Use [prompt-kit](https://prompt-kit.com) for all AI-related UI components (mood input, chat, recommendations, streaming responses). It builds on shadcn/ui and installs via the same CLI pattern:
+
+```bash
+npx shadcn@latest add "https://prompt-kit.com/c/prompt-input.json"
+npx shadcn@latest add "https://prompt-kit.com/c/message.json"
+npx shadcn@latest add "https://prompt-kit.com/c/markdown.json"
+```
+
+Available components: Prompt Input, Message, Markdown, Chat Container, Code Block, Feedback, File Upload, Loader, Prompt Suggestion, Reasoning, Chain of Thought, Scroll Button, Source, Steps, Image.
 
 ## Strict Conventions
 

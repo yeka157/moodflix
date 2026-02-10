@@ -1,4 +1,4 @@
-# CineList - UI/UX & Architecture Guidelines
+# Moodflix - UI/UX & Architecture Guidelines
 
 Best practices for user interface, user experience, and client-side architecture.
 
@@ -286,9 +286,9 @@ import { motion, AnimatePresence } from "framer-motion";
 ```tsx
 // lib/storage.ts
 const STORAGE_KEYS = {
-  THEME: "cinelist-theme",
-  RECENT_SEARCHES: "cinelist-recent-searches",
-  LAST_VIEWED: "cinelist-last-viewed",
+  THEME: "moodflix-theme",
+  RECENT_SEARCHES: "moodflix-recent-searches",
+  LAST_VIEWED: "moodflix-last-viewed",
 } as const;
 
 // ✅ Type-safe storage helpers

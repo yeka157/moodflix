@@ -1,26 +1,25 @@
-# CineList - Project Guidelines & Best Practices
+# Moodflix - Project Guidelines & Best Practices
 
-This document outlines the folder structure, component patterns, and coding conventions for the CineList project.
+This document outlines the folder structure, component patterns, and coding conventions for the Moodflix project.
 
 ---
 
 ## Folder Structure
 
 ```
-movie-watchlist/
+moodflix/
 ├── app/                          # Next.js App Router
 │   ├── (auth)/                   # Auth route group (no layout nesting)
 │   │   ├── login/page.tsx
 │   │   └── signup/page.tsx
-│   ├── (dashboard)/              # Dashboard route group (shared layout)
-│   │   ├── layout.tsx            # Dashboard layout with sidebar/navbar
-│   │   ├── page.tsx              # /dashboard
+│   ├── (app)/                    # Protected route group (shared layout)
+│   │   ├── layout.tsx            # App layout with navbar + auth guard
+│   │   ├── home/
+│   │   │   └── page.tsx          # /home (welcome + AI mood + feature cards)
 │   │   ├── discover/
-│   │   │   └── page.tsx
-│   │   ├── watchlist/
-│   │   │   └── page.tsx
-│   │   └── ai/
-│   │       └── page.tsx
+│   │   │   └── page.tsx          # /discover
+│   │   └── watchlist/
+│   │       └── page.tsx          # /watchlist
 │   ├── api/                      # API Routes
 │   │   ├── movies/
 │   │   │   ├── route.ts          # GET /api/movies (search)
@@ -200,7 +199,7 @@ export function MovieCard({ movie, onAdd, className }: MovieCardProps) {
 
 ```tsx
 // Default: Server Components (no "use client")
-// app/(dashboard)/discover/page.tsx
+// app/(app)/discover/page.tsx
 import { MovieGrid } from "@/components/movies/movie-grid";
 import { searchMovies } from "@/lib/tmdb";
 
@@ -282,7 +281,7 @@ export async function GET(request: Request) {
 }
 
 // Components: Error Boundaries
-// app/(dashboard)/error.tsx
+// app/(app)/error.tsx
 ("use client");
 
 export default function Error({
@@ -305,7 +304,7 @@ export default function Error({
 
 ```tsx
 // Route-level loading
-// app/(dashboard)/discover/loading.tsx
+// app/(app)/discover/loading.tsx
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Loading() {

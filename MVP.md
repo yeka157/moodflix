@@ -1,4 +1,4 @@
-# CineList - Movie Watchlist SaaS MVP
+# Moodflix - Movie Watchlist SaaS MVP
 
 A modern movie watchlist and recommendation platform with AI-powered features for discovering and organizing your movie collection.
 
@@ -146,17 +146,16 @@ ALTER TABLE ai_recommendations ENABLE ROW LEVEL SECURITY;
 ## File Structure
 
 ```
-movie-watchlist/
+moodflix/
 ├── app/
 │   ├── (auth)/
 │   │   ├── login/page.tsx
 │   │   └── signup/page.tsx
-│   ├── (dashboard)/
+│   ├── (app)/
 │   │   ├── layout.tsx
-│   │   ├── page.tsx              # Dashboard home
+│   │   ├── home/page.tsx         # Home (welcome + AI mood section)
 │   │   ├── discover/page.tsx     # Browse/search movies
-│   │   ├── watchlist/page.tsx    # User's watchlist
-│   │   └── ai/page.tsx           # AI mood recommendations
+│   │   └── watchlist/page.tsx    # User's watchlist
 │   ├── api/
 │   │   ├── movies/
 │   │   │   ├── route.ts          # Search movies
