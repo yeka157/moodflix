@@ -150,6 +150,15 @@
   background: oklch(0.541 0.238 293.541 / 30%);
 }
 
+/* Hide scrollbar for horizontal scroll rows */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* Smooth scroll with reduced motion respect */
 html {
   scroll-behavior: smooth;

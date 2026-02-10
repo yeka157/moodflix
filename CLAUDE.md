@@ -158,6 +158,15 @@ Available components: Prompt Input, Message, Markdown, Chat Container, Code Bloc
 
 Three tables with RLS enabled: `profiles` (extends auth.users), `watchlist` (movies with status/rating), `ai_recommendations` (prompt + JSONB results). Watchlist status enum: `want_to_watch`, `watching`, `watched`.
 
+## Notion Documentation
+
+This project's documentation is mirrored to a Notion workspace page. After completing a phase or making significant project-level changes (route structure, tech stack, architecture), update the Notion page to stay in sync.
+
+- **Main page:** `3022b505-590c-80b8-8159-c1591b5c24e1`
+- **To Do page:** `3022b505-590c-8082-b0b6-c227a0bd65a1`
+
+What to sync: Project Status table, Key Directories, Route Structure, and any new sections relevant to completed work. Keep updates concise — project-scope, not plan-scope.
+
 ## Git Conventions
 
 - Commit messages: `feat:`, `fix:`, `style:`, `refactor:`, `docs:`

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="439" viewBox="0 0 780 439" fill="none">
+  <rect width="780" height="439" fill="#1a1a2e"/>
+  <path d="M365 195h50v50h-50z" fill="#2a2a4a"/>
+  <circle cx="380" cy="210" r="7" fill="#3a3a5a"/>
+  <path d="M365 245l15-20 10 12 8-6 17 14H365z" fill="#3a3a5a"/>
+  <text x="390" y="270" text-anchor="middle" font-family="system-ui" font-size="14" fill="#4a4a6a">No Backdrop</text>
+</svg>

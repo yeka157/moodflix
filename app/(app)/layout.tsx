@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AppNavbar } from "@/components/layout/app-navbar";
+import { Providers } from "@/components/providers";
 
 export default async function AppLayout({
   children,
@@ -21,7 +22,9 @@ export default async function AppLayout({
     <div className="min-h-screen bg-background">
       <AppNavbar user={{ email: user.email ?? "" }} />
       <main className="pt-16">
-        <div className="container mx-auto px-4 py-8">{children}</div>
+        <div className="container mx-auto px-4 py-8">
+          <Providers>{children}</Providers>
+        </div>
       </main>
     </div>
   );

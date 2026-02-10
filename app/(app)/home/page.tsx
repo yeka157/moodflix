@@ -1,6 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
-import { FeatureCardGrid } from "@/components/layout/feature-card-grid";
+import { getTrendingMovies } from "@/lib/tmdb";
+import { HeroBanner } from "@/components/movies/hero-banner";
+import { HomeMovies } from "@/components/movies/home-movies";
 import { MoodSection } from "@/components/ai/mood-section";
+import { FeatureCardGrid } from "@/components/layout/feature-card-grid";
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -9,6 +12,10 @@ export default async function HomePage() {
   } = await supabase.auth.getUser();
 
   const displayName = user?.email?.split("@")[0] || "Explorer";
+
+  const trending = await getTrendingMovies();
+  const moviesWithBackdrop = trending.results.filter((m) => m.backdrop_path);
+  const featuredMovie = moviesWithBackdrop[0];
 
   const featureCards = [
     {
@@ -29,16 +36,17 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-10">
-      {/* Welcome Section */}
+      {featuredMovie && <HeroBanner movie={featuredMovie} />}
+
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Welcome back</h1>
         <p className="text-muted-foreground">{displayName}</p>
       </div>
 
-      {/* AI Mood Section */}
       <MoodSection />
 
-      {/* Feature Cards */}
+      <HomeMovies trending={trending.results} />
+
       <FeatureCardGrid cards={featureCards} />
     </div>
   );
