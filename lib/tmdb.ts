@@ -68,3 +68,16 @@ export async function discoverMoviesByGenre(genreIds: string, page = 1) {
     include_adult: "false",
   });
 }
+
+export async function getMovieRecommendations(movieId: number, page = 1) {
+  return tmdbFetch<MovieListResponse>(`/movie/${movieId}/recommendations`, {
+    page: String(page),
+  });
+}
+
+export async function getPopularMoviesInRegion(region: string, page = 1) {
+  return tmdbFetch<MovieListResponse>("/movie/popular", {
+    page: String(page),
+    region,
+  });
+}

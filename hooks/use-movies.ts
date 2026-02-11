@@ -17,6 +17,8 @@ export const movieKeys = {
     [...movieKeys.all, "details", id] as const,
   genre: (genreIds: string) =>
     [...movieKeys.all, "genre", genreIds] as const,
+  recommendations: (id: number) =>
+    [...movieKeys.all, "recommendations", id] as const,
 };
 
 async function fetchMovieCategory(
@@ -105,6 +107,22 @@ export function useDiscoverByGenre(genreIds: string) {
     getNextPageParam: (lastPage) =>
       lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,
     enabled: genreIds.length > 0,
+  });
+}
+
+async function fetchMovieRecommendations(
+  movieId: number,
+): Promise<MovieListResponse> {
+  const res = await fetch(`/api/movies/${movieId}/recommendations`);
+  if (!res.ok) throw new Error("Failed to fetch recommendations");
+  return res.json();
+}
+
+export function useMovieRecommendations(movieId: number | null) {
+  return useQuery({
+    queryKey: movieKeys.recommendations(movieId!),
+    queryFn: () => fetchMovieRecommendations(movieId!),
+    enabled: movieId !== null,
   });
 }
 

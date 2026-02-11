@@ -92,3 +92,15 @@ export type MovieDetailsResponse = MovieDetailsWithExtras & {
   watchProviders: WatchProviderResult | null;
   watchCountry: string;
 };
+
+export type RecommendationSource = {
+  tmdbId: number;
+  title: string;
+};
+
+export type PersonalizedData = {
+  moodMessage: string;
+  sourceMovies: RecommendationSource[];
+  topGenreId: number;
+  topGenreName: string;
+};
