@@ -3,6 +3,7 @@
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { makeQueryClient } from "@/lib/query-client";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 let browserQueryClient: QueryClient | undefined;
 
@@ -19,6 +20,8 @@ function getQueryClient() {
 export function Providers({ children }: { children: ReactNode }) {
   const queryClient = getQueryClient();
   return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
+    </QueryClientProvider>
   );
 }
