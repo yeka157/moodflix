@@ -74,9 +74,12 @@ GOOGLE_GENERATIVE_AI_API_KEY=
 - `lib/supabase/` - Supabase clients (`client.ts` for browser, `server.ts` for server, `middleware.ts`)
 - `lib/tmdb.ts` - TMDB API client
 - `lib/ai.ts` - Vercel AI SDK config
-- `hooks/` - All TanStack Query hooks (`use-movies.ts`, `use-watchlist.ts`, `use-ai.ts`, `use-auth.ts`)
-- `types/` - All TypeScript types (centralized)
-- `actions/` - Server Actions for mutations
+- `hooks/use-movies.ts` - Movie search/trending/popular/details hooks
+- `hooks/use-watchlist.ts` - Watchlist CRUD hooks with optimistic updates
+- `types/movie.ts` - TMDB movie types
+- `types/watchlist.ts` - Watchlist types (WatchlistItem, WatchlistStatus, etc.)
+- `actions/auth.ts` - Auth server actions (login, signup, logout)
+- `actions/watchlist.ts` - Watchlist server actions (add, remove, update status, rate)
 - `middleware.ts` - Next.js middleware for auth session refresh + route protection
 
 **Note:** There is no `supabase/` root folder. Supabase CLI is not used — Drizzle Kit handles migrations, RLS is managed via Supabase Dashboard.

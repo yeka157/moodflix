@@ -42,3 +42,7 @@ next-env.d.ts
 
 .claude
 .playwright-mcp
+
+# supabase CLI temp files
+/supabase/.branches
+/supabase/.temp
