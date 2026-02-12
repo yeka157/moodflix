@@ -163,7 +163,7 @@ export function MovieCard({ movie, onAdd, className }: MovieCardProps) {
   // 2d. Render
   return (
     <Card className={cn("overflow-hidden", className)}>
-      <div className="relative aspect-[2/3]">
+      <div className="relative aspect-2/3">
         <Image
           src={posterUrl}
           alt={movie.title}
@@ -311,7 +311,7 @@ export default function Loading() {
   return (
     <div className="grid grid-cols-4 gap-4">
       {Array.from({ length: 8 }).map((_, i) => (
-        <Skeleton key={i} className="aspect-[2/3] rounded-lg" />
+        <Skeleton key={i} className="aspect-2/3 rounded-lg" />
       ))}
     </div>
   );

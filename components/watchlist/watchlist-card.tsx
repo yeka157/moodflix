@@ -103,7 +103,7 @@ export function WatchlistCard({ item }: { item: WatchlistItem }) {
       <div className="relative h-28 w-[75px] shrink-0 overflow-hidden rounded-md bg-muted">
         <Image
           src={getPosterUrl(item.posterPath)}
-          alt={item.title}
+          alt={`${item.title} poster`}
           fill
           className="object-cover"
           sizes="75px"

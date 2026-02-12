@@ -21,11 +21,11 @@ export function AIPreviewSection() {
             transition={{ duration: 0.6 }}
             className="relative"
           >
-            {/* Purple glow */}
+            {/* Crimson glow */}
             <div
               className="absolute inset-0 rounded-2xl blur-3xl opacity-30"
               style={{
-                background: `radial-gradient(circle at 50% 50%, oklch(0.541 0.238 293.541) 0%, transparent 70%)`,
+                background: `radial-gradient(circle at 50% 50%, oklch(0.637 0.237 25.331) 0%, transparent 70%)`,
               }}
             />
 

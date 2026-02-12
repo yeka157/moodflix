@@ -4,36 +4,14 @@ import { motion } from "framer-motion";
 import type { Movie } from "@/types/movie";
 import { MovieCard } from "./movie-card";
 import { MovieCardSkeleton } from "./movie-card-skeleton";
-import type { RefObject } from "react";
 
 interface MovieGridProps {
   movies: Movie[];
   isLoading?: boolean;
   onMovieClick?: (movie: Movie) => void;
-  sentinelRef?: RefObject<HTMLDivElement | null>;
+  sentinelRef?: ((node: HTMLDivElement | null) => void) | React.RefObject<HTMLDivElement | null>;
   isFetchingMore?: boolean;
 }
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.05,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.4,
-    },
-  },
-};
 
 export function MovieGrid({ movies, isLoading = false, onMovieClick, sentinelRef, isFetchingMore }: MovieGridProps) {
   if (isLoading) {
@@ -48,18 +26,19 @@ export function MovieGrid({ movies, isLoading = false, onMovieClick, sentinelRef
 
   return (
     <div>
-      <motion.div
-        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
         {movies.map((movie) => (
-          <motion.div key={movie.id} variants={itemVariants}>
+          <motion.div
+            key={movie.id}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4 }}
+          >
             <MovieCard movie={movie} onClick={onMovieClick} />
           </motion.div>
         ))}
-      </motion.div>
+      </div>
 
       {/* Infinite scroll sentinel */}
       {sentinelRef && (

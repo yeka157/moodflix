@@ -9,11 +9,11 @@ import { Badge } from "@/components/ui/badge";
 export function HeroSection() {
   return (
     <section className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden">
-      {/* Purple radial gradient glow */}
+      {/* Crimson radial gradient glow */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: `radial-gradient(circle at 50% 40%, oklch(0.541 0.238 293.541 / 0.15) 0%, transparent 60%)`,
+          background: `radial-gradient(circle at 50% 40%, oklch(0.637 0.237 25.331 / 0.15) 0%, transparent 60%)`,
         }}
       />
 

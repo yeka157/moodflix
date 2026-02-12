@@ -63,7 +63,10 @@ export function WatchlistContent() {
       {/* Tabs */}
       <Tabs
         value={activeTab}
-        onValueChange={(v) => setActiveTab(v as WatchlistFilterStatus)}
+        onValueChange={(v) => {
+          setActiveTab(v as WatchlistFilterStatus);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
       >
         <TabsList>
           {TABS.map((tab) => (

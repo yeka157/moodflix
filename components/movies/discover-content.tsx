@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, X, Loader2 } from "lucide-react";
+import { Search, X, Loader2, AlertCircle } from "lucide-react";
 import { useDebouncedCallback } from "use-debounce";
 import type { Movie, MovieListResponse } from "@/types/movie";
 import {
   useMovieSearchInfinite,
   useDiscoverByGenre,
 } from "@/hooks/use-movies";
-import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
+import useInfiniteScroll from "react-infinite-scroll-hook";
 import { GENRES } from "@/lib/constants";
 import { MovieRow } from "./movie-row";
 import { MovieGrid } from "./movie-grid";
@@ -75,17 +75,21 @@ export function DiscoverContent({
     () => dedupeMovies(genreQuery.data?.pages),    [genreQuery.data],
   );
 
-  const searchSentinelRef = useInfiniteScroll(
-    searchQuery.fetchNextPage,
-    searchQuery.hasNextPage,
-    searchQuery.isFetchingNextPage,
-  );
+  const [searchSentinelRef] = useInfiniteScroll({
+    loading: searchQuery.isFetchingNextPage,
+    hasNextPage: searchQuery.hasNextPage ?? false,
+    onLoadMore: searchQuery.fetchNextPage,
+    disabled: Boolean(searchQuery.error),
+    rootMargin: "0px 0px 400px 0px",
+  });
 
-  const genreSentinelRef = useInfiniteScroll(
-    genreQuery.fetchNextPage,
-    genreQuery.hasNextPage,
-    genreQuery.isFetchingNextPage,
-  );
+  const [genreSentinelRef] = useInfiniteScroll({
+    loading: genreQuery.isFetchingNextPage,
+    hasNextPage: genreQuery.hasNextPage ?? false,
+    onLoadMore: genreQuery.fetchNextPage,
+    disabled: Boolean(genreQuery.error),
+    rootMargin: "0px 0px 400px 0px",
+  });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -101,7 +105,7 @@ export function DiscoverContent({
   return (
     <div className="space-y-8">
       {/* Search bar */}
-      <div className="max-w-xl mx-auto">
+      <div className="max-w-full sm:max-w-xl mx-auto">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
@@ -118,6 +122,7 @@ export function DiscoverContent({
               className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10"
               onClick={handleClear}
               disabled={searchQuery.isFetching}
+              aria-label="Clear search"
             >
               {searchQuery.isFetching ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -173,6 +178,17 @@ export function DiscoverContent({
         <div className="space-y-6">
           {searchQuery.isLoading ? (
             <MovieGrid movies={[]} isLoading />
+          ) : searchQuery.isError ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Search failed</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Something went wrong while searching. Please try again.
+              </p>
+              <Button variant="outline" onClick={() => searchQuery.refetch()}>
+                Retry
+              </Button>
+            </div>
           ) : searchMovies.length > 0 ? (
             <>
               <p className="text-sm text-muted-foreground">
@@ -199,6 +215,17 @@ export function DiscoverContent({
         <div className="space-y-6">
           {genreQuery.isLoading ? (
             <MovieGrid movies={[]} isLoading />
+          ) : genreQuery.isError ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Failed to load movies</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Something went wrong while loading genre results. Please try again.
+              </p>
+              <Button variant="outline" onClick={() => genreQuery.refetch()}>
+                Retry
+              </Button>
+            </div>
           ) : genreMovies.length > 0 ? (
             <>
               <p className="text-sm text-muted-foreground">
