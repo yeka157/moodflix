@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, ArrowRight, AlertCircle, RotateCcw } from "lucide-react";
@@ -236,26 +236,18 @@ function ChatInput({
   onSubmit: (text: string) => void;
   isStreaming: boolean;
 }) {
-  const inputRef = useRef<string>("");
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const handleValueChange = (value: string) => {
-    inputRef.current = value;
-  };
+  const [value, setValue] = useState("");
 
   const handleSubmit = () => {
-    onSubmit(inputRef.current);
-    // Clear input after submit by resetting the PromptInput value
-    inputRef.current = "";
-    if (textareaRef.current) {
-      textareaRef.current.value = "";
-    }
+    onSubmit(value);
+    setValue("");
   };
 
   return (
     <PromptInput
+      value={value}
+      onValueChange={setValue}
       onSubmit={handleSubmit}
-      onValueChange={handleValueChange}
       isLoading={isStreaming}
       disabled={isStreaming}
       className={cn(

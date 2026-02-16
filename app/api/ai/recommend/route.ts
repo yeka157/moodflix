@@ -1,4 +1,4 @@
-import { streamText, tool, stepCountIs, type ModelMessage } from "ai";
+import { streamText, tool, stepCountIs, convertToModelMessages } from "ai";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { geminiModel } from "@/lib/ai";
@@ -51,17 +51,21 @@ export async function POST(request: Request) {
       return Response.json({ error: "Invalid request" }, { status: 400 });
     }
 
-    // 3. Validate last message length
-    const messages = parsed.data.messages as Array<{
+    // 3. Validate last message length (UIMessages have `parts`, not `content`)
+    const uiMessages = parsed.data.messages as Array<{
       role: string;
-      content: string;
+      parts?: Array<{ type: string; text?: string }>;
     }>;
-    const lastMessage = messages[messages.length - 1];
-    if (
-      lastMessage?.role === "user" &&
-      typeof lastMessage.content === "string" &&
-      lastMessage.content.length > 500
-    ) {
+    const lastMessage = uiMessages[uiMessages.length - 1];
+    const lastMessageText =
+      lastMessage?.role === "user"
+        ? (lastMessage.parts ?? [])
+            .filter((p) => p.type === "text")
+            .map((p) => p.text ?? "")
+            .join("")
+        : "";
+
+    if (lastMessageText.length > 500) {
       return Response.json(
         { error: "Message must be under 500 characters" },
         { status: 400 },
@@ -100,13 +104,14 @@ Available TMDB genres: ${genreList}
 ${watchlistInstruction}
 Keep responses concise: 2-4 sentences. Be warm and conversational.`;
 
-    // 7. Stream response with tool calling
+    // 7. Convert UIMessages to ModelMessages and stream response
     const userId = user.id;
+    const modelMessages = await convertToModelMessages(uiMessages as Parameters<typeof convertToModelMessages>[0]);
 
     const result = streamText({
       model: geminiModel,
       system: systemPrompt,
-      messages: messages as ModelMessage[],
+      messages: modelMessages,
       tools: {
         suggest_genres: tool({
           description:
@@ -127,10 +132,7 @@ Keep responses concise: 2-4 sentences. Be warm and conversational.`;
           }),
           execute: async (params) => {
             // Store recommendation in DB (fire-and-forget)
-            const moodPrompt =
-              typeof lastMessage?.content === "string"
-                ? lastMessage.content
-                : "mood chat";
+            const moodPrompt = lastMessageText || "mood chat";
 
             db.insert(aiRecommendations)
               .values({

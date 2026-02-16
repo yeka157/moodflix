@@ -1,11 +1,11 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { TextStreamChatTransport } from "ai";
+import { DefaultChatTransport } from "ai";
 import type { UIMessage } from "@ai-sdk/react";
 import type { GenreSuggestion } from "@/types/ai";
 
-const transport = new TextStreamChatTransport({
+const transport = new DefaultChatTransport({
   api: "/api/ai/recommend",
 });
 
