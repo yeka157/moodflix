@@ -1,0 +1,59 @@
+# Moodflix - Full Documentation
+
+> AI-powered movie watchlist and mood-based discovery platform.
+
+## Overview
+
+Moodflix is a movie discovery SaaS that combines a personal watchlist with AI-powered mood-based recommendations. Users describe how they feel, and the app suggests movies that match their mood using Google Gemini AI. It also provides standard movie browsing via TMDB integration.
+
+## Features
+
+### AI Mood Recommendations
+- Natural language mood input (e.g., "I feel adventurous and want something mind-bending")
+- Streaming AI responses powered by Google Gemini via Vercel AI SDK
+- Genre-based movie suggestions extracted from AI analysis
+- Rate-limited to 10 requests/day per user
+
+### Movie Discovery
+- Trending, popular, and top-rated movie categories
+- Genre-based filtering with toggle groups
+- Real-time search with debounced input
+- Infinite scroll pagination
+- Netflix-style movie detail modals with backdrop, cast, and watch providers
+
+### Watchlist Management
+- Add/remove movies to personal watchlist
+- Status tracking: Want to Watch, Watching, Watched
+- Like/dislike rating system
+- Optimistic UI updates via TanStack Query
+
+### Authentication
+- Email/password signup and login
+- Google OAuth
+- Passkey support
+- Protected routes with middleware-based session refresh
+
+## Tech Stack
+
+| Layer         | Technology                                    |
+|---------------|-----------------------------------------------|
+| Framework     | Next.js 16 (App Router), React 19, TypeScript |
+| Styling       | Tailwind CSS v4, shadcn/ui                    |
+| Database      | Supabase (PostgreSQL) with Row Level Security |
+| ORM           | Drizzle ORM with postgres-js driver           |
+| Auth          | Supabase Auth                                 |
+| AI            | Google Gemini via Vercel AI SDK                |
+| Data Fetching | TanStack Query (client), Next.js fetch (SSR)  |
+| Movie Data    | TMDB API                                      |
+
+## API Routes
+
+- `GET /api/movies` - Search movies, fetch by category, or discover by genre
+- `GET /api/movies/[id]` - Movie details with cast, crew, and regional watch providers
+- `POST /api/ai/recommend` - AI mood-based recommendation endpoint (authenticated, rate-limited, streaming)
+
+## Database Schema
+
+- `profiles` - User profiles extending Supabase auth.users
+- `watchlist` - Movie watchlist with status (want_to_watch/watching/watched) and rating (1/-1/null)
+- `ai_recommendations` - AI recommendation history with prompt and JSONB results

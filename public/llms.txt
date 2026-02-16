@@ -1,0 +1,21 @@
+# Moodflix
+
+> AI-powered movie watchlist and mood-based discovery platform.
+
+## Key Features
+
+- **AI Mood Recommendations**: Describe your mood and get personalized movie suggestions powered by Google Gemini
+- **Movie Discovery**: Browse trending, popular, and top-rated movies from TMDB
+- **Watchlist Management**: Track movies with status (want to watch, watching, watched) and like/dislike ratings
+- **Search**: Find any movie with real-time search
+
+## Main Sections
+
+- `/` - Landing page
+- `/home` - Dashboard with AI mood input, trending movies, and personalized recommendations
+- `/discover` - Browse and search movies by genre, category, or keyword
+- `/watchlist` - Manage your personal movie watchlist
+
+## Tech Stack
+
+Next.js, React 19, Supabase, Drizzle ORM, Vercel AI SDK, TMDB API, Tailwind CSS, shadcn/ui

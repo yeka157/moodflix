@@ -9,6 +9,8 @@ import { RecommendationsGrid } from "@/components/ai/recommendations-grid";
 
 export const metadata: Metadata = {
   title: "AI Recommendations",
+  description:
+    "AI-powered movie recommendations based on your mood. Discover films curated just for you.",
 };
 
 export default async function RecommendationsPage({

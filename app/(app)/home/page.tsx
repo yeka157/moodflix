@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+
+export const metadata: Metadata = {
+  title: "Home",
+};
 import { getTrendingMovies, getPopularMoviesInRegion } from "@/lib/tmdb";
 import { getCountryFromHeaders } from "@/lib/country";
 import { getPersonalizedData } from "@/lib/recommendations";
