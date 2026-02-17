@@ -12,7 +12,7 @@ This milestone transforms Moodflix from a functional prototype into a polished, 
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Watchlist Reactivity** - Fix optimistic updates so all watchlist mutations reflect instantly
+- [x] **Phase 1: Watchlist Reactivity** - Fix optimistic updates so all watchlist mutations reflect instantly
 - [ ] **Phase 2: Branding & Assets** - Create logo, favicon, and OG images for professional web presence
 - [ ] **Phase 3: Polish & QA** - Page transitions, responsive testing, accessibility audit, build validation
 
@@ -31,9 +31,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans:** 3 plans (sequential)
 
 Plans:
-- [ ] 01-01-PLAN.md — Data layer (schema migration, server actions, hook optimistic updates)
-- [ ] 01-02-PLAN.md — Route rename & dual icon system (movie card + detail modal)
-- [ ] 01-03-PLAN.md — Library page labels & animation polish
+- [x] 01-01-PLAN.md — Data layer (schema migration, server actions, hook optimistic updates)
+- [x] 01-02-PLAN.md — Route rename & dual icon system (movie card + detail modal)
+- [x] 01-03-PLAN.md — Library page labels & animation polish
 
 ### Phase 2: Branding & Assets
 **Goal**: Professional branded web assets for social sharing and browser UI
@@ -70,6 +70,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Watchlist Reactivity | 0/3 | Not started | - |
+| 1. Watchlist Reactivity | 3/3 | Complete | 2026-02-18 |
 | 2. Branding & Assets | 0/TBD | Not started | - |
 | 3. Polish & QA | 0/TBD | Not started | - |
