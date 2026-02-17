@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -86,6 +87,7 @@ export default function RootLayout({
         className={`${inter.variable} ${geistMono.variable} font-sans antialiased`}
       >
         {children}
+        <SpeedInsights />
         <Toaster />
       </body>
     </html>
