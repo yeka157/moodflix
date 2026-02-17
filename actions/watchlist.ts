@@ -11,6 +11,7 @@ import type {
   WatchlistStatus,
   WatchlistActionResult,
   WatchlistDeleteResult,
+  WatchlistTmdbEntry,
 } from "@/types/watchlist";
 
 function serializeItem(
@@ -56,16 +57,20 @@ export async function getWatchlist(
   return rows.map(serializeItem);
 }
 
-export async function getWatchlistTmdbIds(): Promise<number[]> {
+export async function getWatchlistTmdbIds(): Promise<WatchlistTmdbEntry[]> {
   const userId = await getAuthUserId();
   if (!userId) return [];
 
   const rows = await db
-    .select({ tmdbId: watchlist.tmdbId })
+    .select({ id: watchlist.id, tmdbId: watchlist.tmdbId, status: watchlist.status })
     .from(watchlist)
     .where(eq(watchlist.userId, userId));
 
-  return rows.map((r) => r.tmdbId);
+  return rows.map((r) => ({
+    id: r.id,
+    tmdbId: r.tmdbId,
+    status: r.status ?? "want_to_watch" as WatchlistStatus,
+  }));
 }
 
 export async function getWatchlistItemByTmdbId(
@@ -101,16 +106,16 @@ export async function addToWatchlist(
       })
       .returning();
 
-    revalidatePath("/watchlist");
+    revalidatePath("/library");
     return { item: serializeItem(rows[0]) };
   } catch (err: unknown) {
     if (
       err instanceof Error &&
       err.message.includes("watchlist_user_tmdb_unique")
     ) {
-      return { error: "Movie already in watchlist" };
+      return { error: "Movie already in library" };
     }
-    return { error: "Failed to add to watchlist" };
+    return { error: "Failed to add to library" };
   }
 }
 
@@ -127,10 +132,10 @@ export async function removeFromWatchlist(
         and(eq(watchlist.id, watchlistItemId), eq(watchlist.userId, userId)),
       );
 
-    revalidatePath("/watchlist");
+    revalidatePath("/library");
     return { success: true };
   } catch {
-    return { error: "Failed to remove from watchlist" };
+    return { error: "Failed to remove from library" };
   }
 }
 
@@ -157,7 +162,7 @@ export async function updateWatchlistStatus(
 
     if (rows.length === 0) return { error: "Item not found" };
 
-    revalidatePath("/watchlist");
+    revalidatePath("/library");
     return { item: serializeItem(rows[0]) };
   } catch {
     return { error: "Failed to update status" };
@@ -180,7 +185,7 @@ export async function rateWatchlistItem(
 
     if (rows.length === 0) return { error: "Item not found" };
 
-    revalidatePath("/watchlist");
+    revalidatePath("/library");
     return { item: serializeItem(rows[0]) };
   } catch {
     return { error: "Failed to update rating" };

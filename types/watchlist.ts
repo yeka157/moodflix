@@ -14,6 +14,12 @@ export type WatchlistItem = {
   watchedAt: string | null;
 };
 
+export type WatchlistTmdbEntry = {
+  id: string;
+  tmdbId: number;
+  status: WatchlistStatus;
+};
+
 export type AddToWatchlistInput = {
   tmdbId: number;
   title: string;
