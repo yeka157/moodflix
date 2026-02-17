@@ -11,7 +11,6 @@ import {
 
 export const watchlistStatusEnum = pgEnum("watchlist_status", [
   "want_to_watch",
-  "watching",
   "watched",
 ]);
 

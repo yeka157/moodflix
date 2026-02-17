@@ -22,7 +22,7 @@ function serializeItem(
     tmdbId: row.tmdbId,
     title: row.title,
     posterPath: row.posterPath,
-    status: (row.status === "watching" ? "want_to_watch" : row.status) ?? "want_to_watch" as WatchlistStatus,
+    status: row.status ?? "want_to_watch" as WatchlistStatus,
     rating: row.rating,
     addedAt: row.addedAt?.toISOString() ?? new Date().toISOString(),
     watchedAt: row.watchedAt?.toISOString() ?? null,

@@ -8,6 +8,13 @@
       "when": 1770626136905,
       "tag": "0000_lyrical_nightmare",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1771336964679,
+      "tag": "0001_kind_rick_jones",
+      "breakpoints": true
     }
   ]
 }
