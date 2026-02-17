@@ -21,10 +21,10 @@ export const metadata: Metadata = {
     template: "%s | Moodflix",
   },
   description:
-    "Your personal movie watchlist with AI-powered mood-based discovery. Find the perfect movie for any mood.",
+    "Your personal movie library with AI-powered mood-based discovery. Find the perfect movie for any mood.",
   keywords: [
     "movies",
-    "watchlist",
+    "library",
     "AI recommendations",
     "mood",
     "movie discovery",
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Moodflix - AI-Powered Movie Discovery",
     description:
-      "Your personal movie watchlist with AI-powered mood-based discovery. Find the perfect movie for any mood.",
+      "Your personal movie library with AI-powered mood-based discovery. Find the perfect movie for any mood.",
     siteName: "Moodflix",
     locale: "en_US",
     type: "website",
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Moodflix - AI-Powered Movie Discovery",
     description:
-      "Your personal movie watchlist with AI-powered mood-based discovery. Find the perfect movie for any mood.",
+      "Your personal movie library with AI-powered mood-based discovery. Find the perfect movie for any mood.",
     images: [
       {
         url: "/twitter-image.png",

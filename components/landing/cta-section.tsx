@@ -28,7 +28,7 @@ export function CTASection() {
           </h2>
           <p className="text-lg lg:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
             Join Moodflix today and never struggle to choose what to watch again. Start building
-            your personalized watchlist and discover films that truly speak to you.
+            your personalized library and discover films that truly speak to you.
           </p>
 
           <Button

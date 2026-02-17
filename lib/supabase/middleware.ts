@@ -29,8 +29,15 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Redirect old /watchlist to /library
+  if (request.nextUrl.pathname.startsWith("/watchlist")) {
+    const url = request.nextUrl.clone();
+    url.pathname = request.nextUrl.pathname.replace("/watchlist", "/library");
+    return NextResponse.redirect(url);
+  }
+
   // Redirect unauthenticated users away from protected routes
-  const protectedPrefixes = ["/home", "/discover", "/watchlist"];
+  const protectedPrefixes = ["/home", "/discover", "/library"];
   const isProtectedRoute = protectedPrefixes.some((prefix) =>
     request.nextUrl.pathname.startsWith(prefix),
   );

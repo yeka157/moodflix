@@ -10,11 +10,11 @@ import { Footer } from "@/components/landing/footer";
 export const metadata: Metadata = {
   title: "Moodflix - AI-Powered Movie Discovery",
   description:
-    "Discover movies that match your mood with AI-powered recommendations. Build your watchlist, explore trending films, and find your next favorite movie.",
+    "Discover movies that match your mood with AI-powered recommendations. Build your library, explore trending films, and find your next favorite movie.",
   openGraph: {
     title: "Moodflix - AI-Powered Movie Discovery",
     description:
-      "Discover movies that match your mood with AI-powered recommendations. Build your watchlist, explore trending films, and find your next favorite movie.",
+      "Discover movies that match your mood with AI-powered recommendations. Build your library, explore trending films, and find your next favorite movie.",
   },
 };
 
@@ -24,7 +24,7 @@ export default function Home() {
     "@type": "WebApplication",
     name: "Moodflix",
     description:
-      "AI-powered movie watchlist and mood-based discovery platform.",
+      "AI-powered movie library and mood-based discovery platform.",
     url: "https://moodflix.app",
     applicationCategory: "EntertainmentApplication",
     operatingSystem: "Web",

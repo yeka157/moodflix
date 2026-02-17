@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Moodflix - AI Movie Discovery",
     short_name: "Moodflix",
     description:
-      "Your personal movie watchlist with AI-powered mood-based discovery. Find the perfect movie for any mood.",
+      "Your personal movie library with AI-powered mood-based discovery. Find the perfect movie for any mood.",
     start_url: "/",
     display: "standalone",
     background_color: "#0a0a0a",

@@ -12,9 +12,9 @@ const features = [
   },
   {
     icon: BookmarkCheck,
-    title: "Personal Watchlist",
+    title: "Personal Library",
     description:
-      "Track what you want to watch, what you're watching now, and rate movies you've seen. Your film journey, organized.",
+      "Track what you want to watch and rate movies you've seen. Your film journey, organized.",
   },
   {
     icon: Sparkles,

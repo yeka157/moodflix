@@ -39,8 +39,8 @@ export function AppNavbar({ user }: AppNavbarProps) {
       exact: false,
     },
     {
-      href: "/watchlist",
-      label: "Watchlist",
+      href: "/library",
+      label: "Library",
       icon: Bookmark,
       exact: false,
     },

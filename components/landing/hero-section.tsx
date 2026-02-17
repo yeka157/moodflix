@@ -49,7 +49,7 @@ export function HeroSection() {
           className="text-lg lg:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed"
         >
           Let AI understand your feelings and recommend the perfect movies. Build your personal
-          watchlist, track what you&apos;ve seen, and never run out of great films to watch.
+          library, track what you&apos;ve seen, and never run out of great films to watch.
         </motion.p>
 
         <motion.div

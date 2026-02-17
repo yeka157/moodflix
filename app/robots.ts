@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/home", "/discover", "/watchlist", "/api/"],
+        disallow: ["/home", "/discover", "/library", "/api/"],
       },
     ],
     sitemap: "https://moodflix.app/sitemap.xml",

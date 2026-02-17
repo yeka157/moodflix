@@ -46,11 +46,11 @@ export default async function HomePage() {
         "Browse trending movies and search for your next favorite film",
     },
     {
-      href: "/watchlist",
+      href: "/library",
       icon: "Bookmark",
-      title: "Your Watchlist",
+      title: "My Library",
       description:
-        "Track movies you want to watch and ones you've finished",
+        "Track movies you want to watch and ones you've seen",
     },
   ];
 
