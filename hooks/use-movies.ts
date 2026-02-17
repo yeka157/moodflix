@@ -1,6 +1,11 @@
 "use client";
 
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
+import {
+  useQuery,
+  useInfiniteQuery,
+  useQueryClient,
+  keepPreviousData,
+} from "@tanstack/react-query";
 import type {
   MovieListResponse,
   MovieCategory,
@@ -11,12 +16,15 @@ export const movieKeys = {
   all: ["movies"] as const,
   category: (cat: MovieCategory, page: number) =>
     [...movieKeys.all, "category", cat, page] as const,
-  search: (query: string) =>
-    [...movieKeys.all, "search", query] as const,
-  details: (id: number) =>
-    [...movieKeys.all, "details", id] as const,
-  genre: (genreIds: string) =>
-    [...movieKeys.all, "genre", genreIds] as const,
+  search: (query: string, page?: number) =>
+    [
+      ...movieKeys.all,
+      "search",
+      query,
+      ...(page != null ? [page] : []),
+    ] as const,
+  details: (id: number) => [...movieKeys.all, "details", id] as const,
+  genre: (genreIds: string) => [...movieKeys.all, "genre", genreIds] as const,
   recommendations: (id: number) =>
     [...movieKeys.all, "recommendations", id] as const,
 };
@@ -41,9 +49,7 @@ async function fetchMovieSearch(
   return res.json();
 }
 
-async function fetchMovieDetails(
-  id: number,
-): Promise<MovieDetailsResponse> {
+async function fetchMovieDetails(id: number): Promise<MovieDetailsResponse> {
   const res = await fetch(`/api/movies/${id}`);
   if (!res.ok) throw new Error("Failed to fetch movie details");
   return res.json();
@@ -64,6 +70,8 @@ export function useTrendingMovies(page = 1) {
   return useQuery({
     queryKey: movieKeys.category("trending", page),
     queryFn: () => fetchMovieCategory("trending", page),
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 }
 
@@ -71,6 +79,8 @@ export function usePopularMovies(page = 1) {
   return useQuery({
     queryKey: movieKeys.category("popular", page),
     queryFn: () => fetchMovieCategory("popular", page),
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 }
 
@@ -78,24 +88,42 @@ export function useTopRatedMovies(page = 1) {
   return useQuery({
     queryKey: movieKeys.category("top_rated", page),
     queryFn: () => fetchMovieCategory("top_rated", page),
+    staleTime: 30 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
   });
 }
 
 export function useMovieSearch(query: string, page = 1) {
   return useQuery({
-    queryKey: [...movieKeys.search(query), page],
+    queryKey: movieKeys.search(query, page),
     queryFn: () => fetchMovieSearch(query, page),
     enabled: query.length >= 2,
-    placeholderData: (previousData: MovieListResponse | undefined) =>
-      previousData,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+    placeholderData: keepPreviousData,
   });
 }
 
 export function useMovieDetails(id: number | null) {
+  const queryClient = useQueryClient();
+
   return useQuery({
     queryKey: movieKeys.details(id!),
     queryFn: () => fetchMovieDetails(id!),
     enabled: id !== null,
+    staleTime: 30 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
+    placeholderData: () => {
+      if (id === null) return undefined;
+      const queries = queryClient.getQueriesData<MovieListResponse>({
+        queryKey: movieKeys.all,
+      });
+      for (const [, data] of queries) {
+        const found = data?.results?.find((m) => m.id === id);
+        if (found) return found as unknown as MovieDetailsResponse;
+      }
+      return undefined;
+    },
   });
 }
 
@@ -107,6 +135,9 @@ export function useDiscoverByGenre(genreIds: string) {
     getNextPageParam: (lastPage) =>
       lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,
     enabled: genreIds.length > 0,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -123,6 +154,9 @@ export function useMovieRecommendations(movieId: number | null) {
     queryKey: movieKeys.recommendations(movieId!),
     queryFn: () => fetchMovieRecommendations(movieId!),
     enabled: movieId !== null,
+    staleTime: 30 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -134,5 +168,8 @@ export function useMovieSearchInfinite(query: string) {
     getNextPageParam: (lastPage) =>
       lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,
     enabled: query.length >= 2,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+    placeholderData: keepPreviousData,
   });
 }

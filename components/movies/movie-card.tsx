@@ -22,14 +22,23 @@ interface MovieCardProps {
   onClick?: (movie: Movie) => void;
 }
 
-export function MovieCard({ movie, priority = false, className, onClick }: MovieCardProps) {
+export function MovieCard({
+  movie,
+  priority = false,
+  className,
+  onClick,
+}: MovieCardProps) {
   const year = movie.release_date?.slice(0, 4) || "N/A";
   const rating = movie.vote_average.toFixed(1);
-  const displayGenres = movie.genre_ids.slice(0, 2).map((id) => GENRES[id]).filter(Boolean);
+  const displayGenres = movie.genre_ids
+    .slice(0, 2)
+    .map((id) => GENRES[id])
+    .filter(Boolean);
 
   const { data: tmdbIds } = useWatchlistTmdbIds();
   const addMutation = useAddToWatchlist();
-  const isInWatchlist = tmdbIds?.includes(movie.id) ?? false;
+  const isInWatchlist =
+    tmdbIds?.some((item) => item.tmdbId === movie.id) ?? false;
 
   const handleBookmarkClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -74,9 +83,7 @@ export function MovieCard({ movie, priority = false, className, onClick }: Movie
         <div
           className={cn(
             "absolute top-2 right-2 z-10 transition-opacity duration-200",
-            isInWatchlist
-              ? "opacity-100"
-              : "opacity-0 group-hover:opacity-100",
+            isInWatchlist ? "opacity-100" : "opacity-0 group-hover:opacity-100",
           )}
         >
           <Tooltip>
@@ -98,10 +105,7 @@ export function MovieCard({ movie, priority = false, className, onClick }: Movie
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Bookmark
-                    className={cn(
-                      "h-4 w-4",
-                      isInWatchlist && "fill-current",
-                    )}
+                    className={cn("h-4 w-4", isInWatchlist && "fill-current")}
                   />
                 )}
               </button>

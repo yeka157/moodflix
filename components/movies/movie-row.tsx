@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import type { Movie } from "@/types/movie";
 import { MovieCard } from "./movie-card";
 import { MovieCardSkeleton } from "./movie-card-skeleton";
@@ -10,10 +10,17 @@ interface MovieRowProps {
   title: string;
   movies: Movie[];
   isLoading?: boolean;
+  isUpdating?: boolean;
   onMovieClick?: (movie: Movie) => void;
 }
 
-export function MovieRow({ title, movies, isLoading = false, onMovieClick }: MovieRowProps) {
+export function MovieRow({
+  title,
+  movies,
+  isLoading = false,
+  isUpdating = false,
+  onMovieClick,
+}: MovieRowProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(true);
@@ -49,7 +56,15 @@ export function MovieRow({ title, movies, isLoading = false, onMovieClick }: Mov
 
   return (
     <div className="space-y-3">
-      <h2 className="text-xl font-semibold">{title}</h2>
+      <div className="flex items-center gap-2">
+        <h2 className="text-xl font-semibold">{title}</h2>
+        {isUpdating && (
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary animate-in fade-in zoom-in duration-300">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            <span className="text-[10px] font-medium">Updating...</span>
+          </div>
+        )}
+      </div>
 
       <div className="group/row relative">
         {/* Left arrow */}
@@ -87,22 +102,23 @@ export function MovieRow({ title, movies, isLoading = false, onMovieClick }: Mov
           ref={scrollContainerRef}
           className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 scroll-smooth"
         >
-          {isLoading ? (
-            Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="flex-shrink-0 w-[150px] sm:w-[170px] md:w-[185px]">
-                <MovieCardSkeleton />
-              </div>
-            ))
-          ) : (
-            movies.map((movie) => (
-              <div
-                key={movie.id}
-                className="flex-shrink-0 w-[150px] sm:w-[170px] md:w-[185px]"
-              >
-                <MovieCard movie={movie} onClick={onMovieClick} />
-              </div>
-            ))
-          )}
+          {isLoading
+            ? Array.from({ length: 8 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex-shrink-0 w-[150px] sm:w-[170px] md:w-[185px]"
+                >
+                  <MovieCardSkeleton />
+                </div>
+              ))
+            : movies.map((movie) => (
+                <div
+                  key={movie.id}
+                  className="flex-shrink-0 w-[150px] sm:w-[170px] md:w-[185px]"
+                >
+                  <MovieCard movie={movie} onClick={onMovieClick} />
+                </div>
+              ))}
         </div>
       </div>
     </div>

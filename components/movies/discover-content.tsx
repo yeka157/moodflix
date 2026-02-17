@@ -3,11 +3,9 @@
 import { useState, useMemo } from "react";
 import { Search, X, Loader2, AlertCircle } from "lucide-react";
 import { useDebouncedCallback } from "use-debounce";
+import { cn } from "@/lib/utils";
 import type { Movie, MovieListResponse } from "@/types/movie";
-import {
-  useMovieSearchInfinite,
-  useDiscoverByGenre,
-} from "@/hooks/use-movies";
+import { useMovieSearchInfinite, useDiscoverByGenre } from "@/hooks/use-movies";
 import useInfiniteScroll from "react-infinite-scroll-hook";
 import { GENRES } from "@/lib/constants";
 import { MovieRow } from "./movie-row";
@@ -72,7 +70,8 @@ export function DiscoverContent({
   const searchTotal = searchQuery.data?.pages[0]?.total_results ?? 0;
 
   const genreMovies = useMemo(
-    () => dedupeMovies(genreQuery.data?.pages),    [genreQuery.data],
+    () => dedupeMovies(genreQuery.data?.pages),
+    [genreQuery.data],
   );
 
   const [searchSentinelRef] = useInfiniteScroll({
@@ -190,7 +189,23 @@ export function DiscoverContent({
               </Button>
             </div>
           ) : searchMovies.length > 0 ? (
-            <>
+            <div
+              className={cn(
+                "space-y-6 relative transition-opacity duration-200",
+                searchQuery.isPlaceholderData &&
+                  "opacity-50 pointer-events-none",
+              )}
+            >
+              {searchQuery.isPlaceholderData && (
+                <div className="absolute inset-0 z-10 flex items-start justify-center pt-20">
+                  <div className="bg-background/80 backdrop-blur-sm px-4 py-2 rounded-full border shadow-lg flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    <span className="text-sm font-medium">
+                      Updating results...
+                    </span>
+                  </div>
+                </div>
+              )}
               <p className="text-sm text-muted-foreground">
                 Found {searchTotal.toLocaleString()} results
               </p>
@@ -200,7 +215,7 @@ export function DiscoverContent({
                 sentinelRef={searchSentinelRef}
                 isFetchingMore={searchQuery.isFetchingNextPage}
               />
-            </>
+            </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <Search className="h-12 w-12 text-muted-foreground mb-4" />
@@ -218,20 +233,37 @@ export function DiscoverContent({
           ) : genreQuery.isError ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <AlertCircle className="h-12 w-12 text-destructive mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Failed to load movies</h3>
+              <h3 className="text-lg font-semibold mb-2">
+                Failed to load movies
+              </h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Something went wrong while loading genre results. Please try again.
+                Something went wrong while loading genre results. Please try
+                again.
               </p>
               <Button variant="outline" onClick={() => genreQuery.refetch()}>
                 Retry
               </Button>
             </div>
           ) : genreMovies.length > 0 ? (
-            <>
+            <div
+              className={cn(
+                "space-y-6 relative transition-opacity duration-200",
+                genreQuery.isPlaceholderData &&
+                  "opacity-50 pointer-events-none",
+              )}
+            >
+              {genreQuery.isPlaceholderData && (
+                <div className="absolute inset-0 z-10 flex items-start justify-center pt-20">
+                  <div className="bg-background/80 backdrop-blur-sm px-4 py-2 rounded-full border shadow-lg flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    <span className="text-sm font-medium">
+                      Updating results...
+                    </span>
+                  </div>
+                </div>
+              )}
               <p className="text-sm text-muted-foreground">
-                {selectedGenres
-                  .map((id) => GENRES[Number(id)])
-                  .join(" + ")}{" "}
+                {selectedGenres.map((id) => GENRES[Number(id)]).join(" + ")}{" "}
                 movies
               </p>
               <MovieGrid
@@ -240,7 +272,7 @@ export function DiscoverContent({
                 sentinelRef={genreSentinelRef}
                 isFetchingMore={genreQuery.isFetchingNextPage}
               />
-            </>
+            </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <Search className="h-12 w-12 text-muted-foreground mb-4" />

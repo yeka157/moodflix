@@ -35,7 +35,7 @@ export function PersonalizedSection({
 
   const { data: watchlistIds } = useWatchlistTmdbIds();
   const excludeSet = useMemo(
-    () => new Set(watchlistIds ?? []),
+    () => new Set(watchlistIds?.map((entry) => entry.tmdbId) ?? []),
     [watchlistIds],
   );
 
@@ -64,6 +64,7 @@ export function PersonalizedSection({
           title={`Because you liked ${data.sourceMovies[0].title}`}
           movies={rec0Movies}
           isLoading={rec0.isLoading}
+          isUpdating={rec0.isPlaceholderData}
           onMovieClick={onMovieClick}
         />
       )}
@@ -73,6 +74,7 @@ export function PersonalizedSection({
           title={`Because you liked ${data.sourceMovies[1].title}`}
           movies={rec1Movies}
           isLoading={rec1.isLoading}
+          isUpdating={rec1.isPlaceholderData}
           onMovieClick={onMovieClick}
         />
       )}
@@ -82,6 +84,7 @@ export function PersonalizedSection({
           title={`Top ${data.topGenreName} Picks for You`}
           movies={filteredGenreMovies}
           isLoading={genreDiscover.isLoading}
+          isUpdating={genreDiscover.isPlaceholderData}
           onMovieClick={onMovieClick}
         />
       )}

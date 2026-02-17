@@ -129,8 +129,13 @@ function DetailSkeleton() {
 }
 
 export function MovieDetailModal({ movie, onClose }: MovieDetailModalProps) {
-  const { data: details, isLoading } = useMovieDetails(movie?.id ?? null);
+  const {
+    data: details,
+    isLoading,
+    isPlaceholderData,
+  } = useMovieDetails(movie?.id ?? null);
 
+  const isDetailLoading = isLoading || isPlaceholderData;
   const year = movie?.release_date?.slice(0, 4) || "N/A";
   const rating =
     details?.vote_average?.toFixed(1) ??
@@ -175,7 +180,7 @@ export function MovieDetailModal({ movie, onClose }: MovieDetailModalProps) {
         </Button>
 
         <div className="max-h-[90dvh] md:max-h-[85dvh] overflow-y-auto">
-          {isLoading || !movie ? (
+          {!movie ? (
             <DetailSkeleton />
           ) : (
             <div>
@@ -190,12 +195,13 @@ export function MovieDetailModal({ movie, onClose }: MovieDetailModalProps) {
                   fill
                   className="object-cover"
                   sizes="(max-width: 672px) 100vw, 672px"
+                  priority
                 />
                 <div className="absolute inset-0 bg-linear-to-t from-background via-background/40 to-transparent" />
 
                 {/* Title overlay */}
                 <div className="absolute bottom-0 left-0 right-0 p-6">
-                  <h2 className="text-2xl sm:text-3xl font-bold text-white">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-white line-clamp-2">
                     {movie.title}
                   </h2>
                 </div>
@@ -206,29 +212,35 @@ export function MovieDetailModal({ movie, onClose }: MovieDetailModalProps) {
                 {/* Meta row */}
                 <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
                   <span className="text-foreground font-medium">{year}</span>
-                  {runtime && (
+                  {isDetailLoading && !runtime ? (
+                    <Skeleton className="h-4 w-12" />
+                  ) : runtime ? (
                     <span className="flex items-center gap-1">
                       <Clock className="h-3.5 w-3.5" />
                       {runtime}
                     </span>
-                  )}
+                  ) : null}
                   <span className="flex items-center gap-1">
                     <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
                     {rating}
                   </span>
-                  {details?.watchCountry && (
+                  {isDetailLoading && !details?.watchCountry ? (
+                    <Skeleton className="h-5 w-10" />
+                  ) : details?.watchCountry ? (
                     <Badge variant="outline" className="text-xs">
                       {details.watchCountry}
                     </Badge>
-                  )}
+                  ) : null}
                 </div>
 
                 {/* Tagline */}
-                {details?.tagline && (
+                {isDetailLoading && !details?.tagline ? (
+                  <Skeleton className="h-4 w-3/4" />
+                ) : details?.tagline ? (
                   <p className="text-sm italic text-muted-foreground">
                     &ldquo;{details.tagline}&rdquo;
                   </p>
-                )}
+                ) : null}
 
                 {/* Overview */}
                 <p className="text-sm leading-relaxed">
@@ -236,15 +248,21 @@ export function MovieDetailModal({ movie, onClose }: MovieDetailModalProps) {
                 </p>
 
                 {/* Genres */}
-                {genres.length > 0 && (
-                  <div className="flex gap-2 flex-wrap">
-                    {genres.map((g) => (
+                <div className="flex gap-2 flex-wrap">
+                  {isDetailLoading && genres.length === 0 ? (
+                    <>
+                      <Skeleton className="h-6 w-16" />
+                      <Skeleton className="h-6 w-16" />
+                      <Skeleton className="h-6 w-16" />
+                    </>
+                  ) : (
+                    genres.map((g) => (
                       <Badge key={g.id} variant="secondary" className="text-xs">
                         {g.name}
                       </Badge>
-                    ))}
-                  </div>
-                )}
+                    ))
+                  )}
+                </div>
 
                 {/* Watchlist Actions */}
                 <div className="flex items-center gap-3 flex-wrap">
@@ -304,7 +322,8 @@ export function MovieDetailModal({ movie, onClose }: MovieDetailModalProps) {
                                 {
                                   onSuccess: (result) => {
                                     if (result.error) toast.error(result.error);
-                                    else toast.success("Removed from watchlist");
+                                    else
+                                      toast.success("Removed from watchlist");
                                   },
                                 },
                               );
@@ -401,56 +420,71 @@ export function MovieDetailModal({ movie, onClose }: MovieDetailModalProps) {
                 </div>
 
                 {/* Director */}
-                {director && (
+                {isDetailLoading && !director ? (
+                  <Skeleton className="h-4 w-32" />
+                ) : director ? (
                   <p className="text-sm text-muted-foreground">
                     <span className="text-foreground font-medium">
                       Director:
                     </span>{" "}
                     {director.name}
                   </p>
-                )}
+                ) : null}
 
                 {/* Cast */}
-                {cast.length > 0 && (
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-medium">Cast</h3>
-                    <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1">
-                      {cast.map((person) => (
-                        <div
-                          key={person.id}
-                          className="shrink-0 w-16 text-center"
-                        >
-                          <div className="relative h-16 w-16 rounded-full overflow-hidden bg-muted mx-auto">
-                            {person.profile_path ? (
-                              <Image
-                                src={`${TMDB_IMAGE_BASE}/w185${person.profile_path}`}
-                                alt={person.name}
-                                fill
-                                className="object-cover"
-                                sizes="64px"
-                              />
-                            ) : (
-                              <div className="h-full w-full flex items-center justify-center text-muted-foreground text-lg font-medium">
-                                {person.name[0]}
-                              </div>
-                            )}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium">Cast</h3>
+                  <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1">
+                    {isDetailLoading && cast.length === 0
+                      ? Array.from({ length: 6 }).map((_, i) => (
+                          <div key={i} className="shrink-0 w-16 space-y-2">
+                            <Skeleton className="h-16 w-16 rounded-full" />
+                            <Skeleton className="h-2 w-12 mx-auto" />
                           </div>
-                          <p className="text-[10px] font-medium mt-1.5 line-clamp-1">
-                            {person.name}
-                          </p>
-                          <p className="text-[9px] text-muted-foreground line-clamp-1">
-                            {person.character}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
+                        ))
+                      : cast.map((person) => (
+                          <div
+                            key={person.id}
+                            className="shrink-0 w-16 text-center"
+                          >
+                            <div className="relative h-16 w-16 rounded-full overflow-hidden bg-muted mx-auto">
+                              {person.profile_path ? (
+                                <Image
+                                  src={`${TMDB_IMAGE_BASE}/w185${person.profile_path}`}
+                                  alt={person.name}
+                                  fill
+                                  className="object-cover"
+                                  sizes="64px"
+                                />
+                              ) : (
+                                <div className="h-full w-full flex items-center justify-center text-muted-foreground text-lg font-medium">
+                                  {person.name[0]}
+                                </div>
+                              )}
+                            </div>
+                            <p className="text-[10px] font-medium mt-1.5 line-clamp-1">
+                              {person.name}
+                            </p>
+                            <p className="text-[9px] text-muted-foreground line-clamp-1">
+                              {person.character}
+                            </p>
+                          </div>
+                        ))}
                   </div>
-                )}
+                </div>
 
                 {/* Watch Providers */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium">Where to Watch</h3>
-                  {hasAnyProvider ? (
+                  {isDetailLoading && !watchProviders ? (
+                    <div className="space-y-3">
+                      <Skeleton className="h-8 w-48" />
+                      <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+                        <Skeleton className="h-12 w-12 rounded-lg" />
+                        <Skeleton className="h-12 w-12 rounded-lg" />
+                      </div>
+                    </div>
+                  ) : hasAnyProvider ? (
                     <Tabs defaultValue={defaultTab}>
                       <TabsList className="h-8">
                         {hasStream && (
