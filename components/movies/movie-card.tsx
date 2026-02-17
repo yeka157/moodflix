@@ -2,12 +2,18 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { Star, Bookmark, Loader2 } from "lucide-react";
+import { Star, Bookmark, CircleCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Movie } from "@/types/movie";
+import type { WatchlistStatus } from "@/types/watchlist";
 import { cn, getPosterUrl } from "@/lib/utils";
 import { GENRES } from "@/lib/constants";
-import { useWatchlistTmdbIds, useAddToWatchlist } from "@/hooks/use-watchlist";
+import {
+  useWatchlistTmdbIds,
+  useAddToWatchlist,
+  useRemoveFromWatchlist,
+  useUpdateWatchlistStatus,
+} from "@/hooks/use-watchlist";
 import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
@@ -35,31 +41,124 @@ export function MovieCard({
     .map((id) => GENRES[id])
     .filter(Boolean);
 
-  const { data: tmdbIds } = useWatchlistTmdbIds();
+  const { data: tmdbEntries } = useWatchlistTmdbIds();
   const addMutation = useAddToWatchlist();
-  const isInWatchlist =
-    tmdbIds?.some((item) => item.tmdbId === movie.id) ?? false;
+  const removeMutation = useRemoveFromWatchlist();
+  const statusMutation = useUpdateWatchlistStatus();
+
+  const entry = tmdbEntries?.find((e) => e.tmdbId === movie.id);
+  const status: WatchlistStatus | null = entry?.status ?? null;
+  const isWantToWatch = status === "want_to_watch";
+  const isWatched = status === "watched";
+  const isInLibrary = status !== null;
+
+  const isPending =
+    addMutation.isPending ||
+    removeMutation.isPending ||
+    statusMutation.isPending;
 
   const handleBookmarkClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isInWatchlist) return;
-    addMutation.mutate(
-      {
-        tmdbId: movie.id,
-        title: movie.title,
-        posterPath: movie.poster_path,
-      },
-      {
-        onSuccess: (result) => {
-          if (result.error) {
-            toast.error(result.error);
-          } else {
-            toast.success(`Added "${movie.title}" to watchlist`);
-          }
+    if (isPending) return;
+
+    if (isWantToWatch && entry) {
+      // Remove from library
+      removeMutation.mutate(
+        { id: entry.id, tmdbId: movie.id },
+        {
+          onSuccess: (result) => {
+            if (result.error) {
+              toast.error(result.error);
+            } else {
+              toast("Removed from library", {
+                action: {
+                  label: "Undo",
+                  onClick: () =>
+                    addMutation.mutate({
+                      tmdbId: movie.id,
+                      title: movie.title,
+                      posterPath: movie.poster_path,
+                      status: "want_to_watch",
+                    }),
+                },
+                duration: 5000,
+              });
+            }
+          },
         },
-        onError: () => toast.error("Failed to add to watchlist"),
-      },
-    );
+      );
+    } else if (isWatched && entry) {
+      // Switch from watched → want to watch
+      statusMutation.mutate({ id: entry.id, status: "want_to_watch" });
+    } else {
+      // Add as want to watch
+      addMutation.mutate(
+        {
+          tmdbId: movie.id,
+          title: movie.title,
+          posterPath: movie.poster_path,
+          status: "want_to_watch",
+        },
+        {
+          onSuccess: (result) => {
+            if (result.error) toast.error(result.error);
+          },
+          onError: () => toast.error("Failed to add to library"),
+        },
+      );
+    }
+  };
+
+  const handleCheckClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isPending) return;
+
+    if (isWatched && entry) {
+      // Remove from library
+      removeMutation.mutate(
+        { id: entry.id, tmdbId: movie.id },
+        {
+          onSuccess: (result) => {
+            if (result.error) {
+              toast.error(result.error);
+            } else {
+              toast("Removed from library", {
+                action: {
+                  label: "Undo",
+                  onClick: () =>
+                    addMutation.mutate({
+                      tmdbId: movie.id,
+                      title: movie.title,
+                      posterPath: movie.poster_path,
+                      status: "watched",
+                    }),
+                },
+                duration: 5000,
+              });
+            }
+          },
+        },
+      );
+    } else if (isWantToWatch && entry) {
+      // Switch from want to watch → watched
+      statusMutation.mutate({ id: entry.id, status: "watched" });
+    } else {
+      // Add as watched
+      addMutation.mutate(
+        {
+          tmdbId: movie.id,
+          title: movie.title,
+          posterPath: movie.poster_path,
+          status: "watched",
+        },
+        {
+          onSuccess: (result) => {
+            if (result.error) toast.error(result.error);
+          },
+          onError: () => toast.error("Failed to add to library"),
+        },
+      );
+    }
   };
 
   return (
@@ -79,39 +178,86 @@ export function MovieCard({
           sizes="(max-width: 640px) 150px, (max-width: 768px) 170px, 185px"
         />
 
-        {/* Bookmark button */}
+        {/* Action icons */}
         <div
           className={cn(
-            "absolute top-2 right-2 z-10 transition-opacity duration-200",
-            isInWatchlist ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+            "absolute top-2 right-2 z-10 flex flex-col gap-1.5 transition-opacity duration-200",
+            isInLibrary ? "opacity-100" : "opacity-0 group-hover:opacity-100",
           )}
         >
+          {/* Bookmark (want to watch) */}
           <Tooltip>
             <TooltipTrigger asChild>
-              <button
+              <motion.button
                 className={cn(
-                  "flex items-center justify-center h-8 w-8 rounded-full transition-all duration-200",
-                  isInWatchlist
+                  "flex items-center justify-center h-8 w-8 rounded-full transition-colors duration-200",
+                  isWantToWatch
                     ? "bg-primary text-primary-foreground"
                     : "bg-black/60 hover:bg-black/80 text-white",
                 )}
                 onClick={handleBookmarkClick}
-                disabled={addMutation.isPending || isInWatchlist}
+                disabled={isPending}
+                whileTap={{ scale: 0.85 }}
                 aria-label={
-                  isInWatchlist ? "In your watchlist" : "Add to watchlist"
+                  isWantToWatch
+                    ? "Remove from library"
+                    : "Add to library"
                 }
               >
                 {addMutation.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Bookmark
-                    className={cn("h-4 w-4", isInWatchlist && "fill-current")}
+                    className={cn(
+                      "h-4 w-4",
+                      isWantToWatch && "fill-current",
+                    )}
                   />
                 )}
-              </button>
+              </motion.button>
             </TooltipTrigger>
             <TooltipContent side="left">
-              {isInWatchlist ? "In your watchlist" : "Add to watchlist"}
+              {isWantToWatch
+                ? "Remove from library"
+                : isWatched
+                  ? "Move to want to watch"
+                  : "Want to watch"}
+            </TooltipContent>
+          </Tooltip>
+
+          {/* Check (watched) */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <motion.button
+                className={cn(
+                  "flex items-center justify-center h-8 w-8 rounded-full transition-colors duration-200",
+                  isWatched
+                    ? "bg-green-600 text-white"
+                    : "bg-black/60 hover:bg-black/80 text-white",
+                )}
+                onClick={handleCheckClick}
+                disabled={isPending}
+                whileTap={{ scale: 0.85 }}
+                aria-label={
+                  isWatched
+                    ? "Remove from watched"
+                    : "Mark as watched"
+                }
+              >
+                <CircleCheck
+                  className={cn(
+                    "h-4 w-4",
+                    isWatched && "fill-current",
+                  )}
+                />
+              </motion.button>
+            </TooltipTrigger>
+            <TooltipContent side="left">
+              {isWatched
+                ? "Remove from watched"
+                : isWantToWatch
+                  ? "Mark as watched"
+                  : "Mark as watched"}
             </TooltipContent>
           </Tooltip>
         </div>

@@ -6,14 +6,14 @@ import {
   Clock,
   X,
   Bookmark,
+  CircleCheck,
   ThumbsUp,
   ThumbsDown,
-  ChevronDown,
   Loader2,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import type { Movie } from "@/types/movie";
-import type { WatchlistStatus } from "@/types/watchlist";
 import { useMovieDetails } from "@/hooks/use-movies";
 import {
   useWatchlistCheck,
@@ -29,15 +29,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 interface MovieDetailModalProps {
   movie: Movie | null;
@@ -104,11 +95,6 @@ function ProviderGrid({
   );
 }
 
-const STATUS_LABELS: Record<WatchlistStatus, string> = {
-  want_to_watch: "Want to Watch",
-  watched: "Watched",
-};
-
 function DetailSkeleton() {
   return (
     <div className="space-y-4">
@@ -158,7 +144,86 @@ export function MovieDetailModal({ movie, onClose }: MovieDetailModalProps) {
   const removeMutation = useRemoveFromWatchlist();
   const statusMutation = useUpdateWatchlistStatus();
   const rateMutation = useRateWatchlistItem();
-  const isInWatchlist = !!watchlistItem;
+
+  const isInLibrary = !!watchlistItem;
+  const isWantToWatch = watchlistItem?.status === "want_to_watch";
+  const isWatched = watchlistItem?.status === "watched";
+
+  const handleAddToLibrary = () => {
+    if (!movie) return;
+    addMutation.mutate(
+      {
+        tmdbId: movie.id,
+        title: movie.title,
+        posterPath: movie.poster_path,
+        status: "want_to_watch",
+      },
+      {
+        onSuccess: (result) => {
+          if (result.error) toast.error(result.error);
+        },
+        onError: () => toast.error("Failed to add to library"),
+      },
+    );
+  };
+
+  const handleMarkWatched = () => {
+    if (!movie) return;
+    if (isWantToWatch && watchlistItem) {
+      // Switch status
+      statusMutation.mutate({ id: watchlistItem.id, status: "watched" });
+    } else {
+      // Add directly as watched
+      addMutation.mutate(
+        {
+          tmdbId: movie.id,
+          title: movie.title,
+          posterPath: movie.poster_path,
+          status: "watched",
+        },
+        {
+          onSuccess: (result) => {
+            if (result.error) toast.error(result.error);
+          },
+          onError: () => toast.error("Failed to mark as watched"),
+        },
+      );
+    }
+  };
+
+  const handleRemove = () => {
+    if (!watchlistItem || !movie) return;
+    const previousStatus = watchlistItem.status;
+    removeMutation.mutate(
+      { id: watchlistItem.id, tmdbId: watchlistItem.tmdbId },
+      {
+        onSuccess: (result) => {
+          if (result.error) {
+            toast.error(result.error);
+          } else {
+            toast("Removed from library", {
+              action: {
+                label: "Undo",
+                onClick: () =>
+                  addMutation.mutate({
+                    tmdbId: movie.id,
+                    title: movie.title,
+                    posterPath: movie.poster_path,
+                    status: previousStatus,
+                  }),
+              },
+              duration: 5000,
+            });
+          }
+        },
+      },
+    );
+  };
+
+  const handleMoveToWantToWatch = () => {
+    if (!watchlistItem) return;
+    statusMutation.mutate({ id: watchlistItem.id, status: "want_to_watch" });
+  };
 
   return (
     <Dialog open={movie !== null} onOpenChange={(open) => !open && onClose()}>
@@ -264,158 +329,141 @@ export function MovieDetailModal({ movie, onClose }: MovieDetailModalProps) {
                   )}
                 </div>
 
-                {/* Watchlist Actions */}
-                <div className="flex items-center gap-3 flex-wrap">
+                {/* Library Actions */}
+                <div className="space-y-3">
                   {isCheckingWatchlist ? (
-                    <Skeleton className="h-9 w-40" />
-                  ) : isInWatchlist ? (
+                    <Skeleton className="h-9 w-64" />
+                  ) : (
                     <>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {/* Bookmark / Add to Library button */}
+                        {isWantToWatch ? (
+                          <Button
+                            size="sm"
+                            className="gap-2"
+                            onClick={handleRemove}
+                            disabled={removeMutation.isPending}
+                          >
+                            {removeMutation.isPending ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Bookmark className="h-4 w-4 fill-current" />
+                            )}
+                            In Library
+                          </Button>
+                        ) : (
                           <Button
                             variant="outline"
                             size="sm"
                             className="gap-2"
-                            disabled={statusMutation.isPending}
+                            onClick={
+                              isWatched
+                                ? handleMoveToWantToWatch
+                                : handleAddToLibrary
+                            }
+                            disabled={
+                              addMutation.isPending || statusMutation.isPending
+                            }
                           >
-                            <Bookmark className="h-4 w-4 fill-current" />
-                            {STATUS_LABELS[watchlistItem.status]}
-                            <ChevronDown className="h-3 w-3" />
+                            {addMutation.isPending ||
+                            statusMutation.isPending ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Bookmark className="h-4 w-4" />
+                            )}
+                            {isWatched ? "Want to Watch" : "Add to Library"}
                           </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuRadioGroup
-                            value={watchlistItem.status}
-                            onValueChange={(value) => {
-                              const newStatus = value as WatchlistStatus;
-                              if (newStatus === watchlistItem.status) return;
-                              statusMutation.mutate(
-                                { id: watchlistItem.id, status: newStatus },
-                                {
-                                  onSuccess: (result) => {
-                                    if (result.error) toast.error(result.error);
-                                    else
-                                      toast.success(
-                                        `Status updated to "${STATUS_LABELS[newStatus]}"`,
-                                      );
-                                  },
-                                },
-                              );
-                            }}
-                          >
-                            <DropdownMenuRadioItem value="want_to_watch">
-                              Want to Watch
-                            </DropdownMenuRadioItem>
-                            <DropdownMenuRadioItem value="watched">
-                              Watched
-                            </DropdownMenuRadioItem>
-                          </DropdownMenuRadioGroup>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            variant="destructive"
-                            onClick={() => {
-                              removeMutation.mutate(
-                                {
-                                  id: watchlistItem.id,
-                                  tmdbId: watchlistItem.tmdbId,
-                                },
-                                {
-                                  onSuccess: (result) => {
-                                    if (result.error) toast.error(result.error);
-                                    else
-                                      toast.success("Removed from watchlist");
-                                  },
-                                },
-                              );
-                            }}
+                        )}
+
+                        {/* Check / Mark as Watched button */}
+                        {isWatched ? (
+                          <Button
+                            size="sm"
+                            className="gap-2 bg-green-600 hover:bg-green-700 text-white"
+                            onClick={handleRemove}
                             disabled={removeMutation.isPending}
                           >
-                            Remove from Watchlist
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          onClick={() => {
-                            const newRating =
-                              watchlistItem.rating === 1 ? null : 1;
-                            rateMutation.mutate({
-                              id: watchlistItem.id,
-                              rating: newRating,
-                            });
-                          }}
-                          disabled={rateMutation.isPending}
-                          aria-label="Like"
-                        >
-                          <ThumbsUp
-                            className={cn(
-                              "h-4 w-4",
-                              watchlistItem.rating === 1 &&
-                                "fill-green-500 text-green-500",
+                            {removeMutation.isPending ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <CircleCheck className="h-4 w-4 fill-current" />
                             )}
-                          />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          onClick={() => {
-                            const newRating =
-                              watchlistItem.rating === -1 ? null : -1;
-                            rateMutation.mutate({
-                              id: watchlistItem.id,
-                              rating: newRating,
-                            });
-                          }}
-                          disabled={rateMutation.isPending}
-                          aria-label="Dislike"
-                        >
-                          <ThumbsDown
-                            className={cn(
-                              "h-4 w-4",
-                              watchlistItem.rating === -1 &&
-                                "fill-red-500 text-red-500",
+                            Watched
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-2"
+                            onClick={handleMarkWatched}
+                            disabled={
+                              addMutation.isPending || statusMutation.isPending
+                            }
+                          >
+                            {statusMutation.isPending ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <CircleCheck className="h-4 w-4" />
                             )}
-                          />
-                        </Button>
+                            Mark as Watched
+                          </Button>
+                        )}
                       </div>
-                    </>
-                  ) : (
-                    <Button
-                      size="sm"
-                      className="gap-2"
-                      onClick={() => {
-                        if (!movie) return;
-                        addMutation.mutate(
-                          {
-                            tmdbId: movie.id,
-                            title: movie.title,
-                            posterPath: movie.poster_path,
-                          },
-                          {
-                            onSuccess: (result) => {
-                              if (result.error) toast.error(result.error);
-                              else
-                                toast.success(
-                                  `Added "${movie.title}" to watchlist`,
-                                );
-                            },
-                            onError: () =>
-                              toast.error("Failed to add to watchlist"),
-                          },
-                        );
-                      }}
-                      disabled={addMutation.isPending}
-                    >
-                      {addMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Bookmark className="h-4 w-4" />
+
+                      {/* Like/Dislike — only show when in library */}
+                      {isInLibrary && (
+                        <div className="flex items-center gap-1">
+                          <motion.div whileTap={{ scale: 0.85 }}>
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              onClick={() => {
+                                const newRating =
+                                  watchlistItem.rating === 1 ? null : 1;
+                                rateMutation.mutate({
+                                  id: watchlistItem.id,
+                                  rating: newRating,
+                                });
+                              }}
+                              disabled={rateMutation.isPending}
+                              aria-label="Like"
+                            >
+                              <ThumbsUp
+                                className={cn(
+                                  "h-4 w-4 transition-colors duration-200",
+                                  watchlistItem.rating === 1 &&
+                                    "fill-green-500 text-green-500",
+                                )}
+                              />
+                            </Button>
+                          </motion.div>
+                          <motion.div whileTap={{ scale: 0.85 }}>
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              onClick={() => {
+                                const newRating =
+                                  watchlistItem.rating === -1 ? null : -1;
+                                rateMutation.mutate({
+                                  id: watchlistItem.id,
+                                  rating: newRating,
+                                });
+                              }}
+                              disabled={rateMutation.isPending}
+                              aria-label="Dislike"
+                            >
+                              <ThumbsDown
+                                className={cn(
+                                  "h-4 w-4 transition-colors duration-200",
+                                  watchlistItem.rating === -1 &&
+                                    "fill-red-500 text-red-500",
+                                )}
+                              />
+                            </Button>
+                          </motion.div>
+                        </div>
                       )}
-                      Add to Watchlist
-                    </Button>
+                    </>
                   )}
                 </div>
 
