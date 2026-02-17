@@ -19,7 +19,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 ## Phase Details
 
 ### Phase 1: Watchlist Reactivity
-**Goal**: All watchlist mutations update UI instantly across all components without page refresh
+**Goal**: All watchlist mutations update UI instantly across all components without page refresh. Route rename /watchlist to /library. Dual icon system. One-tap "Mark as Watched".
 **Depends on**: Nothing (first phase)
 **Requirements**: WATCH-R01, WATCH-R02, WATCH-R03, WATCH-R04
 **Success Criteria** (what must be TRUE):
@@ -28,10 +28,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. User sees distinct icons — bookmark for "want to watch", eye/check for "watched"
   4. User changes like/dislike rating and sees the new state immediately without refresh
   5. All changes propagate to watchlist page, movie cards, and detail modal simultaneously
-**Plans**: TBD
+**Plans:** 3 plans (sequential)
 
 Plans:
-- [ ] TBD
+- [ ] 01-01-PLAN.md — Data layer (schema migration, server actions, hook optimistic updates)
+- [ ] 01-02-PLAN.md — Route rename & dual icon system (movie card + detail modal)
+- [ ] 01-03-PLAN.md — Library page labels & animation polish
 
 ### Phase 2: Branding & Assets
 **Goal**: Professional branded web assets for social sharing and browser UI
@@ -68,6 +70,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Watchlist Reactivity | 0/TBD | Not started | - |
+| 1. Watchlist Reactivity | 0/3 | Not started | - |
 | 2. Branding & Assets | 0/TBD | Not started | - |
 | 3. Polish & QA | 0/TBD | Not started | - |
