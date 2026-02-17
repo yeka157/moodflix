@@ -2,9 +2,11 @@
 
 import Image from "next/image";
 import { ThumbsUp, ThumbsDown, ChevronDown } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import { toast } from "sonner";
 import type { WatchlistItem, WatchlistStatus } from "@/types/watchlist";
 import {
+  useAddToWatchlist,
   useRemoveFromWatchlist,
   useUpdateWatchlistStatus,
   useRateWatchlistItem,
@@ -47,9 +49,11 @@ function formatAddedDate(isoDate: string): string {
 }
 
 export function WatchlistCard({ item }: { item: WatchlistItem }) {
+  const addMutation = useAddToWatchlist();
   const removeMutation = useRemoveFromWatchlist();
   const statusMutation = useUpdateWatchlistStatus();
   const rateMutation = useRateWatchlistItem();
+  const prefersReducedMotion = useReducedMotion();
 
   const config = STATUS_CONFIG[item.status];
 
@@ -62,15 +66,15 @@ export function WatchlistCard({ item }: { item: WatchlistItem }) {
         onSuccess: (result) => {
           if (result.error) {
             toast.error(result.error);
-          } else {
-            toast.success(`Status updated to "${STATUS_CONFIG[newStatus].label}"`);
           }
+          // Silent on success — icon/label update is sufficient feedback
         },
       },
     );
   };
 
   const handleRemove = () => {
+    const previousStatus = item.status;
     removeMutation.mutate(
       { id: item.id, tmdbId: item.tmdbId },
       {
@@ -78,7 +82,19 @@ export function WatchlistCard({ item }: { item: WatchlistItem }) {
           if (result.error) {
             toast.error(result.error);
           } else {
-            toast.success(`Removed "${item.title}"`);
+            toast("Removed from library", {
+              action: {
+                label: "Undo",
+                onClick: () =>
+                  addMutation.mutate({
+                    tmdbId: item.tmdbId,
+                    title: item.title,
+                    posterPath: item.posterPath,
+                    status: previousStatus,
+                  }),
+              },
+              duration: 5000,
+            });
           }
         },
       },
@@ -96,6 +112,11 @@ export function WatchlistCard({ item }: { item: WatchlistItem }) {
       },
     );
   };
+
+  const tapAnimation = prefersReducedMotion ? {} : { scale: 0.85 };
+  const ratingSpring = prefersReducedMotion
+    ? {}
+    : { initial: { scale: 1.3 }, animate: { scale: 1 }, transition: { type: "spring" as const, stiffness: 400, damping: 10 } };
 
   return (
     <div className="flex gap-3 rounded-lg border border-border/50 bg-card p-3 transition-colors hover:border-border">
@@ -157,41 +178,55 @@ export function WatchlistCard({ item }: { item: WatchlistItem }) {
                 onClick={handleRemove}
                 disabled={removeMutation.isPending}
               >
-                Remove from Watchlist
+                Remove from Library
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
           {/* Like/Dislike */}
           <div className="flex items-center gap-0.5">
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              onClick={() => handleRate(1)}
-              disabled={rateMutation.isPending}
-              aria-label="Like"
-            >
-              <ThumbsUp
-                className={cn(
-                  "h-3.5 w-3.5",
-                  item.rating === 1 && "fill-green-500 text-green-500",
-                )}
-              />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              onClick={() => handleRate(-1)}
-              disabled={rateMutation.isPending}
-              aria-label="Dislike"
-            >
-              <ThumbsDown
-                className={cn(
-                  "h-3.5 w-3.5",
-                  item.rating === -1 && "fill-red-500 text-red-500",
-                )}
-              />
-            </Button>
+            <motion.div whileTap={tapAnimation}>
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => handleRate(1)}
+                disabled={rateMutation.isPending}
+                aria-label="Like"
+              >
+                <motion.div
+                  key={`like-${item.rating === 1}`}
+                  {...(item.rating === 1 ? ratingSpring : {})}
+                >
+                  <ThumbsUp
+                    className={cn(
+                      "h-3.5 w-3.5",
+                      item.rating === 1 && "fill-green-500 text-green-500",
+                    )}
+                  />
+                </motion.div>
+              </Button>
+            </motion.div>
+            <motion.div whileTap={tapAnimation}>
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => handleRate(-1)}
+                disabled={rateMutation.isPending}
+                aria-label="Dislike"
+              >
+                <motion.div
+                  key={`dislike-${item.rating === -1}`}
+                  {...(item.rating === -1 ? ratingSpring : {})}
+                >
+                  <ThumbsDown
+                    className={cn(
+                      "h-3.5 w-3.5",
+                      item.rating === -1 && "fill-red-500 text-red-500",
+                    )}
+                  />
+                </motion.div>
+              </Button>
+            </motion.div>
           </div>
         </div>
       </div>

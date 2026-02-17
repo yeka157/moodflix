@@ -48,7 +48,7 @@ export function WatchlistContent() {
       {/* Header */}
       <div className="space-y-1">
         <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-bold tracking-tight">Your Watchlist</h1>
+          <h1 className="text-3xl font-bold tracking-tight">My Library</h1>
           {count > 0 && (
             <Badge variant="secondary" className="text-xs">
               {count}
@@ -84,7 +84,7 @@ export function WatchlistContent() {
           <h3 className="text-lg font-semibold mb-2">No movies here yet</h3>
           <p className="text-sm text-muted-foreground mb-6">
             {activeTab === "all"
-              ? "Start building your watchlist by discovering movies"
+              ? "Start building your library by discovering movies"
               : `No movies with "${TABS.find((t) => t.value === activeTab)?.label}" status`}
           </p>
           <Button asChild>

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import { Star, Bookmark, CircleCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -52,10 +52,14 @@ export function MovieCard({
   const isWatched = status === "watched";
   const isInLibrary = status !== null;
 
+  const prefersReducedMotion = useReducedMotion();
+
   const isPending =
     addMutation.isPending ||
     removeMutation.isPending ||
     statusMutation.isPending;
+
+  const tapAnimation = prefersReducedMotion ? {} : { scale: 0.85 };
 
   const handleBookmarkClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -197,7 +201,7 @@ export function MovieCard({
                 )}
                 onClick={handleBookmarkClick}
                 disabled={isPending}
-                whileTap={{ scale: 0.85 }}
+                whileTap={tapAnimation}
                 aria-label={
                   isWantToWatch
                     ? "Remove from library"
@@ -207,12 +211,20 @@ export function MovieCard({
                 {addMutation.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <Bookmark
-                    className={cn(
-                      "h-4 w-4",
-                      isWantToWatch && "fill-current",
-                    )}
-                  />
+                  <motion.span
+                    key={`bookmark-${isWantToWatch}`}
+                    initial={!prefersReducedMotion && isWantToWatch ? { scale: 0.5, opacity: 0 } : false}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                    className="flex items-center justify-center"
+                  >
+                    <Bookmark
+                      className={cn(
+                        "h-4 w-4",
+                        isWantToWatch && "fill-current",
+                      )}
+                    />
+                  </motion.span>
                 )}
               </motion.button>
             </TooltipTrigger>
@@ -237,19 +249,27 @@ export function MovieCard({
                 )}
                 onClick={handleCheckClick}
                 disabled={isPending}
-                whileTap={{ scale: 0.85 }}
+                whileTap={tapAnimation}
                 aria-label={
                   isWatched
                     ? "Remove from watched"
                     : "Mark as watched"
                 }
               >
-                <CircleCheck
-                  className={cn(
-                    "h-4 w-4",
-                    isWatched && "fill-current",
-                  )}
-                />
+                <motion.span
+                  key={`check-${isWatched}`}
+                  initial={!prefersReducedMotion && isWatched ? { scale: 0.5, opacity: 0 } : false}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                  className="flex items-center justify-center"
+                >
+                  <CircleCheck
+                    className={cn(
+                      "h-4 w-4",
+                      isWatched && "fill-current",
+                    )}
+                  />
+                </motion.span>
               </motion.button>
             </TooltipTrigger>
             <TooltipContent side="left">

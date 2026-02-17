@@ -11,7 +11,7 @@ import {
   ThumbsDown,
   Loader2,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { toast } from "sonner";
 import type { Movie } from "@/types/movie";
 import { useMovieDetails } from "@/hooks/use-movies";
@@ -144,6 +144,9 @@ export function MovieDetailModal({ movie, onClose }: MovieDetailModalProps) {
   const removeMutation = useRemoveFromWatchlist();
   const statusMutation = useUpdateWatchlistStatus();
   const rateMutation = useRateWatchlistItem();
+  const prefersReducedMotion = useReducedMotion();
+
+  const tapAnimation = prefersReducedMotion ? {} : { scale: 0.85 };
 
   const isInLibrary = !!watchlistItem;
   const isWantToWatch = watchlistItem?.status === "want_to_watch";
@@ -413,7 +416,7 @@ export function MovieDetailModal({ movie, onClose }: MovieDetailModalProps) {
                       {/* Like/Dislike — only show when in library */}
                       {isInLibrary && (
                         <div className="flex items-center gap-1">
-                          <motion.div whileTap={{ scale: 0.85 }}>
+                          <motion.div whileTap={tapAnimation}>
                             <Button
                               variant="ghost"
                               size="icon-sm"
@@ -428,16 +431,24 @@ export function MovieDetailModal({ movie, onClose }: MovieDetailModalProps) {
                               disabled={rateMutation.isPending}
                               aria-label="Like"
                             >
-                              <ThumbsUp
-                                className={cn(
-                                  "h-4 w-4 transition-colors duration-200",
-                                  watchlistItem.rating === 1 &&
-                                    "fill-green-500 text-green-500",
-                                )}
-                              />
+                              <motion.span
+                                key={`like-${watchlistItem.rating === 1}`}
+                                initial={!prefersReducedMotion && watchlistItem.rating === 1 ? { scale: 1.3 } : false}
+                                animate={{ scale: 1 }}
+                                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                                className="flex items-center justify-center"
+                              >
+                                <ThumbsUp
+                                  className={cn(
+                                    "h-4 w-4 transition-colors duration-200",
+                                    watchlistItem.rating === 1 &&
+                                      "fill-green-500 text-green-500",
+                                  )}
+                                />
+                              </motion.span>
                             </Button>
                           </motion.div>
-                          <motion.div whileTap={{ scale: 0.85 }}>
+                          <motion.div whileTap={tapAnimation}>
                             <Button
                               variant="ghost"
                               size="icon-sm"
@@ -452,13 +463,21 @@ export function MovieDetailModal({ movie, onClose }: MovieDetailModalProps) {
                               disabled={rateMutation.isPending}
                               aria-label="Dislike"
                             >
-                              <ThumbsDown
-                                className={cn(
-                                  "h-4 w-4 transition-colors duration-200",
-                                  watchlistItem.rating === -1 &&
-                                    "fill-red-500 text-red-500",
-                                )}
-                              />
+                              <motion.span
+                                key={`dislike-${watchlistItem.rating === -1}`}
+                                initial={!prefersReducedMotion && watchlistItem.rating === -1 ? { scale: 1.3 } : false}
+                                animate={{ scale: 1 }}
+                                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                                className="flex items-center justify-center"
+                              >
+                                <ThumbsDown
+                                  className={cn(
+                                    "h-4 w-4 transition-colors duration-200",
+                                    watchlistItem.rating === -1 &&
+                                      "fill-red-500 text-red-500",
+                                  )}
+                                />
+                              </motion.span>
                             </Button>
                           </motion.div>
                         </div>
