@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Phase: 1 of 3 (Watchlist Reactivity)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-02-17 — Roadmap created
+Plan: 0 of 3 in current phase
+Status: Planned — ready to execute
+Last activity: 2026-02-17 — Phase 1 planned (3 plans created, verified)
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -42,9 +42,11 @@ Progress: [░░░░░░░░░░] 0%
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-- Phase 1: Two action buttons instead of status dropdown — bookmark for "want to watch", eye/check for "watched" (eliminates extra click)
-- Phase 1: Keep `watching` status in schema but remove from card UI — rarely used, can still be set from watchlist page dropdown
-- Phase 1: Fix optimistic updates at query key level — fix invalidation rather than adding more polling
+- Phase 1: Two action buttons instead of status dropdown — bookmark for "want to watch", check for "watched"
+- Phase 1: Full removal of `watching` enum value from schema (migration needed)
+- Phase 1: Route rename `/watchlist` → `/library`
+- Phase 1: `WatchlistTmdbEntry` includes `id`, `tmdbId`, `status` — enables direct mutations from movie cards without N+1 queries
+- Phase 1: Icon animation only for success feedback, undo toast for remove, error toast + rollback for errors
 
 ### Pending Todos
 
@@ -56,6 +58,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-17 (roadmap creation)
-Stopped at: Roadmap and STATE.md written, awaiting user approval
+Last session: 2026-02-17 (phase 1 planning)
+Stopped at: Plans created and verified, ready to execute
 Resume file: None
