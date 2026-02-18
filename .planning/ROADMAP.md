@@ -43,10 +43,12 @@ Plans:
   1. Moodflix logo appears in navbar and landing page with film-strip-inspired design in crimson
   2. Browser tab shows branded favicon at all sizes (16x16, 32x32, apple-touch-icon)
   3. Social shares on Twitter/LinkedIn/Slack display custom OG image with Moodflix branding
-**Plans**: TBD
+**Plans:** 3 plans (sequential)
 
 Plans:
-- [ ] TBD
+- [ ] 02-01-PLAN.md — SVG logo component system (MoodflixIcon + MoodflixLogo) + Bebas Neue font + all navbar/auth placements
+- [ ] 02-02-PLAN.md — Favicon & PWA icon set (6 PNGs via sharp script, manifest.ts, layout.tsx icons)
+- [ ] 02-03-PLAN.md — OG image system (global + /home + /discover via next/og ImageResponse, cinematic grid bg)
 
 ### Phase 3: Polish & QA
 **Goal**: Production-ready quality across all devices and accessibility standards
@@ -71,5 +73,5 @@ Phases execute in numeric order: 1 → 2 → 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Watchlist Reactivity | 3/3 | Complete | 2026-02-18 |
-| 2. Branding & Assets | 0/TBD | Not started | - |
+| 2. Branding & Assets | 0/3 | Not started | - |
 | 3. Polish & QA | 0/TBD | Not started | - |
