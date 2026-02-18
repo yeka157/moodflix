@@ -4,6 +4,11 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Home",
+  openGraph: {
+    title: "Moodflix - AI Movie Discovery",
+    description:
+      "Discover movies that match your mood with AI-powered recommendations.",
+  },
 };
 import { getTrendingMovies, getPopularMoviesInRegion } from "@/lib/tmdb";
 import { getCountryFromHeaders } from "@/lib/country";

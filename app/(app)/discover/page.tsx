@@ -10,6 +10,11 @@ export const metadata: Metadata = {
   title: "Discover",
   description:
     "Browse trending, popular, and top-rated movies. Search by title or filter by genre to find your next favorite film.",
+  openGraph: {
+    title: "Discover Movies on Moodflix",
+    description:
+      "Browse trending, popular, and top-rated movies. Search by genre.",
+  },
 };
 
 export default async function DiscoverPage() {
