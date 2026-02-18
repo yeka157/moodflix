@@ -10,27 +10,28 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Phase: 2 of 3 (Branding & Assets)
-Plan: 0 of TBD in Phase 2
-Status: Context gathered — ready to plan
-Last activity: 2026-02-18 — Phase 2 context gathered
+Plan: 1 of 3 in Phase 2
+Status: Plan 02-01 complete — awaiting visual checkpoint approval
+Last activity: 2026-02-18 — Phase 2 Plan 01 executed (brand SVG system)
 
-Progress: [███░░░░░░░] 33%
+Progress: [████░░░░░░] 44%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
-- Average duration: ~20 min/plan
-- Total execution time: ~1.0 hours
+- Total plans completed: 4
+- Average duration: ~16 min/plan
+- Total execution time: ~1.1 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1 | 3 | ~1.0h | ~20m |
+| 2 | 1 | ~4m | ~4m |
 
 **Recent Trend:**
-- Last 3 plans: 01-01 (data layer), 01-02 (route+icons), 01-03 (labels+animations)
+- Last 4 plans: 01-01 (data layer), 01-02 (route+icons), 01-03 (labels+animations), 02-01 (brand SVG system)
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -48,6 +49,10 @@ Recent decisions affecting current work:
 - Phase 1: `WatchlistTmdbEntry` includes `id`, `tmdbId`, `status` — enables direct mutations from movie cards
 - Phase 1: Icon animation for success feedback, undo toast for remove, error toast + rollback for errors
 - Phase 1: `useReducedMotion` from Framer Motion for a11y animation control
+- Phase 2 Plan 01: SVG perforations as rect overlays using background color (#0a0a0a) — not true SVG clip-path cutouts
+- Phase 2 Plan 01: Bebas Neue weight must be 400 only (single-weight font)
+- Phase 2 Plan 01: Hex #FB2C36 in all SVG fills — oklch() not valid in SVG fill attributes
+- Phase 2 Plan 01: Responsive navbar uses hidden/flex Tailwind classes at md breakpoint for logo swap
 
 ### Pending Todos
 
@@ -59,6 +64,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-18 (Phase 2 context gathering)
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-branding-assets/02-CONTEXT.md
+Last session: 2026-02-18 (Phase 2 Plan 01 execution)
+Stopped at: Checkpoint — visual verification of brand logo placements (Task 4 of 02-01-PLAN.md)
+Resume file: .planning/phases/02-branding-assets/02-01-PLAN.md
