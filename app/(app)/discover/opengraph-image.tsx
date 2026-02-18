@@ -31,6 +31,7 @@ export default async function Image() {
         }}
       >
         {/* Pre-blurred movie poster collage background */}
+        {/* eslint-disable-next-line jsx-a11y/alt-text -- decorative background in Satori OG context */}
         <img
           src={bgSrc}
           style={{
