@@ -26,11 +26,13 @@ export function MoodflixIcon({
       className={className}
       aria-hidden="true"
     >
-      {/* Geometric sans M — two vertical strokes + diagonals meeting at center peak */}
+      {/* Bold M — inner corners pushed to y=46 for thick diagonals matching reference */}
       <path
-        d="M8 88 L8 12 L50 58 L92 12 L92 88 L80 88 L80 32 L50 70 L20 32 L20 88 Z"
+        d="M8 88 L8 12 L50 58 L92 12 L92 88 L80 88 L80 46 L50 70 L20 46 L20 88 Z"
         fill={letterColor}
       />
+      {/* 2px separation gap between film strip and M body */}
+      <rect x="20" y="10" width="2" height="80" fill={cutoutColor} />
       {/* Film-strip: 6 rectangular holes on the left stroke (x: 8–20) */}
       {/* 1px rails at x=8–9 and x=19–20; 10px-wide holes at x=9–19; no border-radius */}
       <rect x="9" y="15" width="10" height="10" fill={cutoutColor} />
