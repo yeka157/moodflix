@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Geist_Mono } from "next/font/google";
+import { Inter, Geist_Mono, Bebas_Neue } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -12,6 +12,13 @@ const inter = Inter({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const bebasNeue = Bebas_Neue({
+  weight: "400",
+  variable: "--font-display",
+  subsets: ["latin"],
+  display: "block",
 });
 
 export const metadata: Metadata = {
@@ -84,7 +91,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${geistMono.variable} font-sans antialiased`}
+        className={`${inter.variable} ${geistMono.variable} ${bebasNeue.variable} font-sans antialiased`}
       >
         {children}
         <SpeedInsights />
