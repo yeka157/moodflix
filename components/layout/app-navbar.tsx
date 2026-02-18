@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { logout } from "@/actions/auth";
 import { cn } from "@/lib/utils";
+import { MoodflixLogo } from "@/components/brand/moodflix-logo";
+import { MoodflixIcon } from "@/components/brand/moodflix-icon";
 
 interface AppNavbarProps {
   user: {
@@ -65,10 +67,16 @@ export function AppNavbar({ user }: AppNavbarProps) {
         {/* Left: Logo */}
         <Link
           href="/home"
-          className="text-xl font-bold tracking-tight hover:opacity-80 transition-opacity"
+          className="flex items-center hover:opacity-80 transition-opacity"
+          aria-label="Moodflix home"
         >
-          <span className="text-foreground">Mood</span>
-          <span className="text-primary">flix</span>
+          {/* Full wordmark on md+, M icon on mobile */}
+          <span className="hidden md:flex">
+            <MoodflixLogo height={28} variant="dark" />
+          </span>
+          <span className="flex md:hidden">
+            <MoodflixIcon size={32} variant="dark" />
+          </span>
         </Link>
 
         {/* Center-left: Nav Links */}

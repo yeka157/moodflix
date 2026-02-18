@@ -5,6 +5,7 @@ import { Sparkles } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { MoodflixLogo } from "@/components/brand/moodflix-logo";
 
 export function HeroSection() {
   return (
@@ -18,6 +19,16 @@ export function HeroSection() {
       />
 
       <div className="relative z-10 max-w-4xl mx-auto text-center">
+        {/* Logo — above the badge */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="flex justify-center mb-8"
+        >
+          <MoodflixLogo height={48} variant="dark" showTagline={false} />
+        </motion.div>
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

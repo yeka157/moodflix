@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signup, loginWithGoogle } from "@/actions/auth";
 import { cn } from "@/lib/utils";
+import { MoodflixLogo } from "@/components/brand/moodflix-logo";
 
 import type { SignupFormData } from "@/types/auth";
 
@@ -122,10 +123,10 @@ function SignupFormInner() {
           <CardHeader className="space-y-4 text-center">
             <Link
               href="/"
-              className="inline-flex items-center justify-center text-2xl font-bold tracking-tight"
+              className="inline-flex items-center justify-center hover:opacity-80 transition-opacity"
+              aria-label="Moodflix"
             >
-              <span className="text-foreground">Mood</span>
-              <span className="text-primary">flix</span>
+              <MoodflixLogo height={36} variant="dark" />
             </Link>
             <div className="space-y-1">
               <h1 className="text-2xl font-bold">Create your account</h1>

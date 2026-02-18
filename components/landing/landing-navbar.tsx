@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { MoodflixLogo } from "@/components/brand/moodflix-logo";
 
 export function LandingNavbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -25,9 +26,12 @@ export function LandingNavbar() {
       )}
     >
       <div className="container mx-auto h-full px-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-0 text-2xl font-bold tracking-tight">
-          <span className="text-foreground">Mood</span>
-          <span className="text-primary">flix</span>
+        <Link
+          href="/"
+          className="flex items-center hover:opacity-80 transition-opacity"
+          aria-label="Moodflix"
+        >
+          <MoodflixLogo height={30} variant="dark" />
         </Link>
 
         <div className="flex items-center gap-3">
