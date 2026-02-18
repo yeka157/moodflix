@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MoodflixLogo } from "@/components/brand";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -7,9 +8,8 @@ export function Footer() {
     <footer className="border-t border-border">
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-          <Link href="/" className="flex items-center gap-0 text-xl font-bold tracking-tight">
-            <span className="text-foreground">Mood</span>
-            <span className="text-primary">flix</span>
+          <Link href="/" className="hover:opacity-80 transition-opacity">
+            <MoodflixLogo height={28} variant="dark" />
           </Link>
 
           <nav className="flex flex-wrap items-center justify-center gap-6">

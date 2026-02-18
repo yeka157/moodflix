@@ -31,12 +31,14 @@ export function MoodflixIcon({
         d="M8 88 L8 12 L50 58 L92 12 L92 88 L80 88 L80 32 L50 70 L20 32 L20 88 Z"
         fill={letterColor}
       />
-      {/* Film-strip perforations — 4 dark rects on the left vertical stroke (x: 8–20) */}
-      {/* These overlay the crimson M path, visually punching holes through the left stroke */}
-      <rect x="10" y="18" width="8" height="10" rx="1.5" fill={cutoutColor} />
-      <rect x="10" y="34" width="8" height="10" rx="1.5" fill={cutoutColor} />
-      <rect x="10" y="50" width="8" height="10" rx="1.5" fill={cutoutColor} />
-      <rect x="10" y="66" width="8" height="10" rx="1.5" fill={cutoutColor} />
+      {/* Film-strip: 6 rectangular holes on the left stroke (x: 8–20) */}
+      {/* 1px rails at x=8–9 and x=19–20; 10px-wide holes at x=9–19; no border-radius */}
+      <rect x="9" y="15" width="10" height="10" fill={cutoutColor} />
+      <rect x="9" y="27" width="10" height="10" fill={cutoutColor} />
+      <rect x="9" y="39" width="10" height="10" fill={cutoutColor} />
+      <rect x="9" y="51" width="10" height="10" fill={cutoutColor} />
+      <rect x="9" y="63" width="10" height="10" fill={cutoutColor} />
+      <rect x="9" y="75" width="10" height="10" fill={cutoutColor} />
     </svg>
   );
 }
