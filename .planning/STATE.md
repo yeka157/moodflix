@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Users can discover movies that match their mood and manage what they've watched — the library experience must feel instant and intuitive.
-**Current focus:** Planning next milestone.
+**Current focus:** v0.3 Content Expansion — defining requirements.
 
 ## Current Position
 
-Phase: 3 of 3 (Polish & QA) — COMPLETE
-Plan: 4 of 4 plans in Phase 3 complete
-Status: Phase 3 fully signed off — clean build, human-verified responsive layouts and page transitions
-Last activity: 2026-02-19 — Phase 3 Plan 04 executed (build quality gate + visual sign-off)
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements for v0.3 Content Expansion
+Last activity: 2026-02-19 — Milestone v0.3 Content Expansion started
 
-Progress: [██████████] 100%
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
@@ -77,6 +77,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-19 (Phase 3 Plan 04 executed)
-Stopped at: Completed 03-04-PLAN.md (build quality gate + visual sign-off — Phase 3 complete)
-Resume file: N/A — all 3 phases complete
+Last session: 2026-02-19 (v0.3 milestone started)
+Stopped at: Milestone v0.3 requirements and roadmap definition
+Resume file: .planning/REQUIREMENTS.md (once created)

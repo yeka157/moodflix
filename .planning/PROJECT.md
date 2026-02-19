@@ -8,6 +8,15 @@ A movie watchlist and recommendation app with AI-powered mood-based discovery. U
 
 Users can discover movies that match their mood and manage what they've watched — the library experience must feel instant and intuitive.
 
+## Current Milestone: v0.3 Content Expansion
+
+**Goal:** Expand the app to include TV series discovery and polish homepage personalization.
+
+**Target features:**
+- TV Series page (`/series`) with Trending TV, Korean Drama, Chinese Drama, and Top Rated rows
+- Skeleton loading color fix — replace vibrant crimson with neutral muted tone
+- Homepage "Because you liked" rows — daily rotation from top-5 pool + sentence variety
+
 ## Requirements
 
 ### Validated
@@ -40,7 +49,9 @@ Users can discover movies that match their mood and manage what they've watched 
 
 ### Active
 
-(None — all v0.2 requirements shipped)
+- [ ] TV Series discovery page (`/series`) with distinct K-Drama, C-Drama, and general TV rows — v0.3
+- [ ] Skeleton loading color uses neutral muted tone instead of crimson accent — v0.3
+- [ ] Homepage personalized rows rotate daily from top-5 pool with varied sentence phrasing — v0.3
 
 ### Out of Scope
 
@@ -51,7 +62,6 @@ Users can discover movies that match their mood and manage what they've watched 
 - Premium tier / payments — not for v1
 - Real-time collaborative features — not needed for personal watchlist
 - Sidebar navigation (NAV-01, NAV-02) — deferred to v1.0, top navbar works fine
-- TV Shows section (FUTURE-01) — future feature
 - "My Top 100" personal list (FUTURE-02) — future feature
 - Premium AI rate limits (FUTURE-03) — future feature
 
@@ -60,7 +70,7 @@ Users can discover movies that match their mood and manage what they've watched 
 - **Codebase state:** v0.2 alpha complete. All core features + polish shipped. ~8,174 lines of TypeScript/TSX across 54+ files. Build clean, lint clean.
 - **Deployment:** Deployed on Vercel via main branch auto-deploy.
 - **Known issues:** None at v0.2.
-- **Next milestone:** Deployment hardening, user testing, potential v1.0 prep (sidebar redesign, TV shows, premium tier).
+- **v0.3 focus:** TV series discovery + homepage polish.
 
 ## Constraints
 
@@ -90,4 +100,4 @@ Users can discover movies that match their mood and manage what they've watched 
 | CTA card frame on landing page | Explicit bg/border/radius gives CTA its own visual bounding box, preventing optical centering illusion from asymmetric section above. | ✓ Good |
 
 ---
-*Last updated: 2026-02-19 after v0.2 Alpha Polish milestone*
+*Last updated: 2026-02-19 after v0.3 Content Expansion milestone start*
