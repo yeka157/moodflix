@@ -2,10 +2,10 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-17)
+See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Users can discover movies that match their mood and manage what they've watched — the library experience must feel instant and intuitive.
-**Current focus:** Phase 3: Polish & QA — in progress.
+**Current focus:** Planning next milestone.
 
 ## Current Position
 
