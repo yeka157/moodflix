@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AppNavbar } from "@/components/layout/app-navbar";
 import { Providers } from "@/components/providers";
+import NextTopLoader from "nextjs-toploader";
 
 export default async function AppLayout({
   children,
@@ -20,6 +21,12 @@ export default async function AppLayout({
 
   return (
     <div className="min-h-screen bg-background">
+      <NextTopLoader
+        color="#FB2C36"
+        showSpinner={false}
+        height={2}
+        shadow={false}
+      />
       <AppNavbar user={{ email: user.email ?? "" }} />
       <main className="pt-16">
         <div className="container mx-auto px-4 py-8">
