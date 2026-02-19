@@ -4,7 +4,6 @@ import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function HomeError({
-  error: _error,
   reset,
 }: {
   error: Error & { digest?: string };
