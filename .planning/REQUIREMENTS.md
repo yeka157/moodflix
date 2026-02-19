@@ -1,86 +1,110 @@
-# Requirements: Moodflix
+# Requirements: v0.3 Content Expansion
 
-**Defined:** 2026-02-17
-**Core Value:** Users can discover movies that match their mood and manage what they've watched — the watchlist experience must feel instant and intuitive.
+**Milestone:** v0.3 Content Expansion
+**Status:** Roadmapped
+**Last updated:** 2026-02-19
 
-## v1 Requirements
+---
 
-Requirements for this milestone (polish, bug fixes, branding). Each maps to roadmap phases.
+## Scope
 
-### Watchlist Reactivity
+Three features for v0.3:
 
-- [ ] **WATCH-R01**: All watchlist mutations (add, remove, status change, rating) update UI instantly across all consuming components without page refresh
-- [ ] **WATCH-R02**: User can mark a movie as "watched" with one tap from movie card and detail modal
-- [ ] **WATCH-R03**: Movie cards show distinct icons — bookmark for "want to watch", eye/check for "watched"
-- [ ] **WATCH-R04**: Like/dislike rating changes reflect immediately in the UI
+1. **TV Series discovery page** — `/series` route with curated rows
+2. **Skeleton color fix** — replace vibrant crimson skeleton with neutral muted tone
+3. **Homepage personalized rows** — daily rotation from top-5 pool with sentence variety
 
-### Branding & Assets
+---
 
-- [ ] **BRAND-01**: Moodflix logo inspired by Movielist film-strip reference, crimson on dark
-- [ ] **BRAND-02**: Favicon set generated from logo (16x16, 32x32, apple-touch-icon, etc.)
-- [ ] **BRAND-03**: OG images for social sharing with new branded design
+## Requirements
 
-### Polish & QA
+### TV-01: TV Series Discovery Page
 
-- [ ] **POLSH-01**: Smooth Framer Motion page transitions between app routes
-- [ ] **POLSH-02**: Layout tested and fixed across mobile (375px), tablet (768px), desktop (1280px+)
-- [ ] **POLSH-03**: WCAG 2.1 AA accessibility audit passed — keyboard nav, contrast, screen reader
-- [ ] **POLSH-04**: `npm run build` and `npm run lint` pass with zero errors
+**Goal:** Users can discover TV shows on a dedicated `/series` page.
 
-## v2 Requirements
+**Acceptance criteria:**
 
-Deferred to future release. Tracked but not in current roadmap.
+- [ ] `/series` page exists and is accessible from the top navbar via a "Series" link
+- [ ] Page shows four content rows in order: Trending TV, Korean Drama, Chinese Drama, Top Rated Series
+- [ ] Each row uses the existing `MovieRow` component (horizontal scroll with arrows)
+- [ ] TV show cards use the existing `MovieCard` component (poster, title, rating badge)
+- [ ] Clicking a TV show card opens a detail modal
+- [ ] TV detail modal shows: title, overview, first air date, seasons count, episodes count, show status badge (Returning Series / Ended / Cancelled), "Created by:" instead of "Director:", and watch providers for the user's region
+- [ ] Korean Drama row uses TMDB discover with `with_origin_country=KR&with_genres=18&with_original_language=ko`
+- [ ] Chinese Drama row uses TMDB discover with `with_origin_country=CN&with_genres=18`
+- [ ] Page has a route-level `loading.tsx` skeleton matching the discover page skeleton pattern
+- [ ] TV shows do NOT have watchlist add/remove buttons in v0.3 (read-only discovery)
+- [ ] `TV_GENRES` constant added to `lib/constants.ts` for TV-specific genre IDs
 
-### Navigation & Layout
+**Out of scope for TV-01:**
+- TV search / search bar on /series
+- TV genre filter row on /series
+- TV show watchlisting (deferred — no schema changes in v0.3)
+- Anime or Taiwanese Drama rows (deferred to v0.4)
 
-- **NAV-01**: Sidebar navigation layout (matching Revamp-UI reference)
-- **NAV-02**: Collapsible sidebar on mobile
+---
 
-### Future Features (from sidebar reference)
+### SKEL-01: Skeleton Color Fix
 
-- **FUTURE-01**: TV Shows section
-- **FUTURE-02**: "My Top 100" personal list
-- **FUTURE-03**: Premium/Upgrade tier with higher AI rate limits
+**Goal:** Loading skeletons use a neutral muted tone instead of the crimson accent color.
 
-### Authentication
+**Acceptance criteria:**
 
-- **AUTH-V2-01**: Passkey/WebAuthn login
-- **AUTH-V2-02**: Auth form refactor to shadcn FormField
+- [ ] `components/ui/skeleton.tsx` uses `bg-muted` instead of `bg-accent`
+- [ ] All other skeleton components updated if they use `bg-accent` directly
+- [ ] Skeleton pulse animation is preserved (only color changes)
+- [ ] In dark mode, skeletons render as a dark neutral gray, not crimson
+- [ ] No other visual changes to skeleton shape or behavior
 
-## Out of Scope
+---
 
-| Feature | Reason |
-|---------|--------|
-| Sidebar navigation | Deferred to v2 — current top navbar works fine, layout change is high risk for a polish milestone |
-| Apple Sign In | No Apple Developer Program membership |
-| Mobile native app | Web-only for now |
-| Real-time cross-tab sync | Overkill for personal app — TanStack Query `refetchOnWindowFocus` is sufficient |
-| Drag-to-reorder watchlist | Requires schema change + complex DnD, low value for now |
-| Social features | Not in scope until product-market fit established |
+### HOME-01: Homepage Personalized Rows
+
+**Goal:** The "Because you liked" section on `/home` rotates daily from the user's top-5 liked/watched movies and uses varied sentence phrasing.
+
+**Acceptance criteria:**
+
+- [ ] "Because you liked [Title]" rows are shown on the home page for users with at least 1 liked or watched movie
+- [ ] Daily rotation: the movie selected as the source changes once per day, derived deterministically from userId + current date (no `Math.random()`)
+- [ ] Selection pool: user's top-5 most recently liked (`rating = 1`) or watched movies
+- [ ] Row label uses one of 4+ sentence patterns (e.g. "Because you liked", "More like", "If you loved", "Since you enjoyed") — rotated based on the same daily seed
+- [ ] Users with no liked/watched movies see either no "Because you liked" rows or a generic fallback (design decision: show no rows, no error state needed)
+- [ ] Movie recommendations come from TMDB `/movie/{id}/recommendations` (existing API pattern)
+- [ ] Row shows up to 20 recommendation results in horizontal scroll
+
+---
+
+## Constraints
+
+All constraints from PROJECT.md apply:
+
+- Tech stack locked: Next.js 16, React 19, Tailwind v4, shadcn/ui, Drizzle ORM, Supabase
+- No new runtime npm packages unless absolutely unavoidable
+- No database schema changes in v0.3 (watchlist media_type migration deferred to v0.4)
+- WCAG 2.1 AA minimum on all new components
+- 44px touch targets on mobile
+- Framer Motion for any animations
+- No `Math.random()` in Server Components (use deterministic seeding)
+
+---
+
+## Out of Scope (v0.3)
+
+- TV show watchlisting (requires schema migration — deferred to v0.4)
+- TV search on /discover or /series
+- TV genre filters
+- Anime / Taiwanese / Japanese drama rows
+- AI mood recommendations for TV shows
+- Episode-level progress tracking
+- Season-by-season watchlist status
+- Any schema changes
+
+---
 
 ## Traceability
 
-Which phases cover which requirements. Updated during roadmap creation.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| WATCH-R01 | Phase 1 | Pending |
-| WATCH-R02 | Phase 1 | Pending |
-| WATCH-R03 | Phase 1 | Pending |
-| WATCH-R04 | Phase 1 | Pending |
-| BRAND-01 | Phase 2 | Pending |
-| BRAND-02 | Phase 2 | Pending |
-| BRAND-03 | Phase 2 | Pending |
-| POLSH-01 | Phase 3 | Pending |
-| POLSH-02 | Phase 3 | Pending |
-| POLSH-03 | Phase 3 | Pending |
-| POLSH-04 | Phase 3 | Pending |
-
-**Coverage:**
-- v1 requirements: 11 total
-- Mapped to phases: 11
-- Unmapped: 0 ✓
-
----
-*Requirements defined: 2026-02-17*
-*Last updated: 2026-02-17 after initial definition*
+| TV-01 | Phase 4 (data layer) + Phase 5 (UI) | Pending |
+| SKEL-01 | Phase 6 | Pending |
+| HOME-01 | Phase 6 | Pending |

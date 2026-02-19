@@ -5,25 +5,25 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Users can discover movies that match their mood and manage what they've watched — the library experience must feel instant and intuitive.
-**Current focus:** v0.3 Content Expansion — defining requirements.
+**Current focus:** v0.3 Content Expansion — Phase 4 (TV Series Data Layer) ready to plan.
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements for v0.3 Content Expansion
-Last activity: 2026-02-19 — Milestone v0.3 Content Expansion started
+Phase: 4 (TV Series Data Layer)
+Plan: Not started
+Status: Roadmap defined — ready for `/gsd:plan-phase 4`
+Last activity: 2026-02-19 — v0.3 roadmap written (phases 4–6)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [░░░░░░░░░░] 0% (v0.3)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
+- Total plans completed: 10 (v0.1 original: 7, v0.2: 10, excluding planning plans)
 - Average duration: ~30 min/plan
-- Total execution time: ~2.0 hours
+- Total execution time: ~5.0 hours across v0.1 + v0.2
 
-**By Phase:**
+**By Phase (v0.2):**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
@@ -32,7 +32,7 @@ Progress: [░░░░░░░░░░] 0%
 | 3 | 4/4 | ~25m | ~6m |
 
 **Recent Trend:**
-- Last 9 plans: 01-01, 01-02, 01-03, 02-01, 02-02, 02-03, 03-01, 03-02, 03-03, 03-04
+- Last plans: 03-01, 03-02, 03-03, 03-04
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -66,10 +66,15 @@ Recent decisions affecting current work:
 - Phase 3 Plan 03: [@media(hover:none)] Tailwind variant applied to action buttons — 44px on touch, 32px on desktop hover
 - Phase 3 Plan 03: Grid audit confirmed correct — grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 needs no changes
 - Phase 3 Plan 04: No code changes — quality gate and visual verification only; all 5 Phase 3 success criteria confirmed by human sign-off
+- v0.3 Roadmap: No schema migration in v0.3 — media_type column deferred to v0.4; TV shows are read-only discovery only
+- v0.3 Roadmap: TV normalization at hook boundary — normalizeTVShow() called inside queryFn, not at API route
+- v0.3 Roadmap: Separate /api/tv/ route triplet — not a ?type=tv param extension of /api/movies/
+- v0.3 Roadmap: TV modal uses mediaType prop on existing movie-detail-modal.tsx — no forked component
+- v0.3 Roadmap: Daily rotation seed is deterministic from userId + new Date().toDateString() — no Math.random()
 
 ### Pending Todos
 
-None yet.
+None.
 
 ### Blockers/Concerns
 
@@ -77,6 +82,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-19 (v0.3 milestone started)
-Stopped at: Milestone v0.3 requirements and roadmap definition
-Resume file: .planning/REQUIREMENTS.md (once created)
+Last session: 2026-02-19 (v0.3 roadmap defined)
+Stopped at: Roadmap written — phases 4, 5, 6 defined
+Resume at: `/gsd:plan-phase 4`
