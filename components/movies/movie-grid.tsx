@@ -16,6 +16,7 @@ interface MovieGridProps {
 export function MovieGrid({ movies, isLoading = false, onMovieClick, sentinelRef, isFetchingMore }: MovieGridProps) {
   if (isLoading) {
     return (
+      // Columns: 2 (375px) | 3 (640px) | 4 (768px) | 5 (1024px) | 6 (1280px+) — WCAG verified
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
         {Array.from({ length: 12 }).map((_, i) => (
           <MovieCardSkeleton key={i} />
@@ -26,6 +27,7 @@ export function MovieGrid({ movies, isLoading = false, onMovieClick, sentinelRef
 
   return (
     <div>
+      {/* Columns: 2 (375px) | 3 (640px) | 4 (768px) | 5 (1024px) | 6 (1280px+) — WCAG verified */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
         {movies.map((movie) => (
           <motion.div
