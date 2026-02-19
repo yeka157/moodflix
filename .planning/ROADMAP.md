@@ -60,10 +60,13 @@ Plans:
   3. User navigates via keyboard only and can reach all interactive elements with visible focus states
   4. Screen reader announces all interactive elements correctly and contrast meets WCAG 2.1 AA
   5. Build completes with zero TypeScript errors and lint passes with zero warnings
-**Plans**: TBD
+**Plans:** 4 plans
 
 Plans:
-- [ ] TBD
+- [ ] 03-01-PLAN.md — Lint quality baseline (fix 4 pre-existing warnings in error.tsx files and moodflix-logo.tsx)
+- [ ] 03-02-PLAN.md — Page transitions (template.tsx entry animation, NextTopLoader, navbar active pill, hero cinematic stagger)
+- [ ] 03-03-PLAN.md — Responsive audit & touch targets (movie card 44px touch targets, grid column progression)
+- [ ] 03-04-PLAN.md — Build quality gate + visual checkpoint (lint + build pass, human verification at 375/768/1280px)
 
 ## Progress
 
@@ -74,4 +77,4 @@ Phases execute in numeric order: 1 → 2 → 3
 |-------|----------------|--------|-----------|
 | 1. Watchlist Reactivity | 3/3 | Complete | 2026-02-18 |
 | 2. Branding & Assets | 0/3 | Not started | - |
-| 3. Polish & QA | 0/TBD | Not started | - |
+| 3. Polish & QA | 0/4 | Not started | - |
