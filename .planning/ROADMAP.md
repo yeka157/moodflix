@@ -64,8 +64,8 @@ Plans:
 
 Plans:
 - [x] 03-01-PLAN.md — Lint quality baseline (fix 4 pre-existing warnings in error.tsx files and moodflix-logo.tsx)
-- [ ] 03-02-PLAN.md — Page transitions (template.tsx entry animation, NextTopLoader, navbar active pill, hero cinematic stagger)
-- [ ] 03-03-PLAN.md — Responsive audit & touch targets (movie card 44px touch targets, grid column progression)
+- [x] 03-02-PLAN.md — Page transitions (template.tsx entry animation, NextTopLoader, navbar active pill, hero cinematic stagger)
+- [x] 03-03-PLAN.md — Responsive audit & touch targets (movie card 44px touch targets, grid column progression)
 - [ ] 03-04-PLAN.md — Build quality gate + visual checkpoint (lint + build pass, human verification at 375/768/1280px)
 
 ## Progress
@@ -77,4 +77,4 @@ Phases execute in numeric order: 1 → 2 → 3
 |-------|----------------|--------|-----------|
 | 1. Watchlist Reactivity | 3/3 | Complete | 2026-02-18 |
 | 2. Branding & Assets | 3/3 | Complete | 2026-02-19 |
-| 3. Polish & QA | 1/4 | In progress | - |
+| 3. Polish & QA | 3/4 | In progress | - |
