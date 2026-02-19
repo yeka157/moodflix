@@ -13,7 +13,7 @@ This milestone transforms Moodflix from a functional prototype into a polished, 
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Watchlist Reactivity** - Fix optimistic updates so all watchlist mutations reflect instantly
-- [ ] **Phase 2: Branding & Assets** - Create logo, favicon, and OG images for professional web presence
+- [x] **Phase 2: Branding & Assets** - Create logo, favicon, and OG images for professional web presence
 - [ ] **Phase 3: Polish & QA** - Page transitions, responsive testing, accessibility audit, build validation
 
 ## Phase Details
@@ -46,9 +46,9 @@ Plans:
 **Plans:** 3 plans (sequential)
 
 Plans:
-- [ ] 02-01-PLAN.md — SVG logo component system (MoodflixIcon + MoodflixLogo) + Bebas Neue font + all navbar/auth placements
-- [ ] 02-02-PLAN.md — Favicon & PWA icon set (6 PNGs via sharp script, manifest.ts, layout.tsx icons)
-- [ ] 02-03-PLAN.md — OG image system (global + /home + /discover via next/og ImageResponse, cinematic grid bg)
+- [x] 02-01-PLAN.md — SVG logo component system (MoodflixIcon + MoodflixLogo) + Bebas Neue font + all navbar/auth placements
+- [x] 02-02-PLAN.md — Favicon & PWA icon set (6 PNGs via sharp script, manifest.ts, layout.tsx icons)
+- [x] 02-03-PLAN.md — OG image system (global + /home + /discover via next/og ImageResponse, cinematic grid bg)
 
 ### Phase 3: Polish & QA
 **Goal**: Production-ready quality across all devices and accessibility standards
@@ -63,7 +63,7 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — Lint quality baseline (fix 4 pre-existing warnings in error.tsx files and moodflix-logo.tsx)
+- [x] 03-01-PLAN.md — Lint quality baseline (fix 4 pre-existing warnings in error.tsx files and moodflix-logo.tsx)
 - [ ] 03-02-PLAN.md — Page transitions (template.tsx entry animation, NextTopLoader, navbar active pill, hero cinematic stagger)
 - [ ] 03-03-PLAN.md — Responsive audit & touch targets (movie card 44px touch targets, grid column progression)
 - [ ] 03-04-PLAN.md — Build quality gate + visual checkpoint (lint + build pass, human verification at 375/768/1280px)
@@ -76,5 +76,5 @@ Phases execute in numeric order: 1 → 2 → 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Watchlist Reactivity | 3/3 | Complete | 2026-02-18 |
-| 2. Branding & Assets | 0/3 | Not started | - |
-| 3. Polish & QA | 0/4 | Not started | - |
+| 2. Branding & Assets | 3/3 | Complete | 2026-02-19 |
+| 3. Polish & QA | 1/4 | In progress | - |
