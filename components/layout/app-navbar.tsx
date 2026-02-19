@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Compass, Bookmark, LogOut } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +27,7 @@ interface AppNavbarProps {
 
 export function AppNavbar({ user }: AppNavbarProps) {
   const pathname = usePathname();
+  const shouldReduceMotion = useReducedMotion();
 
   const navLinks = [
     {
@@ -90,14 +92,21 @@ export function AppNavbar({ user }: AppNavbarProps) {
                 <Button
                   variant="ghost"
                   className={cn(
-                    "gap-2 min-h-[44px] min-w-[44px]",
+                    "relative gap-2 min-h-[44px] min-w-[44px]",
                     active
-                      ? "text-primary bg-primary/10 hover:bg-primary/15 hover:text-primary"
+                      ? "text-primary hover:text-primary hover:bg-transparent"
                       : "text-muted-foreground hover:text-foreground",
                   )}
                 >
-                  <Icon className="size-5 shrink-0" />
-                  <span className="hidden md:inline">{link.label}</span>
+                  {active && (
+                    <motion.span
+                      layoutId={shouldReduceMotion ? undefined : "nav-active-pill"}
+                      className="absolute inset-0 rounded-md bg-primary/10"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
+                    />
+                  )}
+                  <Icon className="size-5 shrink-0 relative z-10" />
+                  <span className="hidden md:inline relative z-10">{link.label}</span>
                 </Button>
               </Link>
             );

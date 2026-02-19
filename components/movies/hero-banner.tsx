@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { Play } from "lucide-react";
@@ -14,7 +14,20 @@ interface HeroBannerProps {
   movie: Movie;
 }
 
+const containerVariants = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.08, delayChildren: 0.25 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" as const } },
+};
+
 export function HeroBanner({ movie }: HeroBannerProps) {
+  const shouldReduceMotion = useReducedMotion();
   const year = movie.release_date?.slice(0, 4) || "N/A";
   const displayGenres = movie.genre_ids
     .slice(0, 3)
@@ -22,30 +35,40 @@ export function HeroBanner({ movie }: HeroBannerProps) {
     .filter(Boolean);
 
   return (
-    <motion.div
-      className="relative -mx-4 -mt-8 h-[50vh] min-h-[400px] max-h-[600px] overflow-hidden"
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: 0.2 }}
-    >
-      {/* Backdrop image */}
-      <Image
-        src={getBackdropUrl(movie.backdrop_path, "lg")}
-        alt={movie.title}
-        fill
-        priority
-        className="object-cover object-top"
-        sizes="100vw"
-      />
+    <div className="relative -mx-4 -mt-8 h-[50vh] min-h-[400px] max-h-[600px] overflow-hidden">
+      {/* Backdrop image — cinematic scale-in */}
+      <motion.div
+        className="absolute inset-0"
+        initial={shouldReduceMotion ? false : { opacity: 0, scale: 1.05 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      >
+        <Image
+          src={getBackdropUrl(movie.backdrop_path, "lg")}
+          alt={movie.title}
+          fill
+          priority
+          className="object-cover object-top"
+          sizes="100vw"
+        />
+      </motion.div>
 
       {/* Gradient overlays */}
       <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-transparent" />
 
-      {/* Content */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-8 space-y-3 sm:space-y-4">
+      {/* Content — staggered children */}
+      <motion.div
+        className="absolute bottom-0 left-0 right-0 p-4 sm:p-8 space-y-3 sm:space-y-4"
+        variants={shouldReduceMotion ? undefined : containerVariants}
+        initial={shouldReduceMotion ? false : "hidden"}
+        animate={shouldReduceMotion ? undefined : "visible"}
+      >
         {/* Genre badges and year */}
-        <div className="flex gap-2 flex-wrap">
+        <motion.div
+          className="flex gap-2 flex-wrap"
+          variants={shouldReduceMotion ? undefined : itemVariants}
+        >
           {displayGenres.map((genre) => (
             <Badge
               key={genre}
@@ -58,26 +81,34 @@ export function HeroBanner({ movie }: HeroBannerProps) {
           <Badge variant="secondary" className="bg-white/10 text-white border-0 text-xs">
             {year}
           </Badge>
-        </div>
+        </motion.div>
 
         {/* Title */}
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
+        <motion.h1
+          className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white"
+          variants={shouldReduceMotion ? undefined : itemVariants}
+        >
           {movie.title}
-        </h1>
+        </motion.h1>
 
         {/* Overview */}
-        <p className="text-sm sm:text-base text-white/80 line-clamp-3 max-w-lg">
+        <motion.p
+          className="text-sm sm:text-base text-white/80 line-clamp-3 max-w-lg"
+          variants={shouldReduceMotion ? undefined : itemVariants}
+        >
           {movie.overview}
-        </p>
+        </motion.p>
 
         {/* CTA Button */}
-        <Button asChild size="lg" className="gap-2">
-          <Link href="/discover">
-            <Play className="h-5 w-5" />
-            Discover More
-          </Link>
-        </Button>
-      </div>
-    </motion.div>
+        <motion.div variants={shouldReduceMotion ? undefined : itemVariants}>
+          <Button asChild size="lg" className="gap-2">
+            <Link href="/discover">
+              <Play className="h-5 w-5" />
+              Discover More
+            </Link>
+          </Button>
+        </motion.div>
+      </motion.div>
+    </div>
   );
 }
