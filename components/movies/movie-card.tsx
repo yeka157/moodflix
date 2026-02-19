@@ -194,7 +194,7 @@ export function MovieCard({
             <TooltipTrigger asChild>
               <motion.button
                 className={cn(
-                  "flex items-center justify-center h-8 w-8 rounded-full transition-colors duration-200",
+                  "flex items-center justify-center h-8 w-8 [@media(hover:none)]:h-11 [@media(hover:none)]:w-11 rounded-full transition-colors duration-200",
                   isWantToWatch
                     ? "bg-primary text-primary-foreground"
                     : "bg-black/60 hover:bg-black/80 text-white",
@@ -242,7 +242,7 @@ export function MovieCard({
             <TooltipTrigger asChild>
               <motion.button
                 className={cn(
-                  "flex items-center justify-center h-8 w-8 rounded-full transition-colors duration-200",
+                  "flex items-center justify-center h-8 w-8 [@media(hover:none)]:h-11 [@media(hover:none)]:w-11 rounded-full transition-colors duration-200",
                   isWatched
                     ? "bg-green-600 text-white"
                     : "bg-black/60 hover:bg-black/80 text-white",
