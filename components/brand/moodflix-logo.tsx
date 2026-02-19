@@ -4,14 +4,12 @@ import { MoodflixIcon } from "./moodflix-icon";
 interface MoodflixLogoProps {
   height?: number;
   variant?: "dark" | "light";
-  showTagline?: boolean;
   className?: string;
 }
 
 export function MoodflixLogo({
   height = 32,
   variant = "dark",
-  showTagline = false,
   className,
 }: MoodflixLogoProps) {
   const textColor = variant === "dark" ? "#ffffff" : "#1a1a1a";

@@ -26,7 +26,7 @@ export function HeroSection() {
           transition={{ duration: 0.6, delay: 0.1 }}
           className="flex justify-center mb-8"
         >
-          <MoodflixLogo height={48} variant="dark" showTagline={false} />
+          <MoodflixLogo height={48} variant="dark" />
         </motion.div>
 
         <motion.div
