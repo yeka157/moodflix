@@ -13,8 +13,10 @@ import {
 } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { toast } from "sonner";
-import type { Movie } from "@/types/movie";
+import type { Movie, MovieDetailsResponse } from "@/types/movie";
+import type { TVDetailsResponse } from "@/types/tv";
 import { useMovieDetails } from "@/hooks/use-movies";
+import { useTVDetails } from "@/hooks/use-tv";
 import {
   useWatchlistCheck,
   useAddToWatchlist,
@@ -42,6 +44,18 @@ function formatRuntime(minutes: number | null): string {
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
+}
+
+function getStatusBadgeVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
+  switch (status) {
+    case "Returning Series": return "default";
+    case "Ended":            return "secondary";
+    case "Canceled":         return "destructive";
+    case "In Production":    return "outline";
+    case "Planned":          return "outline";
+    case "Pilot":            return "outline";
+    default:                 return "secondary";
+  }
 }
 
 function ProviderGrid({
@@ -116,22 +130,45 @@ function DetailSkeleton() {
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function MovieDetailModal({ movie, onClose, readOnly = false, mediaType = "movie" }: MovieDetailModalProps) {
-  const {
-    data: details,
-    isLoading,
-    isPlaceholderData,
-  } = useMovieDetails(movie?.id ?? null);
+  const isTV = mediaType === "tv";
 
-  const isDetailLoading = isLoading || isPlaceholderData;
+  // Movie details — disabled when TV (both hooks always called: React rules)
+  const {
+    data: movieDetails,
+    isLoading: isMovieLoading,
+    isPlaceholderData: isMoviePlaceholder,
+  } = useMovieDetails(isTV ? null : (movie?.id ?? null));
+
+  // TV details — disabled when movie
+  const {
+    data: tvDetails,
+    isLoading: isTVLoading,
+  } = useTVDetails(isTV ? (movie?.id ?? null) : null);
+
+  // Unified references
+  const details = isTV ? tvDetails : movieDetails;
+  const isDetailLoading = isTV ? isTVLoading : (isMovieLoading || isMoviePlaceholder);
+
   const year = movie?.release_date?.slice(0, 4) || "N/A";
   const rating =
     details?.vote_average?.toFixed(1) ??
     movie?.vote_average?.toFixed(1) ??
     "0.0";
-  const runtime = details ? formatRuntime(details.runtime) : "";
-  const director = details?.credits?.crew?.find((c) => c.job === "Director");
+
+  // TV-specific derived data
+  const tvData = isTV ? (details as TVDetailsResponse | undefined) : undefined;
+  const creators = tvData?.created_by ?? [];
+  const creatorNames = creators.map((c) => c.name).join(", ");
+  const numberOfSeasons = tvData?.number_of_seasons ?? null;
+  const numberOfEpisodes = tvData?.number_of_episodes ?? null;
+  const showStatus = tvData?.status ?? null;
+
+  // Movie-specific derived data
+  const movieData = !isTV ? (details as MovieDetailsResponse | undefined) : undefined;
+  const director = movieData?.credits?.crew?.find((c) => c.job === "Director");
+  const runtime = movieData ? formatRuntime(movieData.runtime) : "";
+
   const cast = details?.credits?.cast?.slice(0, 8) ?? [];
   const genres = details?.genres ?? [];
   const watchProviders = details?.watchProviders;
@@ -238,7 +275,7 @@ export function MovieDetailModal({ movie, onClose, readOnly = false, mediaType =
         showCloseButton={false}
       >
         <DialogTitle className="sr-only">
-          {movie?.title ?? "Movie Details"}
+          {movie?.title ?? (isTV ? "TV Show Details" : "Movie Details")}
         </DialogTitle>
 
         <Button
@@ -283,14 +320,27 @@ export function MovieDetailModal({ movie, onClose, readOnly = false, mediaType =
                 {/* Meta row */}
                 <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
                   <span className="text-foreground font-medium">{year}</span>
-                  {isDetailLoading && !runtime ? (
-                    <Skeleton className="h-4 w-12" />
-                  ) : runtime ? (
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3.5 w-3.5" />
-                      {runtime}
-                    </span>
-                  ) : null}
+
+                  {/* Runtime — movie only */}
+                  {!isTV && (
+                    isDetailLoading && !runtime ? (
+                      <Skeleton className="h-4 w-12" />
+                    ) : runtime ? (
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3.5 w-3.5" />
+                        {runtime}
+                      </span>
+                    ) : null
+                  )}
+
+                  {/* TV meta info — seasons and episodes */}
+                  {isTV && numberOfSeasons !== null && (
+                    <span>{numberOfSeasons} {numberOfSeasons === 1 ? "Season" : "Seasons"}</span>
+                  )}
+                  {isTV && numberOfEpisodes !== null && (
+                    <span>{numberOfEpisodes} Episodes</span>
+                  )}
+
                   <span className="flex items-center gap-1">
                     <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
                     {rating}
@@ -302,6 +352,13 @@ export function MovieDetailModal({ movie, onClose, readOnly = false, mediaType =
                       {details.watchCountry}
                     </Badge>
                   ) : null}
+
+                  {/* Status badge — TV only */}
+                  {isTV && showStatus && (
+                    <Badge variant={getStatusBadgeVariant(showStatus)} className="text-xs">
+                      {showStatus}
+                    </Badge>
+                  )}
                 </div>
 
                 {/* Tagline */}
@@ -491,17 +548,28 @@ export function MovieDetailModal({ movie, onClose, readOnly = false, mediaType =
                 </div>
                 )}
 
-                {/* Director */}
-                {isDetailLoading && !director ? (
-                  <Skeleton className="h-4 w-32" />
-                ) : director ? (
-                  <p className="text-sm text-muted-foreground">
-                    <span className="text-foreground font-medium">
-                      Director:
-                    </span>{" "}
-                    {director.name}
-                  </p>
-                ) : null}
+                {/* Director (movie) or Created by (TV) */}
+                {isTV ? (
+                  isDetailLoading && !creatorNames ? (
+                    <Skeleton className="h-4 w-32" />
+                  ) : creatorNames ? (
+                    <p className="text-sm text-muted-foreground">
+                      <span className="text-foreground font-medium">Created by:</span>{" "}
+                      {creatorNames}
+                    </p>
+                  ) : null
+                ) : (
+                  isDetailLoading && !director ? (
+                    <Skeleton className="h-4 w-32" />
+                  ) : director ? (
+                    <p className="text-sm text-muted-foreground">
+                      <span className="text-foreground font-medium">
+                        Director:
+                      </span>{" "}
+                      {director.name}
+                    </p>
+                  ) : null
+                )}
 
                 {/* Cast */}
                 <div className="space-y-2">
