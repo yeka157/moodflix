@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Compass, Bookmark, LogOut } from "lucide-react";
+import { Home, Compass, Bookmark, LogOut, Tv } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,12 @@ export function AppNavbar({ user }: AppNavbarProps) {
       href: "/discover",
       label: "Discover",
       icon: Compass,
+      exact: false,
+    },
+    {
+      href: "/series",
+      label: "Series",
+      icon: Tv,
       exact: false,
     },
     {

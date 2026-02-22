@@ -116,6 +116,7 @@ function DetailSkeleton() {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function MovieDetailModal({ movie, onClose, readOnly = false, mediaType = "movie" }: MovieDetailModalProps) {
   const {
     data: details,
