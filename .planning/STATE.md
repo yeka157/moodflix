@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 ## Current Position
 
 Phase: 4 (TV Series Data Layer)
-Plan: 01 complete (2/? plans)
-Status: Executing — Plan 01 complete, ready for Plan 02
-Last activity: 2026-02-22 — Phase 4 Plan 01 executed (TV types, constants, TMDB fetch functions)
+Plan: 02 complete (2/? plans)
+Status: Executing — Plan 02 complete, ready for Plan 03
+Last activity: 2026-02-22 — Phase 4 Plan 02 executed (TV API proxy routes + TanStack Query hooks)
 
 Progress: [░░░░░░░░░░] 0% (v0.3)
 
@@ -36,6 +36,7 @@ Progress: [░░░░░░░░░░] 0% (v0.3)
 - Trend: Steady
 
 *Updated after each plan completion*
+| Phase 04-tv-series-data-layer P02 | 2min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -74,6 +75,8 @@ Recent decisions affecting current work:
 - v0.3 Roadmap: Separate /api/tv/ route triplet — not a ?type=tv param extension of /api/movies/
 - v0.3 Roadmap: TV modal uses mediaType prop on existing movie-detail-modal.tsx — no forked component
 - v0.3 Roadmap: Daily rotation seed is deterministic from userId + new Date().toDateString() — no Math.random()
+- [Phase 04]: Phase 4 Plan 02: Normalization at hook boundary (not API route) — queryFn calls normalizeTVShow() so API routes return raw TMDB shapes
+- [Phase 04]: Phase 4 Plan 02: Details hook returns TVDetailsResponse (not normalized) — preserves TV-specific fields needed by modal
 
 ### Pending Todos
 
@@ -85,6 +88,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-22 (Phase 4 Plan 01 executed)
-Stopped at: Completed 04-01-PLAN.md
-Resume at: `/gsd:execute-phase 4` for Plan 02 (API routes + TanStack Query hooks)
+Last session: 2026-02-22 (Phase 4 Plan 02 executed)
+Stopped at: Completed 04-02-PLAN.md
+Resume at: `/gsd:execute-phase 4` for Plan 03 (TV Series UI — /series page)
