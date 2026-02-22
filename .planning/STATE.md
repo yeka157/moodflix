@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 ## Current Position
 
 Phase: 5 (TV Series Page & Modal)
-Plan: 01 complete (1/2 plans)
-Status: Executing — Plan 01 complete, ready for Plan 02
-Last activity: 2026-02-22 — Phase 5 Plan 01 executed (/series page, hero banner, readOnly prop, navbar link)
+Plan: 02 complete (2/2 plans) — Phase 5 COMPLETE
+Status: Phase complete — all plans executed
+Last activity: 2026-02-22 — Phase 5 Plan 02 executed (TV detail modal with TV-specific fields)
 
-Progress: [░░░░░░░░░░] 0% (v0.3)
+Progress: [##########] 100% (v0.3 Phase 5 complete)
 
 ## Performance Metrics
 
@@ -38,6 +38,7 @@ Progress: [░░░░░░░░░░] 0% (v0.3)
 *Updated after each plan completion*
 | Phase 04-tv-series-data-layer P02 | 2min | 2 tasks | 3 files |
 | Phase 05-tv-series-page-modal P01 | 3min | 2 tasks | 8 files |
+| Phase 05-tv-series-page-modal P02 | 2 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -82,6 +83,8 @@ Recent decisions affecting current work:
 - [Phase 05]: Phase 5 Plan 01: mediaType prop added to MovieDetailModal with eslint-disable — TV branching deferred to Plan 02
 - [Phase 05]: Phase 5 Plan 01: SeriesHeroBanner uses TV_GENRES first then falls back to GENRES for shared IDs
 - [Phase 05]: Phase 5 Plan 01: featuredShow selected deterministically via trending.find(t => t.backdrop_path) — no Math.random()
+- [Phase 05]: Both useMovieDetails and useTVDetails always called — null ID disables the irrelevant hook (React rules)
+- [Phase 05]: getStatusBadgeVariant maps Returning Series=default, Ended=secondary, Canceled=destructive — TMDB spells it Canceled (single L)
 
 ### Pending Todos
 
@@ -93,6 +96,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-22 (Phase 5 Plan 01 executed)
-Stopped at: Phase 5 Plan 01 complete — /series page, hero banner, readOnly prop, navbar link
-Resume at: Execute Phase 5 Plan 02 (TV detail modal with TV-specific fields)
+Last session: 2026-02-22 (Phase 5 Plan 02 executed)
+Stopped at: Phase 5 Plan 02 complete — TV detail modal with TV-specific fields (seasons, episodes, status badge, Created by)
+Resume at: Phase 5 fully complete — ready for next milestone/phase planning
