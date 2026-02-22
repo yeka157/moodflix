@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 ## Current Position
 
 Phase: 4 (TV Series Data Layer)
-Plan: Not started
-Status: Roadmap defined — ready for `/gsd:plan-phase 4`
-Last activity: 2026-02-19 — v0.3 roadmap written (phases 4–6)
+Plan: 01 complete (2/? plans)
+Status: Executing — Plan 01 complete, ready for Plan 02
+Last activity: 2026-02-22 — Phase 4 Plan 01 executed (TV types, constants, TMDB fetch functions)
 
 Progress: [░░░░░░░░░░] 0% (v0.3)
 
@@ -44,6 +44,9 @@ Progress: [░░░░░░░░░░] 0% (v0.3)
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
+- Phase 4 Plan 01: normalizeTVShow maps first_air_date to release_date preserving empty string — satisfies Movie no-undefined contract
+- Phase 4 Plan 01: video hardcoded to false in normalizeTVShow — TV shows have no video trailer flag in TMDB
+- Phase 4 Plan 01: discoverChineseDramas omits with_original_language — content spans Mandarin (zh) and Cantonese (yue)
 - Phase 1: Two action buttons instead of status dropdown — bookmark for "want to watch", check for "watched"
 - Phase 1: Full removal of `watching` enum value from schema (migration done)
 - Phase 1: Route rename `/watchlist` → `/library` with backwards-compat redirect
@@ -82,6 +85,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-19 (v0.3 roadmap defined)
-Stopped at: Roadmap written — phases 4, 5, 6 defined
-Resume at: `/gsd:plan-phase 4`
+Last session: 2026-02-22 (Phase 4 Plan 01 executed)
+Stopped at: Completed 04-01-PLAN.md
+Resume at: `/gsd:execute-phase 4` for Plan 02 (API routes + TanStack Query hooks)

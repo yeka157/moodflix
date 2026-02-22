@@ -105,6 +105,6 @@ All constraints from PROJECT.md apply:
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TV-01 | Phase 4 (data layer) + Phase 5 (UI) | Pending |
+| TV-01 | Phase 4 (data layer) + Phase 5 (UI) | Complete |
 | SKEL-01 | Phase 6 | Pending |
 | HOME-01 | Phase 6 | Pending |
