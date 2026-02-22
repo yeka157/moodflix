@@ -1,4 +1,5 @@
 import type { MovieListResponse, MovieDetailsWithExtras } from "@/types/movie";
+import type { TVListResponse, TVDetailsWithExtras } from "@/types/tv";
 
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 
@@ -79,5 +80,42 @@ export async function getPopularMoviesInRegion(region: string, page = 1) {
   return tmdbFetch<MovieListResponse>("/movie/popular", {
     page: String(page),
     region,
+  });
+}
+
+export async function getTrendingTV(page = 1) {
+  return tmdbFetch<TVListResponse>("/trending/tv/week", {
+    page: String(page),
+  });
+}
+
+export async function getTopRatedTV(page = 1) {
+  return tmdbFetch<TVListResponse>("/tv/top_rated", {
+    page: String(page),
+  });
+}
+
+export async function discoverKoreanDramas(page = 1) {
+  return tmdbFetch<TVListResponse>("/discover/tv", {
+    with_origin_country: "KR",
+    with_genres: "18",
+    with_original_language: "ko",
+    sort_by: "popularity.desc",
+    page: String(page),
+  });
+}
+
+export async function discoverChineseDramas(page = 1) {
+  return tmdbFetch<TVListResponse>("/discover/tv", {
+    with_origin_country: "CN",
+    with_genres: "18",
+    sort_by: "popularity.desc",
+    page: String(page),
+  });
+}
+
+export async function getTVDetails(id: number) {
+  return tmdbFetch<TVDetailsWithExtras>(`/tv/${id}`, {
+    append_to_response: "credits,watch/providers",
   });
 }
