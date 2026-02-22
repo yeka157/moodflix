@@ -88,6 +88,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-22 (Phase 4 Plan 02 executed)
-Stopped at: Completed 04-02-PLAN.md
-Resume at: `/gsd:execute-phase 4` for Plan 03 (TV Series UI — /series page)
+Last session: 2026-02-22 (Phase 5 context gathered)
+Stopped at: Phase 5 context gathered
+Resume at: Add TV watchlist schema phase to v0.3 via `/gsd:add-phase`, then `/gsd:plan-phase 5`
