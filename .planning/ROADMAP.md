@@ -94,5 +94,5 @@ Plans:
 | 2. Branding & Assets | v0.2 | 3/3 | Complete | 2026-02-19 |
 | 3. Polish & QA | v0.2 | 4/4 | Complete | 2026-02-19 |
 | 4. TV Series Data Layer | 2/2 | Complete   | 2026-02-22 | - |
-| 5. TV Series Page + Modal | v0.3 | 0/2 | Not started | - |
+| 5. TV Series Page + Modal | 1/2 | In Progress|  | - |
 | 6. Homepage Polish | v0.3 | 0/2 | Not started | - |

@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Users can discover movies that match their mood and manage what they've watched — the library experience must feel instant and intuitive.
-**Current focus:** v0.3 Content Expansion — Phase 4 (TV Series Data Layer) ready to plan.
+**Current focus:** v0.3 Content Expansion — Phase 5 (TV Series Page & Modal) in progress.
 
 ## Current Position
 
-Phase: 4 (TV Series Data Layer)
-Plan: 02 complete (2/? plans)
-Status: Executing — Plan 02 complete, ready for Plan 03
-Last activity: 2026-02-22 — Phase 4 Plan 02 executed (TV API proxy routes + TanStack Query hooks)
+Phase: 5 (TV Series Page & Modal)
+Plan: 01 complete (1/2 plans)
+Status: Executing — Plan 01 complete, ready for Plan 02
+Last activity: 2026-02-22 — Phase 5 Plan 01 executed (/series page, hero banner, readOnly prop, navbar link)
 
 Progress: [░░░░░░░░░░] 0% (v0.3)
 
@@ -37,6 +37,7 @@ Progress: [░░░░░░░░░░] 0% (v0.3)
 
 *Updated after each plan completion*
 | Phase 04-tv-series-data-layer P02 | 2min | 2 tasks | 3 files |
+| Phase 05-tv-series-page-modal P01 | 3min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -77,6 +78,10 @@ Recent decisions affecting current work:
 - v0.3 Roadmap: Daily rotation seed is deterministic from userId + new Date().toDateString() — no Math.random()
 - [Phase 04]: Phase 4 Plan 02: Normalization at hook boundary (not API route) — queryFn calls normalizeTVShow() so API routes return raw TMDB shapes
 - [Phase 04]: Phase 4 Plan 02: Details hook returns TVDetailsResponse (not normalized) — preserves TV-specific fields needed by modal
+- [Phase 05]: Phase 5 Plan 01: readOnly prop gates action icon div in MovieCard and Library Actions in MovieDetailModal — hook calls kept (React rules), only rendering suppressed
+- [Phase 05]: Phase 5 Plan 01: mediaType prop added to MovieDetailModal with eslint-disable — TV branching deferred to Plan 02
+- [Phase 05]: Phase 5 Plan 01: SeriesHeroBanner uses TV_GENRES first then falls back to GENRES for shared IDs
+- [Phase 05]: Phase 5 Plan 01: featuredShow selected deterministically via trending.find(t => t.backdrop_path) — no Math.random()
 
 ### Pending Todos
 
@@ -88,6 +93,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-22 (Phase 5 context gathered)
-Stopped at: Phase 5 context gathered
-Resume at: Add TV watchlist schema phase to v0.3 via `/gsd:add-phase`, then `/gsd:plan-phase 5`
+Last session: 2026-02-22 (Phase 5 Plan 01 executed)
+Stopped at: Phase 5 Plan 01 complete — /series page, hero banner, readOnly prop, navbar link
+Resume at: Execute Phase 5 Plan 02 (TV detail modal with TV-specific fields)
