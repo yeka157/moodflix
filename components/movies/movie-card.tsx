@@ -26,6 +26,7 @@ interface MovieCardProps {
   priority?: boolean;
   className?: string;
   onClick?: (movie: Movie) => void;
+  readOnly?: boolean;
 }
 
 export function MovieCard({
@@ -33,6 +34,7 @@ export function MovieCard({
   priority = false,
   className,
   onClick,
+  readOnly = false,
 }: MovieCardProps) {
   const year = movie.release_date?.slice(0, 4) || "N/A";
   const rating = movie.vote_average.toFixed(1);
@@ -183,7 +185,7 @@ export function MovieCard({
         />
 
         {/* Action icons */}
-        <div
+        {!readOnly && <div
           className={cn(
             "absolute top-2 right-2 z-10 flex flex-col gap-1.5 transition-opacity duration-200",
             isInLibrary ? "opacity-100" : "opacity-0 group-hover:opacity-100",
@@ -280,7 +282,7 @@ export function MovieCard({
                   : "Mark as watched"}
             </TooltipContent>
           </Tooltip>
-        </div>
+        </div>}
 
         {/* Hover overlay */}
         <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100">

@@ -33,6 +33,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 interface MovieDetailModalProps {
   movie: Movie | null;
   onClose: () => void;
+  readOnly?: boolean;
+  mediaType?: "movie" | "tv";
 }
 
 function formatRuntime(minutes: number | null): string {
@@ -114,7 +116,7 @@ function DetailSkeleton() {
   );
 }
 
-export function MovieDetailModal({ movie, onClose }: MovieDetailModalProps) {
+export function MovieDetailModal({ movie, onClose, readOnly = false, mediaType = "movie" }: MovieDetailModalProps) {
   const {
     data: details,
     isLoading,
@@ -333,6 +335,7 @@ export function MovieDetailModal({ movie, onClose }: MovieDetailModalProps) {
                 </div>
 
                 {/* Library Actions */}
+                {!readOnly && (
                 <div className="space-y-3">
                   {isCheckingWatchlist ? (
                     <Skeleton className="h-9 w-64" />
@@ -485,6 +488,7 @@ export function MovieDetailModal({ movie, onClose }: MovieDetailModalProps) {
                     </>
                   )}
                 </div>
+                )}
 
                 {/* Director */}
                 {isDetailLoading && !director ? (

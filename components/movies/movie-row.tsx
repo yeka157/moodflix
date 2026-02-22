@@ -12,6 +12,7 @@ interface MovieRowProps {
   isLoading?: boolean;
   isUpdating?: boolean;
   onMovieClick?: (movie: Movie) => void;
+  readOnly?: boolean;
 }
 
 export function MovieRow({
@@ -20,6 +21,7 @@ export function MovieRow({
   isLoading = false,
   isUpdating = false,
   onMovieClick,
+  readOnly = false,
 }: MovieRowProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
@@ -116,7 +118,7 @@ export function MovieRow({
                   key={movie.id}
                   className="flex-shrink-0 w-[150px] sm:w-[170px] md:w-[185px]"
                 >
-                  <MovieCard movie={movie} onClick={onMovieClick} />
+                  <MovieCard movie={movie} onClick={onMovieClick} readOnly={readOnly} />
                 </div>
               ))}
         </div>
