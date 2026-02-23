@@ -1,36 +1,22 @@
 import type { Metadata } from "next";
-import {
-  getTrendingTV,
-  getTopRatedTV,
-  getAiringTodayTV,
-  discoverKoreanDramas,
-  discoverChineseDramas,
-} from "@/lib/tmdb";
-import { normalizeTVShow } from "@/types/tv";
-import { SeriesContent } from "@/components/series/series-content";
+import { SeriesGridContent } from "@/components/series/series-grid-content";
 
 export const metadata: Metadata = {
   title: "Series",
   description:
-    "Browse trending and top-rated TV shows, Korean dramas, and Chinese dramas.",
+    "Browse and filter TV shows by genre, release year, and more.",
 };
 
-export default async function SeriesPage() {
-  const [trending, airingToday, topRated, korean, chinese] = await Promise.all([
-    getTrendingTV(),
-    getAiringTodayTV(),
-    getTopRatedTV(),
-    discoverKoreanDramas(),
-    discoverChineseDramas(),
-  ]);
-
+export default function SeriesPage() {
   return (
-    <SeriesContent
-      trending={trending.results.map(normalizeTVShow)}
-      airingToday={airingToday.results.map(normalizeTVShow)}
-      topRated={topRated.results.map(normalizeTVShow)}
-      korean={korean.results.map(normalizeTVShow)}
-      chinese={chinese.results.map(normalizeTVShow)}
-    />
+    <div className="px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight">Series</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Discover TV shows filtered by genre, year, and popularity
+        </p>
+      </div>
+      <SeriesGridContent />
+    </div>
   );
 }

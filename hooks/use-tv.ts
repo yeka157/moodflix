@@ -1,16 +1,23 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, keepPreviousData } from "@tanstack/react-query";
 import type { Movie } from "@/types/movie";
 import type { TVListResponse, TVDetailsResponse } from "@/types/tv";
 import { normalizeTVShow } from "@/types/tv";
 
 export type TVCategory = "trending" | "top_rated" | "airing_today" | "korean_drama" | "chinese_drama";
 
+export type DiscoverTVParams = {
+  genreId: string;
+  sortBy: string;
+  year: string;
+};
+
 export const tvKeys = {
   all: ["tv"] as const,
   category: (cat: TVCategory) => [...tvKeys.all, "category", cat] as const,
   details: (id: number) => [...tvKeys.all, "details", id] as const,
+  discover: (params: DiscoverTVParams) => [...tvKeys.all, "discover", params] as const,
 };
 
 async function fetchTVCategory(category: TVCategory): Promise<Movie[]> {
@@ -23,6 +30,29 @@ async function fetchTVCategory(category: TVCategory): Promise<Movie[]> {
 async function fetchTVDetails(id: number): Promise<TVDetailsResponse> {
   const res = await fetch(`/api/tv/${id}`);
   if (!res.ok) throw new Error("Failed to fetch TV details");
+  return res.json();
+}
+
+// Maps decade values like "2020s" to year_start/year_end params
+function buildTVYearParams(year: string): string {
+  if (!year) return "";
+  const decadeMatch = year.match(/^(\d{4})s$/);
+  if (decadeMatch) {
+    const start = decadeMatch[1];
+    const end = String(Number(start) + 9);
+    return `&year_start=${start}&year_end=${end}`;
+  }
+  return `&year=${encodeURIComponent(year)}`;
+}
+
+async function fetchDiscoverTV(params: DiscoverTVParams, page: number): Promise<TVListResponse> {
+  const genreParam = params.genreId ? `&genre=${encodeURIComponent(params.genreId)}` : "";
+  const sortParam = params.sortBy ? `&sort_by=${encodeURIComponent(params.sortBy)}` : "";
+  const yearParam = buildTVYearParams(params.year);
+  const res = await fetch(
+    `/api/tv?action=discover&page=${page}${genreParam}${sortParam}${yearParam}`,
+  );
+  if (!res.ok) throw new Error("Failed to discover TV shows");
   return res.json();
 }
 
@@ -78,5 +108,24 @@ export function useTVDetails(id: number | null) {
     enabled: id !== null,
     staleTime: 30 * 60 * 1000,
     gcTime: 60 * 60 * 1000,
+  });
+}
+
+export function useDiscoverTV(params: DiscoverTVParams) {
+  return useInfiniteQuery({
+    queryKey: tvKeys.discover(params),
+    queryFn: async ({ pageParam }) => {
+      const data = await fetchDiscoverTV(params, pageParam);
+      return {
+        ...data,
+        results: data.results.map(normalizeTVShow),
+      };
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    placeholderData: keepPreviousData,
   });
 }

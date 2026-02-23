@@ -5,6 +5,7 @@ import {
   getAiringTodayTV,
   discoverKoreanDramas,
   discoverChineseDramas,
+  discoverTV,
 } from "@/lib/tmdb";
 
 export async function GET(request: NextRequest) {
@@ -12,6 +13,26 @@ export async function GET(request: NextRequest) {
     const { searchParams } = request.nextUrl;
     const category = searchParams.get("category");
     const page = Number(searchParams.get("page") ?? "1");
+
+    const action = searchParams.get("action");
+    const genre = searchParams.get("genre");
+    const sortBy = searchParams.get("sort_by");
+    const year = searchParams.get("year");
+    const yearStart = searchParams.get("year_start");
+    const yearEnd = searchParams.get("year_end");
+
+    // New discover endpoint with genre + sort + year filters
+    if (action === "discover") {
+      const data = await discoverTV({
+        genreIds: genre ?? undefined,
+        sortBy: sortBy ?? undefined,
+        year: year ?? undefined,
+        yearStart: yearStart ?? undefined,
+        yearEnd: yearEnd ?? undefined,
+        page,
+      });
+      return Response.json(data);
+    }
 
     switch (category) {
       case "trending":
