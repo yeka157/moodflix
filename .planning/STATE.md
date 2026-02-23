@@ -90,6 +90,10 @@ Recent decisions affecting current work:
 
 None.
 
+### Roadmap Evolution
+
+- Phase 7 added: UI/UX Revamp — sidebar navigation, color scheme overhaul, Stremio-inspired layout (Pencil MCP design)
+
 ### Blockers/Concerns
 
 None.

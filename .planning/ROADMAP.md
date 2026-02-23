@@ -3,7 +3,7 @@
 ## Milestones
 
 - ✅ **v0.2 Alpha Polish** — Phases 1–3 (shipped 2026-02-19)
-- 🚧 **v0.3 Content Expansion** — Phases 4–6 (in progress)
+- 🚧 **v0.3 Content Expansion** — Phases 4–7 (in progress)
 
 ## Phases
 
@@ -20,11 +20,12 @@ See: `.planning/milestones/v0.2-ROADMAP.md` for full details.
 
 ### 🚧 v0.3 Content Expansion (In Progress)
 
-**Milestone Goal:** Expand the app with TV series discovery, fix skeleton loading colors, and surface personalized "Because you liked" rows on the home page.
+**Milestone Goal:** Expand the app with TV series discovery, fix skeleton loading colors, surface personalized "Because you liked" rows on the home page, and revamp the UI/UX with a sidebar navigation and Stremio-inspired design.
 
 - [x] **Phase 4: TV Series Data Layer** - Types, constants, API routes, and TanStack Query hooks for TV shows (completed 2026-02-22)
 - [x] **Phase 5: TV Series Page + Modal** - `/series` page with four content rows and extended detail modal (completed 2026-02-22)
 - [ ] **Phase 6: Homepage Polish** - Skeleton color fix and personalized recommendation rows
+- [ ] **Phase 7: UI/UX Revamp** - Sidebar navigation, color scheme overhaul, and Stremio-inspired layout patterns
 
 ## Phase Details
 
@@ -84,6 +85,23 @@ Plans:
 - [ ] 06-01: Skeleton color fix — audit and replace `bg-accent` with `bg-muted` across all skeleton components
 - [ ] 06-02: Homepage personalized rows — daily rotation logic, TMDB recommendations hook, and "Because you liked" row integration on `/home`
 
+### Phase 7: UI/UX Revamp
+**Goal**: Replace top navbar with sidebar navigation, update color scheme, and adopt Stremio-inspired layout patterns across all pages — using Pencil MCP for design prototyping. Reference: `Revamp-UI.png` (sidebar + color scheme), `Revamp-UI-1.png` and `Revamp-UI-2.png` from stremio.com (UI/UX style — pill metadata, compact icon sidebar, detail panels).
+**Depends on**: Phase 6
+**Requirements**: REVAMP-01
+**Success Criteria** (what must be TRUE):
+  1. Top navbar is replaced with a collapsible sidebar (icon-only compact mode + expanded mode with labels) containing Home, Discover, Series, Library navigation
+  2. Color scheme is updated away from crimson accent — new palette inspired by Revamp-UI.png reference
+  3. Movie/TV detail modal adopts Stremio-inspired layout: pill-style genre tags, pill-style cast chips, structured metadata (runtime, year, rating), bottom action bar
+  4. Discover and Series pages adopt grid layout with filter dropdowns (matching Revamp-UI-2.png style)
+  5. All existing features (home, discover, series, library, detail modal, AI mood section) remain fully functional after the redesign
+  6. Responsive: sidebar collapses to icon-only on mobile/tablet, expands on desktop
+
+**Plans**: TBD (run /gsd:discuss-phase 7 then /gsd:plan-phase 7)
+
+Plans:
+- [ ] TBD — will be broken down during planning
+
 ---
 
 ## Progress
@@ -96,3 +114,4 @@ Plans:
 | 4. TV Series Data Layer | 2/2 | Complete   | 2026-02-22 | - |
 | 5. TV Series Page + Modal | 2/2 | Complete   | 2026-02-22 | - |
 | 6. Homepage Polish | v0.3 | 0/2 | Not started | - |
+| 7. UI/UX Revamp | v0.3 | 0/? | Not started | - |
