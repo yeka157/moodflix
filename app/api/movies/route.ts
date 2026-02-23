@@ -5,6 +5,7 @@ import {
   getTopRatedMovies,
   searchMovies,
   discoverMoviesByGenre,
+  discoverMovies,
 } from "@/lib/tmdb";
 
 export async function GET(request: NextRequest) {
@@ -15,9 +16,26 @@ export async function GET(request: NextRequest) {
     const page = Number(searchParams.get("page") ?? "1");
 
     const genre = searchParams.get("genre");
+    const sortBy = searchParams.get("sort_by");
+    const year = searchParams.get("year");
+    const yearStart = searchParams.get("year_start");
+    const yearEnd = searchParams.get("year_end");
 
     if (query) {
       const data = await searchMovies(query, page);
+      return Response.json(data);
+    }
+
+    // New discover endpoint: supports genre + sortBy + year filters
+    if (searchParams.get("action") === "discover" || (sortBy && !category)) {
+      const data = await discoverMovies({
+        genreIds: genre ?? undefined,
+        sortBy: sortBy ?? undefined,
+        year: year ?? undefined,
+        yearStart: yearStart ?? undefined,
+        yearEnd: yearEnd ?? undefined,
+        page,
+      });
       return Response.json(data);
     }
 

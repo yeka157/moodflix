@@ -72,6 +72,51 @@ export async function discoverMoviesByGenre(genreIds: string, page = 1) {
   });
 }
 
+export async function discoverMovies(
+  opts: {
+    genreIds?: string;
+    sortBy?: string;
+    year?: string;
+    yearStart?: string;
+    yearEnd?: string;
+    page?: number;
+  } = {},
+) {
+  const params: Record<string, string> = {
+    sort_by: opts.sortBy ?? "popularity.desc",
+    page: String(opts.page ?? 1),
+    include_adult: "false",
+    "vote_count.gte": "10",
+  };
+  if (opts.genreIds) params.with_genres = opts.genreIds;
+  if (opts.year) params.primary_release_year = opts.year;
+  if (opts.yearStart) params["primary_release_date.gte"] = `${opts.yearStart}-01-01`;
+  if (opts.yearEnd) params["primary_release_date.lte"] = `${opts.yearEnd}-12-31`;
+  return tmdbFetch<MovieListResponse>("/discover/movie", params);
+}
+
+export async function discoverTV(
+  opts: {
+    genreIds?: string;
+    sortBy?: string;
+    year?: string;
+    yearStart?: string;
+    yearEnd?: string;
+    page?: number;
+  } = {},
+) {
+  const params: Record<string, string> = {
+    sort_by: opts.sortBy ?? "popularity.desc",
+    page: String(opts.page ?? 1),
+    "vote_count.gte": "10",
+  };
+  if (opts.genreIds) params.with_genres = opts.genreIds;
+  if (opts.year) params.first_air_date_year = opts.year;
+  if (opts.yearStart) params["first_air_date.gte"] = `${opts.yearStart}-01-01`;
+  if (opts.yearEnd) params["first_air_date.lte"] = `${opts.yearEnd}-12-31`;
+  return tmdbFetch<TVListResponse>("/discover/tv", params);
+}
+
 export async function getMovieRecommendations(movieId: number, page = 1) {
   return tmdbFetch<MovieListResponse>(`/movie/${movieId}/recommendations`, {
     page: String(page),

@@ -12,6 +12,12 @@ import type {
   MovieDetailsResponse,
 } from "@/types/movie";
 
+export type DiscoverMoviesParams = {
+  genreId: string;
+  sortBy: string;
+  year: string;
+};
+
 export const movieKeys = {
   all: ["movies"] as const,
   category: (cat: MovieCategory, page: number) =>
@@ -25,6 +31,8 @@ export const movieKeys = {
     ] as const,
   details: (id: number) => [...movieKeys.all, "details", id] as const,
   genre: (genreIds: string) => [...movieKeys.all, "genre", genreIds] as const,
+  discover: (params: DiscoverMoviesParams) =>
+    [...movieKeys.all, "discover", params] as const,
   recommendations: (id: number) =>
     [...movieKeys.all, "recommendations", id] as const,
 };
@@ -63,6 +71,36 @@ async function fetchGenreDiscover(
     `/api/movies?genre=${encodeURIComponent(genreIds)}&page=${page}`,
   );
   if (!res.ok) throw new Error("Failed to discover movies by genre");
+  return res.json();
+}
+
+// Maps decade values like "2020s" to year_start/year_end params
+function buildYearParams(year: string): string {
+  if (!year) return "";
+  const decadeMatch = year.match(/^(\d{4})s$/);
+  if (decadeMatch) {
+    const start = decadeMatch[1];
+    const end = String(Number(start) + 9);
+    return `&year_start=${start}&year_end=${end}`;
+  }
+  return `&year=${encodeURIComponent(year)}`;
+}
+
+async function fetchDiscover(
+  params: DiscoverMoviesParams,
+  page: number,
+): Promise<MovieListResponse> {
+  const genreParam = params.genreId
+    ? `&genre=${encodeURIComponent(params.genreId)}`
+    : "";
+  const sortParam = params.sortBy
+    ? `&sort_by=${encodeURIComponent(params.sortBy)}`
+    : "";
+  const yearParam = buildYearParams(params.year);
+  const res = await fetch(
+    `/api/movies?action=discover&page=${page}${genreParam}${sortParam}${yearParam}`,
+  );
+  if (!res.ok) throw new Error("Failed to discover movies");
   return res.json();
 }
 
@@ -135,6 +173,19 @@ export function useDiscoverByGenre(genreIds: string) {
     getNextPageParam: (lastPage) =>
       lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,
     enabled: genreIds.length > 0,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useDiscoverMovies(params: DiscoverMoviesParams) {
+  return useInfiniteQuery({
+    queryKey: movieKeys.discover(params),
+    queryFn: ({ pageParam }) => fetchDiscover(params, pageParam),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,
     staleTime: 10 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     placeholderData: keepPreviousData,
