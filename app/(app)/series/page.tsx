@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import {
   getTrendingTV,
   getTopRatedTV,
+  getAiringTodayTV,
   discoverKoreanDramas,
   discoverChineseDramas,
 } from "@/lib/tmdb";
@@ -15,8 +16,9 @@ export const metadata: Metadata = {
 };
 
 export default async function SeriesPage() {
-  const [trending, topRated, korean, chinese] = await Promise.all([
+  const [trending, airingToday, topRated, korean, chinese] = await Promise.all([
     getTrendingTV(),
+    getAiringTodayTV(),
     getTopRatedTV(),
     discoverKoreanDramas(),
     discoverChineseDramas(),
@@ -25,6 +27,7 @@ export default async function SeriesPage() {
   return (
     <SeriesContent
       trending={trending.results.map(normalizeTVShow)}
+      airingToday={airingToday.results.map(normalizeTVShow)}
       topRated={topRated.results.map(normalizeTVShow)}
       korean={korean.results.map(normalizeTVShow)}
       chinese={chinese.results.map(normalizeTVShow)}

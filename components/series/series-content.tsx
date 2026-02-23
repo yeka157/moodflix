@@ -8,6 +8,7 @@ import { MovieDetailModal } from "@/components/movies/movie-detail-modal";
 
 interface SeriesContentProps {
   trending: Movie[];
+  airingToday: Movie[];
   korean: Movie[];
   chinese: Movie[];
   topRated: Movie[];
@@ -15,6 +16,7 @@ interface SeriesContentProps {
 
 export function SeriesContent({
   trending,
+  airingToday,
   korean,
   chinese,
   topRated,
@@ -37,35 +39,36 @@ export function SeriesContent({
         title="Trending TV Shows"
         movies={trending}
         onMovieClick={setSelectedShow}
-        readOnly
+      />
+
+      <MovieRow
+        title="Airing Today"
+        movies={airingToday}
+        onMovieClick={setSelectedShow}
       />
 
       <MovieRow
         title="Korean Drama"
         movies={korean}
         onMovieClick={setSelectedShow}
-        readOnly
       />
 
       <MovieRow
         title="Chinese Drama"
         movies={chinese}
         onMovieClick={setSelectedShow}
-        readOnly
       />
 
       <MovieRow
         title="Top Rated Series"
         movies={topRated}
         onMovieClick={setSelectedShow}
-        readOnly
       />
 
       <MovieDetailModal
         movie={selectedShow}
         onClose={() => setSelectedShow(null)}
         mediaType="tv"
-        readOnly
       />
     </div>
   );

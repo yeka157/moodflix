@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import {
   getTrendingTV,
   getTopRatedTV,
+  getAiringTodayTV,
   discoverKoreanDramas,
   discoverChineseDramas,
 } from "@/lib/tmdb";
@@ -17,6 +18,8 @@ export async function GET(request: NextRequest) {
         return Response.json(await getTrendingTV(page));
       case "top_rated":
         return Response.json(await getTopRatedTV(page));
+      case "airing_today":
+        return Response.json(await getAiringTodayTV(page));
       case "korean_drama":
         return Response.json(await discoverKoreanDramas(page));
       case "chinese_drama":

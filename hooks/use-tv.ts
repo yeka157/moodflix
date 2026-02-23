@@ -5,7 +5,7 @@ import type { Movie } from "@/types/movie";
 import type { TVListResponse, TVDetailsResponse } from "@/types/tv";
 import { normalizeTVShow } from "@/types/tv";
 
-export type TVCategory = "trending" | "top_rated" | "korean_drama" | "chinese_drama";
+export type TVCategory = "trending" | "top_rated" | "airing_today" | "korean_drama" | "chinese_drama";
 
 export const tvKeys = {
   all: ["tv"] as const,
@@ -50,6 +50,15 @@ export function useKoreanDramas() {
     queryFn: () => fetchTVCategory("korean_drama"),
     staleTime: 10 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
+  });
+}
+
+export function useAiringTodayTV() {
+  return useQuery({
+    queryKey: tvKeys.category("airing_today"),
+    queryFn: () => fetchTVCategory("airing_today"),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
   });
 }
 

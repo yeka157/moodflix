@@ -7,7 +7,7 @@ export default function SeriesLoading() {
       <Skeleton className="-mx-4 -mt-8 h-[50vh] min-h-[400px] max-h-[600px] rounded-none" />
 
       {/* Row skeletons */}
-      {Array.from({ length: 4 }).map((_, rowIndex) => (
+      {Array.from({ length: 5 }).map((_, rowIndex) => (
         <div key={rowIndex} className="space-y-3">
           <Skeleton className="h-7 w-40" />
           <div className="flex gap-3 overflow-hidden">

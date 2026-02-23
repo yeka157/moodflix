@@ -23,7 +23,9 @@ async function tmdbFetch<T>(
   });
 
   if (!response.ok) {
-    throw new Error(`TMDB API error: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `TMDB API error: ${response.status} ${response.statusText}`,
+    );
   }
 
   return response.json() as Promise<T>;
@@ -89,27 +91,47 @@ export async function getTrendingTV(page = 1) {
   });
 }
 
+export async function getAiringTodayTV(page = 1) {
+  return tmdbFetch<TVListResponse>("/tv/airing_today", {
+    page: String(page),
+  });
+}
+
 export async function getTopRatedTV(page = 1) {
-  return tmdbFetch<TVListResponse>("/tv/top_rated", {
+  const twoYearsAgo = new Date();
+  twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
+  return tmdbFetch<TVListResponse>("/discover/tv", {
+    sort_by: "first_air_date.desc",
+    "vote_count.gte": "50",
+    "vote_average.gte": "7.5",
+    "first_air_date.gte": twoYearsAgo.toISOString().slice(0, 10),
     page: String(page),
   });
 }
 
 export async function discoverKoreanDramas(page = 1) {
+  const twoYearsAgo = new Date();
+  twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
   return tmdbFetch<TVListResponse>("/discover/tv", {
     with_origin_country: "KR",
     with_genres: "18",
     with_original_language: "ko",
-    sort_by: "popularity.desc",
+    sort_by: "first_air_date.desc",
+    "vote_count.gte": "1",
+    "first_air_date.gte": twoYearsAgo.toISOString().slice(0, 10),
     page: String(page),
   });
 }
 
 export async function discoverChineseDramas(page = 1) {
+  const twoYearsAgo = new Date();
+  twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
   return tmdbFetch<TVListResponse>("/discover/tv", {
     with_origin_country: "CN",
     with_genres: "18",
-    sort_by: "popularity.desc",
+    sort_by: "first_air_date.desc",
+    "vote_count.gte": "1",
+    "first_air_date.gte": twoYearsAgo.toISOString().slice(0, 10),
     page: String(page),
   });
 }

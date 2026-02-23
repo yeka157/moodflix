@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import {
   Star,
@@ -10,11 +11,12 @@ import {
   ThumbsUp,
   ThumbsDown,
   Loader2,
+  ChevronDown,
 } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { toast } from "sonner";
 import type { Movie, MovieDetailsResponse } from "@/types/movie";
-import type { TVDetailsResponse } from "@/types/tv";
+import type { TVDetailsResponse, TVSeason } from "@/types/tv";
 import { useMovieDetails } from "@/hooks/use-movies";
 import { useTVDetails } from "@/hooks/use-tv";
 import {
@@ -130,6 +132,99 @@ function DetailSkeleton() {
   );
 }
 
+const SEASONS_COLLAPSED_COUNT = 5;
+
+function SeasonsSection({ seasons }: { seasons: TVSeason[] }) {
+  const [expanded, setExpanded] = useState(false);
+  const reversedSeasons = [...seasons].reverse();
+  const needsCollapse = reversedSeasons.length > SEASONS_COLLAPSED_COUNT;
+  const visibleSeasons = needsCollapse && !expanded
+    ? reversedSeasons.slice(0, SEASONS_COLLAPSED_COUNT)
+    : reversedSeasons;
+  const latestSeasonNumber = Math.max(...seasons.map((s) => s.season_number));
+
+  return (
+    <div className="space-y-2">
+      <h3 className="text-sm font-medium">
+        Seasons ({seasons.length})
+      </h3>
+      <div className="space-y-2">
+        {visibleSeasons.map((season) => {
+          const isLatest = season.season_number === latestSeasonNumber;
+          return (
+            <div
+              key={season.id}
+              className={cn(
+                "flex items-center gap-3 rounded-md px-3 py-2",
+                isLatest
+                  ? "bg-accent/10 ring-1 ring-accent/30"
+                  : "bg-muted/50",
+              )}
+            >
+              {season.poster_path ? (
+                <div className="relative h-14 w-10 shrink-0 overflow-hidden rounded">
+                  <Image
+                    src={`${TMDB_IMAGE_BASE}/w92${season.poster_path}`}
+                    alt={season.name}
+                    fill
+                    className="object-cover"
+                    sizes="40px"
+                  />
+                </div>
+              ) : (
+                <div className="flex h-14 w-10 shrink-0 items-center justify-center rounded bg-muted text-[10px] font-medium text-muted-foreground">
+                  S{season.season_number}
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium truncate">
+                    {season.name}
+                  </span>
+                  {isLatest && (
+                    <Badge variant="default" className="text-[10px] px-1.5 py-0">
+                      Latest
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>{season.episode_count} episodes</span>
+                  {season.air_date && (
+                    <>
+                      <span className="text-muted-foreground/50">·</span>
+                      <span>{season.air_date.slice(0, 4)}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        {needsCollapse && !expanded && (
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            className="flex w-full items-center justify-center gap-1.5 rounded-md border border-dashed border-border py-1.5 text-xs text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
+          >
+            <ChevronDown className="h-3.5 w-3.5" />
+            Show all {reversedSeasons.length} seasons
+          </button>
+        )}
+        {needsCollapse && expanded && (
+          <button
+            type="button"
+            onClick={() => setExpanded(false)}
+            className="flex w-full items-center justify-center gap-1.5 rounded-md border border-dashed border-border py-1.5 text-xs text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
+          >
+            <ChevronDown className="h-3.5 w-3.5 rotate-180" />
+            Show less
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function MovieDetailModal({ movie, onClose, readOnly = false, mediaType = "movie" }: MovieDetailModalProps) {
   const isTV = mediaType === "tv";
 
@@ -160,9 +255,14 @@ export function MovieDetailModal({ movie, onClose, readOnly = false, mediaType =
   const tvData = isTV ? (details as TVDetailsResponse | undefined) : undefined;
   const creators = tvData?.created_by ?? [];
   const creatorNames = creators.map((c) => c.name).join(", ");
+  const networks = tvData?.networks ?? [];
+  const networkNames = networks.map((n) => n.name).join(", ");
   const numberOfSeasons = tvData?.number_of_seasons ?? null;
   const numberOfEpisodes = tvData?.number_of_episodes ?? null;
   const showStatus = tvData?.status ?? null;
+  const seasons: TVSeason[] = (tvData?.seasons ?? []).filter(
+    (s) => s.season_number > 0,
+  );
 
   // Movie-specific derived data
   const movieData = !isTV ? (details as MovieDetailsResponse | undefined) : undefined;
@@ -548,14 +648,19 @@ export function MovieDetailModal({ movie, onClose, readOnly = false, mediaType =
                 </div>
                 )}
 
-                {/* Director (movie) or Created by (TV) */}
+                {/* Director (movie) or Created by / Network (TV) */}
                 {isTV ? (
-                  isDetailLoading && !creatorNames ? (
+                  isDetailLoading && !creatorNames && !networkNames ? (
                     <Skeleton className="h-4 w-32" />
                   ) : creatorNames ? (
                     <p className="text-sm text-muted-foreground">
                       <span className="text-foreground font-medium">Created by:</span>{" "}
                       {creatorNames}
+                    </p>
+                  ) : networkNames ? (
+                    <p className="text-sm text-muted-foreground">
+                      <span className="text-foreground font-medium">Network:</span>{" "}
+                      {networkNames}
                     </p>
                   ) : null
                 ) : (
@@ -674,6 +779,11 @@ export function MovieDetailModal({ movie, onClose, readOnly = false, mediaType =
                     Streaming data powered by JustWatch
                   </p>
                 </div>
+
+                {/* Seasons — TV only */}
+                {isTV && seasons.length > 0 && (
+                  <SeasonsSection seasons={seasons} />
+                )}
               </div>
             </div>
           )}

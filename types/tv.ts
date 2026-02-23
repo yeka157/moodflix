@@ -44,6 +44,16 @@ export type TVNetwork = {
   origin_country: string;
 };
 
+export type TVSeason = {
+  id: number;
+  name: string;
+  season_number: number;
+  episode_count: number;
+  air_date: string | null;
+  overview: string;
+  poster_path: string | null;
+};
+
 export type TVDetails = TVShow & {
   genres: { id: number; name: string }[];
   status: string;
@@ -53,6 +63,7 @@ export type TVDetails = TVShow & {
   episode_run_time: number[];
   created_by: TVCreatedBy[];
   networks: TVNetwork[];
+  seasons: TVSeason[];
 };
 
 export type TVDetailsWithExtras = TVDetails & {
