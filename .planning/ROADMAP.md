@@ -97,10 +97,22 @@ Plans:
   5. All existing features (home, discover, series, library, detail modal, AI mood section) remain fully functional after the redesign
   6. Responsive: sidebar collapses to icon-only on mobile/tablet, expands on desktop
 
-**Plans**: TBD (run /gsd:discuss-phase 7 then /gsd:plan-phase 7)
+**Plans**: 4 plans
 
 Plans:
-- [ ] TBD — will be broken down during planning
+- [ ] 07-01-PLAN.md — Sidebar + bottom tab bar + warmer color tokens + layout restructure
+- [ ] 07-02-PLAN.md — Movie + TV detail page routes (Stremio-inspired full-page layout)
+- [ ] 07-03-PLAN.md — Discover + Series grid layout with filter dropdowns
+- [ ] 07-04-PLAN.md — Card navigation migration + search drawer + navbar removal + visual verification
+
+### Phase 8: Landing page revamp
+
+**Goal:** [To be planned]
+**Depends on:** Phase 7
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 8 to break down)
 
 ---
 
@@ -114,4 +126,4 @@ Plans:
 | 4. TV Series Data Layer | 2/2 | Complete   | 2026-02-22 | - |
 | 5. TV Series Page + Modal | 2/2 | Complete   | 2026-02-22 | - |
 | 6. Homepage Polish | v0.3 | 2/2 | Complete | 2026-02-23 |
-| 7. UI/UX Revamp | v0.3 | 0/? | Not started | - |
+| 7. UI/UX Revamp | v0.3 | 0/4 | Planned | - |
