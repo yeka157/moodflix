@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 ## Current Position
 
 Phase: 7 (UI/UX Revamp)
-Plan: 03 complete (3/4 plans) — Phase 7 in progress
-Status: Phase in progress — plans 01, 02, 03 executed
-Last activity: 2026-02-24 — Phase 7 Plan 03 executed (discover + series grid layout with filter dropdowns)
+Plan: 04 tasks 1-2 complete — paused at checkpoint:human-verify (Task 3)
+Status: Phase in progress — plans 01, 02, 03, 04 (tasks 1-2) executed
+Last activity: 2026-02-24 — Phase 7 Plan 04 tasks 1-2 executed (link-based card navigation + search drawer + navbar deletion)
 
-Progress: [##############################] 75% (v0.3 Phase 7, plan 03/04)
+Progress: [##############################] 95% (v0.3 Phase 7, plan 04 awaiting human verify)
 
 ## Performance Metrics
 
@@ -41,6 +41,7 @@ Progress: [##############################] 75% (v0.3 Phase 7, plan 03/04)
 | Phase 05-tv-series-page-modal P02 | 2 | 1 tasks | 1 files |
 | Phase 07-ui-ux-revamp P01 | 2min | 2 tasks | 4 files |
 | Phase 07-ui-ux-revamp P03 | 15min | 2 tasks | 8 files |
+| Phase 07-ui-ux-revamp P04 | 12min | 2 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -97,6 +98,9 @@ Recent decisions affecting current work:
 - [Phase 07 Plan 03]: Decade year values (2020s, 2010s) expand to year_start/year_end range params at hook layer
 - [Phase 07 Plan 03]: keepPreviousData on discover queries — smooth filter transitions with loading overlay instead of full re-render
 - [Phase 07 Plan 03]: Series page fully client-driven (no SSR prefetch) — filter-first UX makes pre-fetching unfiltered results unnecessary
+- [Phase 07-04]: MovieCard href prop: dual-mode Link/onClick — wraps in Link when href provided, uses onClick callback when not
+- [Phase 07-04]: MovieSearchDrawer: search results use onClick→Sheet drawer; grid/filter results use link navigation
+- [Phase 07-04]: app-navbar.tsx deleted — layout.tsx already used AppSidebar since Plan 01
 
 ### Pending Todos
 
@@ -113,6 +117,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-24 (Phase 7 Plan 03 executed)
-Stopped at: Completed 07-03-PLAN.md — discover + series grid layout with filter dropdowns
-Resume at: Execute 07-04-PLAN.md
+Last session: 2026-02-24 (Phase 7 Plan 04 Tasks 1-2 executed)
+Stopped at: 07-04-PLAN.md Task 3 checkpoint:human-verify — awaiting visual verification of complete UI/UX revamp
+Resume at: After human verification of all 10 feature areas in Task 3, mark checkpoint complete and finalize Phase 7
