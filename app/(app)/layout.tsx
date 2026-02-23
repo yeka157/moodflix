@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { AppNavbar } from "@/components/layout/app-navbar";
+import { AppSidebar } from "@/components/layout/app-sidebar";
+import { BottomTabBar } from "@/components/layout/bottom-tab-bar";
 import { Providers } from "@/components/providers";
 import NextTopLoader from "nextjs-toploader";
 
@@ -27,8 +28,9 @@ export default async function AppLayout({
         height={2}
         shadow={false}
       />
-      <AppNavbar user={{ email: user.email ?? "" }} />
-      <main className="pt-16">
+      <AppSidebar user={{ email: user.email ?? "" }} />
+      <BottomTabBar />
+      <main className="md:pl-[60px] pb-16 md:pb-0">
         <div className="container mx-auto px-4 py-8">
           <Providers>{children}</Providers>
         </div>
