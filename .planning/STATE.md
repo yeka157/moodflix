@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 
 ## Current Position
 
-Phase: 6 (Homepage Polish)
-Plan: 02 complete (2/2 plans) — Phase 6 COMPLETE
-Status: Phase complete — all plans executed
-Last activity: 2026-02-23 — Phase 6 executed (skeleton color fix + personalized rows + section reorder)
+Phase: 7 (UI/UX Revamp)
+Plan: 01 complete (1/4 plans) — Phase 7 in progress
+Status: Phase in progress — plan 01 executed
+Last activity: 2026-02-23 — Phase 7 Plan 01 executed (sidebar navigation + warm color scheme)
 
-Progress: [##########] 100% (v0.3 Phase 6 complete)
+Progress: [##########] 25% (v0.3 Phase 7, plan 01/04)
 
 ## Performance Metrics
 
@@ -39,6 +39,7 @@ Progress: [##########] 100% (v0.3 Phase 6 complete)
 | Phase 04-tv-series-data-layer P02 | 2min | 2 tasks | 3 files |
 | Phase 05-tv-series-page-modal P01 | 3min | 2 tasks | 8 files |
 | Phase 05-tv-series-page-modal P02 | 2 | 1 tasks | 1 files |
+| Phase 07-ui-ux-revamp P01 | 2min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -85,6 +86,12 @@ Recent decisions affecting current work:
 - [Phase 05]: Phase 5 Plan 01: featuredShow selected deterministically via trending.find(t => t.backdrop_path) — no Math.random()
 - [Phase 05]: Both useMovieDetails and useTVDetails always called — null ID disables the irrelevant hook (React rules)
 - [Phase 05]: getStatusBadgeVariant maps Returning Series=default, Ended=secondary, Canceled=destructive — TMDB spells it Canceled (single L)
+- [Phase 07 Plan 01]: AppSidebar uses onHoverStart/onHoverEnd only — no click/pin toggle
+- [Phase 07 Plan 01]: Sidebar fixed at 60px collapsed, 200px expanded — desktop only (hidden md:flex)
+- [Phase 07 Plan 01]: BottomTabBar fixed at bottom — mobile only (flex md:hidden), h-16 satisfies 44px touch target
+- [Phase 07 Plan 01]: app-navbar.tsx NOT deleted yet — preserved until Plan 04 confirms all references gone
+- [Phase 07 Plan 01]: Content offset: md:pl-[60px] pb-16 md:pb-0 for sidebar + tab bar clearance
+- [Phase 07 Plan 01]: Sidebar background: oklch(0.11 0.008 25) — darker than page bg oklch(0.13 0.008 25)
 
 ### Pending Todos
 
@@ -93,6 +100,7 @@ None.
 ### Roadmap Evolution
 
 - Phase 7 added: UI/UX Revamp — sidebar navigation, color scheme overhaul, Stremio-inspired layout (Pencil MCP design)
+- Phase 8 added: Landing page revamp
 
 ### Blockers/Concerns
 
@@ -100,6 +108,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-23 (Phase 6 executed + Phase 7 context gathered)
-Stopped at: Phase 7 context captured — all 5 areas discussed (sidebar, color, detail, browse, landing)
-Resume at: Gather more landing page visual references for user review, then /gsd:plan-phase 7
+Last session: 2026-02-23 (Phase 7 Plan 01 executed)
+Stopped at: Completed 07-01-PLAN.md — sidebar navigation + warm color scheme
+Resume at: Execute 07-02-PLAN.md
