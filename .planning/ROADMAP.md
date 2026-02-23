@@ -100,9 +100,9 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 07-01-PLAN.md — Sidebar + bottom tab bar + warmer color tokens + layout restructure
-- [ ] 07-02-PLAN.md — Movie + TV detail page routes (Stremio-inspired full-page layout)
-- [ ] 07-03-PLAN.md — Discover + Series grid layout with filter dropdowns
+- [x] 07-01-PLAN.md — Sidebar + bottom tab bar + warmer color tokens + layout restructure
+- [x] 07-02-PLAN.md — Movie + TV detail page routes (Stremio-inspired full-page layout)
+- [x] 07-03-PLAN.md — Discover + Series grid layout with filter dropdowns
 - [ ] 07-04-PLAN.md — Card navigation migration + search drawer + navbar removal + visual verification
 
 ### Phase 8: Landing page revamp
@@ -126,4 +126,4 @@ Plans:
 | 4. TV Series Data Layer | 2/2 | Complete   | 2026-02-22 | - |
 | 5. TV Series Page + Modal | 2/2 | Complete   | 2026-02-22 | - |
 | 6. Homepage Polish | v0.3 | 2/2 | Complete | 2026-02-23 |
-| 7. UI/UX Revamp | v0.3 | 0/4 | Planned | - |
+| 7. UI/UX Revamp | v0.3 | 3/4 | In Progress | - |
