@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Users can discover movies that match their mood and manage what they've watched — the library experience must feel instant and intuitive.
-**Current focus:** v0.3 Content Expansion — Phase 5 (TV Series Page & Modal) in progress.
+**Current focus:** v0.3 Content Expansion — Phase 6 (Homepage Polish) complete, Phase 7 next.
 
 ## Current Position
 
-Phase: 5 (TV Series Page & Modal)
-Plan: 02 complete (2/2 plans) — Phase 5 COMPLETE
+Phase: 6 (Homepage Polish)
+Plan: 02 complete (2/2 plans) — Phase 6 COMPLETE
 Status: Phase complete — all plans executed
-Last activity: 2026-02-22 — Phase 5 Plan 02 executed (TV detail modal with TV-specific fields)
+Last activity: 2026-02-23 — Phase 6 executed (skeleton color fix + personalized rows + section reorder)
 
-Progress: [##########] 100% (v0.3 Phase 5 complete)
+Progress: [##########] 100% (v0.3 Phase 6 complete)
 
 ## Performance Metrics
 
@@ -100,6 +100,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-22 (Phase 5 Plan 02 executed)
-Stopped at: Phase 5 Plan 02 complete — TV detail modal with TV-specific fields (seasons, episodes, status badge, Created by)
-Resume at: Phase 5 fully complete — ready for next milestone/phase planning
+Last session: 2026-02-23 (Phase 6 executed — both plans)
+Stopped at: Phase 6 complete — skeleton color fix + personalized rows with daily rotation
+Resume at: Phase 6 fully complete — ready for Phase 7 (UI/UX Revamp) planning

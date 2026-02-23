@@ -24,7 +24,7 @@ See: `.planning/milestones/v0.2-ROADMAP.md` for full details.
 
 - [x] **Phase 4: TV Series Data Layer** - Types, constants, API routes, and TanStack Query hooks for TV shows (completed 2026-02-22)
 - [x] **Phase 5: TV Series Page + Modal** - `/series` page with four content rows and extended detail modal (completed 2026-02-22)
-- [ ] **Phase 6: Homepage Polish** - Skeleton color fix and personalized recommendation rows
+- [x] **Phase 6: Homepage Polish** - Skeleton color fix and personalized recommendation rows (completed 2026-02-23)
 - [ ] **Phase 7: UI/UX Revamp** - Sidebar navigation, color scheme overhaul, and Stremio-inspired layout patterns
 
 ## Phase Details
@@ -82,8 +82,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 06-01: Skeleton color fix — audit and replace `bg-accent` with `bg-muted` across all skeleton components
-- [ ] 06-02: Homepage personalized rows — daily rotation logic, TMDB recommendations hook, and "Because you liked" row integration on `/home`
+- [x] 06-01: Skeleton color fix — replace `bg-accent` with `bg-muted` and slow pulse to 3s
+- [x] 06-02: Homepage personalized rows — daily rotation, varied sentence patterns, section reorder
 
 ### Phase 7: UI/UX Revamp
 **Goal**: Replace top navbar with sidebar navigation, update color scheme, and adopt Stremio-inspired layout patterns across all pages — using Pencil MCP for design prototyping. Reference: `Revamp-UI.png` (sidebar + color scheme), `Revamp-UI-1.png` and `Revamp-UI-2.png` from stremio.com (UI/UX style — pill metadata, compact icon sidebar, detail panels).
@@ -113,5 +113,5 @@ Plans:
 | 3. Polish & QA | v0.2 | 4/4 | Complete | 2026-02-19 |
 | 4. TV Series Data Layer | 2/2 | Complete   | 2026-02-22 | - |
 | 5. TV Series Page + Modal | 2/2 | Complete   | 2026-02-22 | - |
-| 6. Homepage Polish | v0.3 | 0/2 | Not started | - |
+| 6. Homepage Polish | v0.3 | 2/2 | Complete | 2026-02-23 |
 | 7. UI/UX Revamp | v0.3 | 0/? | Not started | - |
