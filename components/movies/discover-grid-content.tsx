@@ -12,7 +12,7 @@ import {
 import useInfiniteScroll from "react-infinite-scroll-hook";
 import { GENRES } from "@/lib/constants";
 import { MovieGrid } from "./movie-grid";
-import { MovieDetailModal } from "./movie-detail-modal";
+import { MovieSearchDrawer } from "./movie-search-drawer";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -72,7 +72,7 @@ export function DiscoverGridContent() {
   const [genreId, setGenreId] = useState("");
   const [sortBy, setSortBy] = useState("popularity.desc");
   const [year, setYear] = useState("");
-  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
+  const [selectedSearchResult, setSelectedSearchResult] = useState<Movie | null>(null);
 
   const debouncedSetQuery = useDebouncedCallback((value: string) => {
     setDebouncedQuery(value);
@@ -259,9 +259,10 @@ export function DiscoverGridContent() {
               <p className="text-sm text-muted-foreground">
                 Found {searchTotal.toLocaleString()} results
               </p>
+              {/* Search results: onClick opens drawer (no href) */}
               <MovieGrid
                 movies={searchMovies}
-                onMovieClick={setSelectedMovie}
+                onMovieClick={setSelectedSearchResult}
                 sentinelRef={searchSentinelRef}
                 isFetchingMore={searchQuery.isFetchingNextPage}
               />
@@ -306,9 +307,10 @@ export function DiscoverGridContent() {
                   </div>
                 </div>
               )}
+              {/* Discover grid results: link-based navigation */}
               <MovieGrid
                 movies={discoverMovies}
-                onMovieClick={setSelectedMovie}
+                hrefPrefix="/movie/"
                 sentinelRef={discoverSentinelRef}
                 isFetchingMore={discoverQuery.isFetchingNextPage}
               />
@@ -334,9 +336,13 @@ export function DiscoverGridContent() {
         </div>
       )}
 
-      <MovieDetailModal
-        movie={selectedMovie}
-        onClose={() => setSelectedMovie(null)}
+      {/* Search drawer for quick preview of search results */}
+      <MovieSearchDrawer
+        movie={selectedSearchResult}
+        open={!!selectedSearchResult}
+        onOpenChange={(open: boolean) => {
+          if (!open) setSelectedSearchResult(null);
+        }}
       />
     </div>
   );

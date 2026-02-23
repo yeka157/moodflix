@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import useInfiniteScroll from "react-infinite-scroll-hook";
 import type { Movie, MovieListResponse } from "@/types/movie";
 import { useDiscoverByGenre } from "@/hooks/use-movies";
 import { MovieGrid } from "@/components/movies/movie-grid";
-import { MovieDetailModal } from "@/components/movies/movie-detail-modal";
 
 interface RecommendationsGridProps {
   genres: string;
@@ -31,7 +30,6 @@ export function RecommendationsGrid({
   genres,
   initialMovies,
 }: RecommendationsGridProps) {
-  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const query = useDiscoverByGenre(genres);
 
   const movies = useMemo(() => {
@@ -48,18 +46,11 @@ export function RecommendationsGrid({
   });
 
   return (
-    <>
-      <MovieGrid
-        movies={movies}
-        onMovieClick={setSelectedMovie}
-        sentinelRef={sentinelRef}
-        isFetchingMore={query.isFetchingNextPage}
-      />
-
-      <MovieDetailModal
-        movie={selectedMovie}
-        onClose={() => setSelectedMovie(null)}
-      />
-    </>
+    <MovieGrid
+      movies={movies}
+      hrefPrefix="/movie/"
+      sentinelRef={sentinelRef}
+      isFetchingMore={query.isFetchingNextPage}
+    />
   );
 }

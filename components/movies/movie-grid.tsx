@@ -9,12 +9,13 @@ interface MovieGridProps {
   movies: Movie[];
   isLoading?: boolean;
   onMovieClick?: (movie: Movie) => void;
+  hrefPrefix?: string;
   sentinelRef?: ((node: HTMLDivElement | null) => void) | React.RefObject<HTMLDivElement | null>;
   isFetchingMore?: boolean;
   readOnly?: boolean;
 }
 
-export function MovieGrid({ movies, isLoading = false, onMovieClick, sentinelRef, isFetchingMore, readOnly = false }: MovieGridProps) {
+export function MovieGrid({ movies, isLoading = false, onMovieClick, hrefPrefix, sentinelRef, isFetchingMore, readOnly = false }: MovieGridProps) {
   if (isLoading) {
     return (
       // Columns: 2 (375px) | 3 (640px) | 4 (768px) | 5 (1024px) | 6 (1280px+) — WCAG verified
@@ -38,7 +39,12 @@ export function MovieGrid({ movies, isLoading = false, onMovieClick, sentinelRef
             viewport={{ once: true }}
             transition={{ duration: 0.4 }}
           >
-            <MovieCard movie={movie} onClick={onMovieClick} readOnly={readOnly} />
+            <MovieCard
+              movie={movie}
+              href={hrefPrefix ? `${hrefPrefix}${movie.id}` : undefined}
+              onClick={hrefPrefix ? undefined : onMovieClick}
+              readOnly={readOnly}
+            />
           </motion.div>
         ))}
       </div>

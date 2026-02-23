@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import Image from "next/image";
 import { ThumbsUp, ThumbsDown, ChevronDown } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
@@ -120,21 +121,25 @@ export function WatchlistCard({ item }: { item: WatchlistItem }) {
 
   return (
     <div className="flex gap-3 rounded-lg border border-border/50 bg-card p-3 transition-colors hover:border-border">
-      {/* Poster */}
-      <div className="relative h-28 w-[75px] shrink-0 overflow-hidden rounded-md bg-muted">
+      {/* Poster — links to detail page */}
+      <Link href={`/movie/${item.tmdbId}`} className="relative h-28 w-[75px] shrink-0 overflow-hidden rounded-md bg-muted block">
         <Image
           src={getPosterUrl(item.posterPath)}
           alt={`${item.title} poster`}
           fill
-          className="object-cover"
+          className="object-cover transition-opacity hover:opacity-80"
           sizes="75px"
         />
-      </div>
+      </Link>
 
       {/* Info */}
       <div className="flex min-w-0 flex-1 flex-col justify-between">
         <div className="space-y-1">
-          <h3 className="text-sm font-semibold line-clamp-1">{item.title}</h3>
+          <h3 className="text-sm font-semibold line-clamp-1">
+            <Link href={`/movie/${item.tmdbId}`} className="hover:text-primary transition-colors">
+              {item.title}
+            </Link>
+          </h3>
           <p className="text-xs text-muted-foreground">
             {formatAddedDate(item.addedAt)}
           </p>

@@ -9,7 +9,6 @@ import type { DiscoverTVParams } from "@/hooks/use-tv";
 import useInfiniteScroll from "react-infinite-scroll-hook";
 import { GENRES, TV_GENRES } from "@/lib/constants";
 import { MovieGrid } from "@/components/movies/movie-grid";
-import { MovieDetailModal } from "@/components/movies/movie-detail-modal";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -84,7 +83,6 @@ export function SeriesGridContent() {
   const [genreId, setGenreId] = useState("");
   const [sortBy, setSortBy] = useState("popularity.desc");
   const [year, setYear] = useState("");
-  const [selectedShow, setSelectedShow] = useState<Movie | null>(null);
 
   const discoverParams = useMemo<DiscoverTVParams>(
     () => ({ genreId, sortBy, year }),
@@ -203,9 +201,10 @@ export function SeriesGridContent() {
               </div>
             </div>
           )}
+          {/* TV show cards link to /tv/[id] */}
           <MovieGrid
             movies={shows}
-            onMovieClick={setSelectedShow}
+            hrefPrefix="/tv/"
             sentinelRef={sentinelRef}
             isFetchingMore={discoverQuery.isFetchingNextPage}
             readOnly
@@ -229,12 +228,6 @@ export function SeriesGridContent() {
           )}
         </div>
       )}
-
-      <MovieDetailModal
-        movie={selectedShow}
-        onClose={() => setSelectedShow(null)}
-        mediaType="tv"
-      />
     </div>
   );
 }

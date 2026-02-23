@@ -1,9 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import type { Movie, PersonalizedData } from "@/types/movie";
 import { MovieRow } from "./movie-row";
-import { MovieDetailModal } from "./movie-detail-modal";
 import { PersonalizedSection } from "./personalized-section";
 
 interface HomeMoviesProps {
@@ -17,20 +15,17 @@ export function HomeMovies({
   personalizedData,
   regionalPopular,
 }: HomeMoviesProps) {
-  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
-
   return (
     <>
       <MovieRow
         title="Trending This Week"
         movies={trending}
-        onMovieClick={setSelectedMovie}
+        mediaType="movie"
       />
 
       {personalizedData && (
         <PersonalizedSection
           data={personalizedData}
-          onMovieClick={setSelectedMovie}
         />
       )}
 
@@ -38,14 +33,9 @@ export function HomeMovies({
         <MovieRow
           title="Popular in Your Region"
           movies={regionalPopular}
-          onMovieClick={setSelectedMovie}
+          mediaType="movie"
         />
       )}
-
-      <MovieDetailModal
-        movie={selectedMovie}
-        onClose={() => setSelectedMovie(null)}
-      />
     </>
   );
 }

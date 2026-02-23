@@ -20,7 +20,6 @@ const ROW_PATTERNS: ((title: string) => string)[] = [
 
 interface PersonalizedSectionProps {
   data: PersonalizedData;
-  onMovieClick: (movie: Movie) => void;
 }
 
 function filterMovies(movies: Movie[], excludeIds: Set<number>): Movie[] {
@@ -34,7 +33,6 @@ function filterMovies(movies: Movie[], excludeIds: Set<number>): Movie[] {
 
 export function PersonalizedSection({
   data,
-  onMovieClick,
 }: PersonalizedSectionProps) {
   const rec0 = useMovieRecommendations(data.sourceMovies[0]?.tmdbId ?? null);
   const rec1 = useMovieRecommendations(data.sourceMovies[1]?.tmdbId ?? null);
@@ -74,7 +72,7 @@ export function PersonalizedSection({
           movies={rec0Movies}
           isLoading={rec0.isLoading}
           isUpdating={rec0.isPlaceholderData}
-          onMovieClick={onMovieClick}
+          mediaType="movie"
         />
       )}
 
@@ -84,7 +82,7 @@ export function PersonalizedSection({
           movies={rec1Movies}
           isLoading={rec1.isLoading}
           isUpdating={rec1.isPlaceholderData}
-          onMovieClick={onMovieClick}
+          mediaType="movie"
         />
       )}
 
@@ -94,7 +92,7 @@ export function PersonalizedSection({
           movies={filteredGenreMovies}
           isLoading={genreDiscover.isLoading}
           isUpdating={genreDiscover.isPlaceholderData}
-          onMovieClick={onMovieClick}
+          mediaType="movie"
         />
       )}
     </div>

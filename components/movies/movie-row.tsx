@@ -12,6 +12,8 @@ interface MovieRowProps {
   isLoading?: boolean;
   isUpdating?: boolean;
   onMovieClick?: (movie: Movie) => void;
+  hrefPrefix?: string;
+  mediaType?: "movie" | "tv";
   readOnly?: boolean;
 }
 
@@ -21,11 +23,16 @@ export function MovieRow({
   isLoading = false,
   isUpdating = false,
   onMovieClick,
+  hrefPrefix,
+  mediaType = "movie",
   readOnly = false,
 }: MovieRowProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(true);
+
+  // Determine the href prefix: explicit prop takes priority, otherwise derive from mediaType
+  const resolvedHrefPrefix = hrefPrefix ?? (onMovieClick ? undefined : `/${mediaType}/`);
 
   const handleScroll = () => {
     const container = scrollContainerRef.current;
@@ -118,7 +125,12 @@ export function MovieRow({
                   key={movie.id}
                   className="flex-shrink-0 w-[150px] sm:w-[170px] md:w-[185px]"
                 >
-                  <MovieCard movie={movie} onClick={onMovieClick} readOnly={readOnly} />
+                  <MovieCard
+                    movie={movie}
+                    href={resolvedHrefPrefix ? `${resolvedHrefPrefix}${movie.id}` : undefined}
+                    onClick={resolvedHrefPrefix ? undefined : onMovieClick}
+                    readOnly={readOnly}
+                  />
                 </div>
               ))}
         </div>
