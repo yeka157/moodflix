@@ -68,13 +68,13 @@ export default async function HomePage() {
         <p className="text-muted-foreground">{displayName}</p>
       </div>
 
-      <MoodSection />
-
       <HomeMovies
         trending={trending.results}
         personalizedData={personalizedData}
         regionalPopular={regionalPopular?.results}
       />
+
+      <MoodSection />
 
       <FeatureCardGrid cards={featureCards} />
     </div>

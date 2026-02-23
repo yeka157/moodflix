@@ -21,6 +21,12 @@ export function HomeMovies({
 
   return (
     <>
+      <MovieRow
+        title="Trending This Week"
+        movies={trending}
+        onMovieClick={setSelectedMovie}
+      />
+
       {personalizedData && (
         <PersonalizedSection
           data={personalizedData}
@@ -35,12 +41,6 @@ export function HomeMovies({
           onMovieClick={setSelectedMovie}
         />
       )}
-
-      <MovieRow
-        title="Trending This Week"
-        movies={trending}
-        onMovieClick={setSelectedMovie}
-      />
 
       <MovieDetailModal
         movie={selectedMovie}

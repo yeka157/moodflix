@@ -10,12 +10,13 @@ import {
 import type { PersonalizedData } from "@/types/movie";
 
 /**
- * Deterministic index from user ID — avoids Math.random() in server components.
+ * Deterministic seed from input string — avoids Math.random() in server components.
+ * Accepts any string (e.g., userId + date) for daily rotation.
  */
-function deterministicIndex(userId: string, length: number): number {
+function deterministicSeed(input: string, length: number): number {
   let hash = 0;
-  for (let i = 0; i < userId.length; i++) {
-    hash = (hash * 31 + userId.charCodeAt(i)) | 0;
+  for (let i = 0; i < input.length; i++) {
+    hash = (hash * 31 + input.charCodeAt(i)) | 0;
   }
   return Math.abs(hash) % length;
 }
@@ -67,22 +68,37 @@ export async function getPersonalizedData(
   const topGenreId = sortedGenres[0];
   const topGenreName = GENRES[topGenreId] ?? "Movies";
 
-  // Select mood message deterministically
+  // Daily seed for rotation — changes once per day, deterministic per user
+  const dailySeed = userId + new Date().toDateString();
+
+  // Select mood message using daily seed
   const messages = GENRE_MOOD_MESSAGES[topGenreId];
   const moodMessage = messages
-    ? messages[deterministicIndex(userId, messages.length)]
+    ? messages[deterministicSeed(dailySeed + "mood", messages.length)]
     : DEFAULT_MOOD_MESSAGE;
 
-  // Pick up to 2 source movies for "Because you liked" rows
-  const sourceMovies = topMovies.slice(0, 2).map((m) => ({
-    tmdbId: m.tmdbId,
-    title: m.title,
-  }));
+  // Pick source movies using daily rotation from top-5
+  const primaryIndex = deterministicSeed(dailySeed, topMovies.length);
+  const sourceMovies: { tmdbId: number; title: string }[] = [
+    { tmdbId: topMovies[primaryIndex].tmdbId, title: topMovies[primaryIndex].title },
+  ];
+
+  if (topMovies.length >= 2) {
+    const secondIndex = deterministicSeed(dailySeed + "second", topMovies.length - 1);
+    const adjustedIndex = secondIndex >= primaryIndex ? secondIndex + 1 : secondIndex;
+    sourceMovies.push({
+      tmdbId: topMovies[adjustedIndex].tmdbId,
+      title: topMovies[adjustedIndex].title,
+    });
+  }
+
+  const rowPatternIndex = deterministicSeed(dailySeed + "pattern", 6);
 
   return {
     moodMessage,
     sourceMovies,
     topGenreId,
     topGenreName,
+    rowPatternIndex,
   };
 }

@@ -103,4 +103,5 @@ export type PersonalizedData = {
   sourceMovies: RecommendationSource[];
   topGenreId: number;
   topGenreName: string;
+  rowPatternIndex: number;
 };

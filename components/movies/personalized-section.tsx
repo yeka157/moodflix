@@ -9,6 +9,15 @@ import { useDiscoverByGenre } from "@/hooks/use-movies";
 import { useWatchlistTmdbIds } from "@/hooks/use-watchlist";
 import { MovieRow } from "./movie-row";
 
+const ROW_PATTERNS: ((title: string) => string)[] = [
+  (title) => `Because you liked ${title}`,
+  (title) => `More like ${title}`,
+  (title) => `If you loved ${title}`,
+  (title) => `Since you enjoyed ${title}`,
+  (title) => `Fans of ${title} also watch`,
+  (title) => `Picked for you — inspired by ${title}`,
+];
+
 interface PersonalizedSectionProps {
   data: PersonalizedData;
   onMovieClick: (movie: Movie) => void;
@@ -61,7 +70,7 @@ export function PersonalizedSection({
 
       {data.sourceMovies[0] && (rec0.isLoading || rec0Movies.length > 0) && (
         <MovieRow
-          title={`Because you liked ${data.sourceMovies[0].title}`}
+          title={ROW_PATTERNS[data.rowPatternIndex % ROW_PATTERNS.length](data.sourceMovies[0].title)}
           movies={rec0Movies}
           isLoading={rec0.isLoading}
           isUpdating={rec0.isPlaceholderData}
@@ -71,7 +80,7 @@ export function PersonalizedSection({
 
       {data.sourceMovies[1] && (rec1.isLoading || rec1Movies.length > 0) && (
         <MovieRow
-          title={`Because you liked ${data.sourceMovies[1].title}`}
+          title={ROW_PATTERNS[(data.rowPatternIndex + 1) % ROW_PATTERNS.length](data.sourceMovies[1].title)}
           movies={rec1Movies}
           isLoading={rec1.isLoading}
           isUpdating={rec1.isPlaceholderData}
