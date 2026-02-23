@@ -124,6 +124,20 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.4;
+    }
+  }
+}
+
+.animate-pulse {
+  animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 /* Scrollbar styling */
@@ -162,6 +176,7 @@
 /* Smooth scroll with reduced motion respect */
 html {
   scroll-behavior: smooth;
+  scrollbar-gutter: stable;
 }
 
 /* Marquee animations for movie showcase */
