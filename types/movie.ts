@@ -13,6 +13,7 @@ export type Movie = {
   adult: boolean;
   original_language: string;
   video: boolean;
+  media_type?: "movie" | "tv";
 };
 
 export type MovieListResponse = {

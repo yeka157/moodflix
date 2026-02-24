@@ -127,7 +127,7 @@ export function MovieRow({
                 >
                   <MovieCard
                     movie={movie}
-                    href={resolvedHrefPrefix ? `${resolvedHrefPrefix}${movie.id}` : undefined}
+                    href={resolvedHrefPrefix ? `/${movie.media_type ?? mediaType}/${movie.id}` : undefined}
                     onClick={resolvedHrefPrefix ? undefined : onMovieClick}
                     readOnly={readOnly}
                   />
