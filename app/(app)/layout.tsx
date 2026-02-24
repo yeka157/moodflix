@@ -31,9 +31,7 @@ export default async function AppLayout({
       <AppSidebar user={{ email: user.email ?? "" }} />
       <BottomTabBar />
       <main className="md:pl-[60px] pb-16 md:pb-0">
-        <div className="container mx-auto px-4 py-8">
-          <Providers>{children}</Providers>
-        </div>
+        <Providers>{children}</Providers>
       </main>
     </div>
   );

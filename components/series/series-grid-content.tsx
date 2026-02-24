@@ -20,7 +20,7 @@ import {
 
 // Combine TV-specific genres with shared movie/TV genre IDs that appear on TV shows
 const ALL_TV_GENRE_OPTIONS = [
-  { value: "", label: "All Genres" },
+  { value: "all", label: "All Genres" },
   // TV-specific genres first
   ...Object.entries(TV_GENRES).map(([id, name]) => ({ value: id, label: name })),
   // Shared genres also available on TV shows
@@ -40,7 +40,7 @@ const SORT_OPTIONS = [
 ];
 
 const YEAR_OPTIONS = [
-  { value: "", label: "All Years" },
+  { value: "all", label: "All Years" },
   { value: "2026", label: "2026" },
   { value: "2025", label: "2025" },
   { value: "2024", label: "2024" },
@@ -80,12 +80,16 @@ function dedupeShows(
 }
 
 export function SeriesGridContent() {
-  const [genreId, setGenreId] = useState("");
+  const [genreId, setGenreId] = useState("all");
   const [sortBy, setSortBy] = useState("popularity.desc");
-  const [year, setYear] = useState("");
+  const [year, setYear] = useState("all");
 
   const discoverParams = useMemo<DiscoverTVParams>(
-    () => ({ genreId, sortBy, year }),
+    () => ({
+      genreId: genreId === "all" ? "" : genreId,
+      sortBy,
+      year: year === "all" ? "" : year,
+    }),
     [genreId, sortBy, year],
   );
 
@@ -105,12 +109,12 @@ export function SeriesGridContent() {
   });
 
   const hasActiveFilters =
-    genreId !== "" || sortBy !== "popularity.desc" || year !== "";
+    genreId !== "all" || sortBy !== "popularity.desc" || year !== "all";
 
   const handleResetFilters = () => {
-    setGenreId("");
+    setGenreId("all");
     setSortBy("popularity.desc");
-    setYear("");
+    setYear("all");
   };
 
   return (

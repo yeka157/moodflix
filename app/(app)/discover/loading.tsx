@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DiscoverLoading() {
   return (
-    <div className="space-y-8">
+    <div className="px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       <div className="space-y-2">
         <Skeleton className="h-9 w-48" />
         <Skeleton className="h-5 w-64" />

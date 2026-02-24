@@ -42,8 +42,20 @@ export default async function MoviePage({ params }: MoviePageProps) {
   const requestHeaders = await headers();
   const country = getCountryFromHeaders(requestHeaders);
 
+  const fetchWithRetry = async () => {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        return await getMovieDetails(movieId);
+      } catch {
+        if (attempt === 1) return null;
+        await new Promise((r) => setTimeout(r, 500));
+      }
+    }
+    return null;
+  };
+
   const [details, recommendations] = await Promise.all([
-    getMovieDetails(movieId).catch(() => null),
+    fetchWithRetry(),
     getMovieRecommendations(movieId).catch(() => null),
   ]);
 

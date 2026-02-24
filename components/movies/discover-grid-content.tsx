@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/select";
 
 const GENRE_OPTIONS = [
-  { value: "", label: "All Genres" },
+  { value: "all", label: "All Genres" },
   ...Object.entries(GENRES).map(([id, name]) => ({ value: id, label: name })),
 ];
 
@@ -36,7 +36,7 @@ const SORT_OPTIONS = [
 ];
 
 const YEAR_OPTIONS = [
-  { value: "", label: "All Years" },
+  { value: "all", label: "All Years" },
   { value: "2026", label: "2026" },
   { value: "2025", label: "2025" },
   { value: "2024", label: "2024" },
@@ -69,9 +69,9 @@ function dedupeMovies(pages: MovieListResponse[] | undefined): Movie[] {
 export function DiscoverGridContent() {
   const [inputValue, setInputValue] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [genreId, setGenreId] = useState("");
+  const [genreId, setGenreId] = useState("all");
   const [sortBy, setSortBy] = useState("popularity.desc");
-  const [year, setYear] = useState("");
+  const [year, setYear] = useState("all");
   const [selectedSearchResult, setSelectedSearchResult] = useState<Movie | null>(null);
 
   const debouncedSetQuery = useDebouncedCallback((value: string) => {
@@ -81,7 +81,11 @@ export function DiscoverGridContent() {
   const isSearchActive = debouncedQuery.length >= 2;
 
   const discoverParams = useMemo(
-    () => ({ genreId, sortBy, year }),
+    () => ({
+      genreId: genreId === "all" ? "" : genreId,
+      sortBy,
+      year: year === "all" ? "" : year,
+    }),
     [genreId, sortBy, year],
   );
 
@@ -126,12 +130,12 @@ export function DiscoverGridContent() {
     setDebouncedQuery("");
   };
 
-  const hasActiveFilters = genreId !== "" || sortBy !== "popularity.desc" || year !== "";
+  const hasActiveFilters = genreId !== "all" || sortBy !== "popularity.desc" || year !== "all";
 
   const handleResetFilters = () => {
-    setGenreId("");
+    setGenreId("all");
     setSortBy("popularity.desc");
-    setYear("");
+    setYear("all");
   };
 
   return (

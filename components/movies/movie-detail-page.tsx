@@ -19,7 +19,7 @@ import {
   useUpdateWatchlistStatus,
   useRateWatchlistItem,
 } from "@/hooks/use-watchlist";
-import { cn, getBackdropUrl } from "@/lib/utils";
+import { cn, getBackdropUrl, getPosterUrl } from "@/lib/utils";
 import { TMDB_IMAGE_BASE, PROVIDER_URLS } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -230,27 +230,43 @@ export function MovieDetailPageContent({
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-linear-to-t from-background via-background/50 to-transparent" />
         <div className="absolute inset-0 bg-linear-to-r from-background/30 to-transparent" />
-
-        {/* Title overlay at bottom-left */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white line-clamp-2 drop-shadow-lg">
-            {details.title}
-          </h1>
-          {details.tagline && (
-            <p className="mt-2 text-sm md:text-base text-white/70 italic line-clamp-1">
-              &ldquo;{details.tagline}&rdquo;
-            </p>
-          )}
-        </div>
       </motion.div>
 
-      {/* Main content */}
+      {/* Main content — poster + info layout */}
       <motion.div
-        className="max-w-5xl mx-auto px-4 md:px-6 space-y-6 mt-6"
+        className="max-w-5xl mx-auto px-4 md:px-6 -mt-32 relative z-10"
         initial="hidden"
         animate="visible"
         variants={contentVariants}
       >
+        <div className="flex gap-6 md:gap-8 items-end mb-8">
+          {/* Poster */}
+          {details.poster_path && (
+            <div className="relative shrink-0 w-32 md:w-44 lg:w-52 aspect-2/3 rounded-lg overflow-hidden shadow-2xl border border-white/10 hidden sm:block">
+              <Image
+                src={getPosterUrl(details.poster_path)}
+                alt={details.title}
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 128px, (max-width: 1024px) 176px, 208px"
+                priority
+              />
+            </div>
+          )}
+          {/* Title + tagline */}
+          <div className="min-w-0 pb-1">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white line-clamp-2 drop-shadow-lg">
+              {details.title}
+            </h1>
+            {details.tagline && (
+              <p className="mt-2 text-sm md:text-base text-white/70 italic line-clamp-1">
+                &ldquo;{details.tagline}&rdquo;
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-6">
         {/* Metadata pills row */}
         <div className="flex flex-wrap items-center gap-2">
           {year && (
@@ -379,6 +395,7 @@ export function MovieDetailPageContent({
             />
           </div>
         )}
+        </div>
       </motion.div>
 
       {/* Fixed bottom action bar */}

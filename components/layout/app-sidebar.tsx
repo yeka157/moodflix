@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Compass, Tv, Bookmark, LogOut, Settings } from "lucide-react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -16,7 +16,6 @@ import {
 import { logout } from "@/actions/auth";
 import { cn } from "@/lib/utils";
 import { MoodflixLogo } from "@/components/brand/moodflix-logo";
-import { MoodflixIcon } from "@/components/brand/moodflix-icon";
 
 interface AppSidebarProps {
   user: {
@@ -80,33 +79,15 @@ export function AppSidebar({ user }: AppSidebarProps) {
       onHoverStart={() => setExpanded(true)}
       onHoverEnd={() => setExpanded(false)}
     >
-      {/* Logo area */}
+      {/* Logo area — always render full logo, clip text based on expanded state */}
       <div className="flex items-center h-16 px-4 shrink-0 overflow-hidden">
-        <AnimatePresence mode="wait" initial={false}>
-          {expanded ? (
-            <motion.div
-              key="logo"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.15 }}
-              className="shrink-0"
-            >
-              <MoodflixLogo height={28} variant="dark" />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="icon"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.15 }}
-              className="shrink-0"
-            >
-              <MoodflixIcon size={28} variant="dark" />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <motion.div
+          className="shrink-0 overflow-hidden"
+          animate={{ width: expanded ? "auto" : 28 }}
+          transition={shouldReduceMotion ? { duration: 0 } : { type: "spring", stiffness: 280, damping: 26 }}
+        >
+          <MoodflixLogo height={28} variant="dark" />
+        </motion.div>
       </div>
 
       {/* Nav items */}

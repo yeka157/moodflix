@@ -63,20 +63,22 @@ export default async function HomePage() {
     <div className="space-y-10">
       {featuredMovie && <HeroBanner movie={featuredMovie} />}
 
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Welcome back</h1>
-        <p className="text-muted-foreground">{displayName}</p>
+      <div className="px-4 sm:px-6 lg:px-8 space-y-10">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">Welcome back</h1>
+          <p className="text-muted-foreground">{displayName}</p>
+        </div>
+
+        <HomeMovies
+          trending={trending.results}
+          personalizedData={personalizedData}
+          regionalPopular={regionalPopular?.results}
+        />
+
+        <MoodSection />
+
+        <FeatureCardGrid cards={featureCards} />
       </div>
-
-      <HomeMovies
-        trending={trending.results}
-        personalizedData={personalizedData}
-        regionalPopular={regionalPopular?.results}
-      />
-
-      <MoodSection />
-
-      <FeatureCardGrid cards={featureCards} />
     </div>
   );
 }
