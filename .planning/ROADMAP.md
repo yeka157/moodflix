@@ -103,12 +103,24 @@ Plans:
 - [x] 07-01-PLAN.md — Sidebar + bottom tab bar + warmer color tokens + layout restructure
 - [x] 07-02-PLAN.md — Movie + TV detail page routes (Stremio-inspired full-page layout)
 - [x] 07-03-PLAN.md — Discover + Series grid layout with filter dropdowns
-- [ ] 07-04-PLAN.md — Card navigation migration + search drawer + navbar removal + visual verification
+- [x] 07-04-PLAN.md — Card navigation migration + search drawer + navbar removal + visual verification
+
+### Phase 07.1: Bug Fixes & Improvements (INSERTED)
+
+**Goal:** Fix AI model quota issues, restore K-drama/C-drama separation on series page, add season breakdown to TV detail page, fix grid orphan rows, and create settings page with profile management.
+**Depends on:** Phase 7
+**Requirements:** BACKLOG-20, BACKLOG-27, BACKLOG-28, BACKLOG-29, BACKLOG-30, BACKLOG-33
+**Plans:** 3 plans
+
+Plans:
+- [ ] 07.1-01-PLAN.md — AI model switch + quota error handling + grid orphan row padding
+- [ ] 07.1-02-PLAN.md — Series page curated rows + TV detail page season breakdown
+- [ ] 07.1-03-PLAN.md — Settings page with profile display and username editing
 
 ### Phase 8: Landing page revamp
 
 **Goal:** [To be planned]
-**Depends on:** Phase 7
+**Depends on:** Phase 07.1
 **Plans:** 4/4 plans complete
 
 Plans:
