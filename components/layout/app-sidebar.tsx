@@ -161,9 +161,11 @@ export function AppSidebar({ user }: AppSidebarProps) {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent side="right" align="end" className="w-56">
-            <DropdownMenuItem disabled className="cursor-not-allowed">
-              <Settings className="mr-2 size-4" />
-              <span>Settings</span>
+            <DropdownMenuItem asChild>
+              <Link href="/settings" className="cursor-pointer">
+                <Settings className="mr-2 size-4" />
+                <span>Settings</span>
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
