@@ -1,12 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
-import type { TVDetailsWithExtras } from "@/types/tv";
+import type { TVDetailsWithExtras, TVSeason } from "@/types/tv";
 import type { WatchProviderResult } from "@/types/movie";
 import { getBackdropUrl } from "@/lib/utils";
 import { TMDB_IMAGE_BASE, PROVIDER_URLS, TV_GENRES, GENRES } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface TVDetailPageContentProps {
@@ -76,6 +78,74 @@ function ProviderGrid({
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function SeasonsSection({ seasons }: { seasons: TVSeason[] }) {
+  const [showAll, setShowAll] = useState(false);
+
+  // Filter out specials (season 0), sort latest first
+  const regularSeasons = seasons
+    .filter((s) => s.season_number > 0)
+    .sort((a, b) => b.season_number - a.season_number);
+
+  if (regularSeasons.length === 0) return null;
+
+  const hasMany = regularSeasons.length > 5;
+  const displayedSeasons = hasMany && !showAll ? regularSeasons.slice(0, 5) : regularSeasons;
+  const latestSeasonNumber = regularSeasons[0]?.season_number;
+
+  return (
+    <div className="space-y-3">
+      <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
+        Seasons ({regularSeasons.length})
+      </h2>
+      <div className="space-y-3">
+        {displayedSeasons.map((season) => (
+          <div key={season.id} className="flex items-center gap-3">
+            <div className="relative h-16 w-11 overflow-hidden rounded-md bg-muted shrink-0">
+              {season.poster_path ? (
+                <Image
+                  src={`${TMDB_IMAGE_BASE}/w92${season.poster_path}`}
+                  alt={season.name}
+                  fill
+                  className="object-cover"
+                  sizes="44px"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
+                  S{season.season_number}
+                </div>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-medium truncate">{season.name}</p>
+                {season.season_number === latestSeasonNumber && (
+                  <Badge variant="default" className="text-[10px] px-1.5 py-0">
+                    Latest
+                  </Badge>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {season.episode_count} {season.episode_count === 1 ? "Episode" : "Episodes"}
+                {season.air_date && ` | ${season.air_date.slice(0, 4)}`}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+      {hasMany && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-xs"
+          onClick={() => setShowAll(!showAll)}
+        >
+          {showAll ? "Show less" : `Show all ${regularSeasons.length} seasons`}
+        </Button>
+      )}
     </div>
   );
 }
@@ -300,6 +370,11 @@ export function TVDetailPageContent({
             Streaming data powered by JustWatch
           </p>
         </div>
+
+        {/* Seasons breakdown */}
+        {details.seasons && details.seasons.length > 0 && (
+          <SeasonsSection seasons={details.seasons} />
+        )}
 
         {/* TV watchlist notice */}
         <p className="text-xs text-muted-foreground/60 italic pb-4">
