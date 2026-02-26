@@ -6,9 +6,13 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { db } from "@/drizzle";
 import { watchlist, aiRecommendations } from "@/drizzle/schema";
 import { eq, and, or, ne, isNull, desc, sql } from "drizzle-orm";
-import { GENRES } from "@/lib/constants";
+import { GENRES, TV_GENRES } from "@/lib/constants";
 
-const genreList = Object.entries(GENRES)
+const movieGenreList = Object.entries(GENRES)
+  .map(([id, name]) => `${name} (${id})`)
+  .join(", ");
+
+const tvGenreList = Object.entries(TV_GENRES)
   .map(([id, name]) => `${name} (${id})`)
   .join(", ");
 
@@ -109,15 +113,17 @@ export async function POST(request: Request) {
       : "";
 
     // 6. Build system prompt
-    const systemPrompt = `You are Moodflix AI, a friendly movie mood expert. Help users find the perfect movies by understanding their emotional state.
+    const systemPrompt = `You are Moodflix AI, a friendly movie and TV show mood expert. Help users find the perfect movies or TV shows by understanding their emotional state.
 
-When you understand the user's mood well enough, call the suggest_genres tool with 1-3 TMDB genres that best match. Then continue your response with 2-3 movie examples that illustrate the mood fit.
+When you understand the user's mood well enough, call the suggest_genres tool with 1-3 TMDB genres that best match, and set the media_type to "movie" or "tv" based on what fits best. If the user mentions Korean drama, K-drama, C-drama, TV series, shows, or similar terms, set media_type to "tv". Default to "movie" if unclear.
 
-If the user refines their preferences, call suggest_genres again with updated genres.
+If the user refines their preferences, call suggest_genres again with updated genres and media_type.
 
 If the user is vague, ask ONE clarifying question instead of guessing.
 
-Available TMDB genres: ${genreList}
+Available TMDB movie genres: ${movieGenreList}
+Available TMDB TV genres: ${tvGenreList}
+Note: Some genres overlap between movies and TV. Use the correct ID for the media_type you choose.
 ${watchlistInstruction}
 Keep responses concise: 2-4 sentences. Be warm and conversational.`;
 
@@ -146,6 +152,10 @@ Keep responses concise: 2-4 sentences. Be warm and conversational.`;
             moodSummary: z
               .string()
               .describe("A short summary of the user's mood or preference"),
+            media_type: z
+              .enum(["movie", "tv"])
+              .describe("Whether to recommend movies or TV shows")
+              .default("movie"),
           }),
           execute: async (params) => {
             // Store recommendation in DB (fire-and-forget)

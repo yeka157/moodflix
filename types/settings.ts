@@ -1,10 +1,9 @@
 export type SettingsFormValues = {
-  username: string;
+  displayName: string;
 };
 
 export type UserProfile = {
   email: string;
-  username: string | null;
   displayName: string;
   avatarUrl: string | null;
 };

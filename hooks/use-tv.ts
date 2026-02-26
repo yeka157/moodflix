@@ -18,6 +18,7 @@ export const tvKeys = {
   category: (cat: TVCategory) => [...tvKeys.all, "category", cat] as const,
   details: (id: number) => [...tvKeys.all, "details", id] as const,
   discover: (params: DiscoverTVParams) => [...tvKeys.all, "discover", params] as const,
+  genre: (genreIds: string) => [...tvKeys.all, "genre", genreIds] as const,
 };
 
 async function fetchTVCategory(category: TVCategory): Promise<Movie[]> {
@@ -124,6 +125,30 @@ export function useDiscoverTV(params: DiscoverTVParams) {
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>
       lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    placeholderData: keepPreviousData,
+  });
+}
+
+async function fetchTVGenreDiscover(
+  genreIds: string,
+  page: number,
+): Promise<{ page: number; results: Movie[]; total_pages: number; total_results: number }> {
+  const res = await fetch(`/api/tv?action=discover&genre=${encodeURIComponent(genreIds)}&page=${page}`);
+  if (!res.ok) throw new Error("Failed to discover TV by genre");
+  const data: TVListResponse = await res.json();
+  return { ...data, results: data.results.map(normalizeTVShow) };
+}
+
+export function useDiscoverTVByGenre(genreIds: string) {
+  return useInfiniteQuery({
+    queryKey: tvKeys.genre(genreIds),
+    queryFn: ({ pageParam }) => fetchTVGenreDiscover(genreIds, pageParam),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,
+    enabled: genreIds.length > 0,
     staleTime: 10 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     placeholderData: keepPreviousData,

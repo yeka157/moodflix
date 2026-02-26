@@ -181,6 +181,15 @@ export async function discoverChineseDramas(page = 1) {
   });
 }
 
+export async function discoverTVByGenre(genreIds: string, page = 1) {
+  return tmdbFetch<TVListResponse>("/discover/tv", {
+    with_genres: genreIds,
+    sort_by: "popularity.desc",
+    page: String(page),
+    include_adult: "false",
+  });
+}
+
 export async function getTVDetails(id: number) {
   return tmdbFetch<TVDetailsWithExtras>(`/tv/${id}`, {
     append_to_response: "credits,watch/providers",

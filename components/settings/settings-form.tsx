@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { updateUsername } from "@/actions/profile";
+import { updateDisplayName } from "@/actions/profile";
 import type { SettingsFormValues } from "@/types/settings";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -14,25 +14,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-const usernameSchema = z.object({
-  username: z
+const formSchema = z.object({
+  displayName: z
     .string()
-    .max(30, "Username must be 30 characters or less")
-    .regex(
-      /^[a-zA-Z0-9_-]*$/,
-      "Only letters, numbers, hyphens, and underscores",
-    ),
+    .min(1, "Display name is required")
+    .max(50, "Display name must be 50 characters or less"),
 });
 
 interface SettingsFormProps {
-  currentUsername: string;
   displayName: string;
   email: string;
   avatarUrl: string | null;
 }
 
 export function SettingsForm({
-  currentUsername,
   displayName,
   email,
   avatarUrl,
@@ -44,19 +39,19 @@ export function SettingsForm({
     handleSubmit,
     formState: { errors },
   } = useForm<SettingsFormValues>({
-    resolver: zodResolver(usernameSchema),
+    resolver: zodResolver(formSchema),
     defaultValues: {
-      username: currentUsername,
+      displayName,
     },
   });
 
   function onSubmit(data: SettingsFormValues) {
     startTransition(async () => {
-      const result = await updateUsername(data.username);
+      const result = await updateDisplayName(data.displayName);
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success("Username updated");
+        toast.success("Display name updated");
       }
     });
   }
@@ -64,13 +59,12 @@ export function SettingsForm({
   const initial = displayName.charAt(0).toUpperCase();
 
   return (
-    <div className="space-y-6">
-      {/* Profile info */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Profile</CardTitle>
-        </CardHeader>
-        <CardContent className="flex items-center gap-4">
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">Profile</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="flex items-center gap-4">
           {avatarUrl ? (
             <div className="relative size-16 overflow-hidden rounded-full shrink-0">
               <Image
@@ -92,39 +86,28 @@ export function SettingsForm({
             <p className="text-base font-medium truncate">{displayName}</p>
             <p className="text-sm text-muted-foreground truncate">{email}</p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Username form */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Username</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                placeholder="Enter a username"
-                {...register("username")}
-                className="max-w-sm"
-              />
-              {errors.username && (
-                <p className="text-sm text-destructive">
-                  {errors.username.message}
-                </p>
-              )}
-              <p className="text-xs text-muted-foreground">
-                2-30 characters. Letters, numbers, hyphens, and underscores only.
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="displayName">Display Name</Label>
+            <Input
+              id="displayName"
+              placeholder="Enter your name"
+              {...register("displayName")}
+              className="max-w-sm"
+            />
+            {errors.displayName && (
+              <p className="text-sm text-destructive">
+                {errors.displayName.message}
               </p>
-            </div>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? "Saving..." : "Save"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+            )}
+          </div>
+          <Button type="submit" disabled={isPending}>
+            {isPending ? "Saving..." : "Save"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

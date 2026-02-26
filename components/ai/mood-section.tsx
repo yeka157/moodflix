@@ -65,7 +65,8 @@ export function MoodSection() {
     if (!genreSuggestion) return;
     const genreIds = genreSuggestion.genres.map((g) => g.id).join(",");
     const mood = encodeURIComponent(genreSuggestion.moodSummary);
-    router.push(`/home/recommendations?genres=${genreIds}&mood=${mood}`);
+    const mediaType = genreSuggestion.media_type ?? "movie";
+    router.push(`/home/recommendations?genres=${genreIds}&mood=${mood}&type=${mediaType}`);
   };
 
   return (

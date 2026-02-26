@@ -26,9 +26,9 @@ export default async function SettingsPage() {
     .where(eq(profiles.id, user.id))
     .limit(1);
 
-  const currentUsername = profile[0]?.username ?? null;
+  const savedName = profile[0]?.username ?? null;
   const displayName =
-    currentUsername ??
+    savedName ??
     (user.user_metadata?.full_name as string | undefined) ??
     user.email?.split("@")[0] ??
     "User";
@@ -46,7 +46,6 @@ export default async function SettingsPage() {
       </div>
 
       <SettingsForm
-        currentUsername={currentUsername ?? ""}
         displayName={displayName}
         email={email}
         avatarUrl={avatarUrl}

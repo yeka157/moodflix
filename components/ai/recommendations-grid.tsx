@@ -4,11 +4,13 @@ import { useMemo } from "react";
 import useInfiniteScroll from "react-infinite-scroll-hook";
 import type { Movie, MovieListResponse } from "@/types/movie";
 import { useDiscoverByGenre } from "@/hooks/use-movies";
+import { useDiscoverTVByGenre } from "@/hooks/use-tv";
 import { MovieGrid } from "@/components/movies/movie-grid";
 
 interface RecommendationsGridProps {
   genres: string;
   initialMovies: Movie[];
+  mediaType?: "movie" | "tv";
 }
 
 function dedupeMovies(pages: MovieListResponse[] | undefined): Movie[] {
@@ -29,8 +31,11 @@ function dedupeMovies(pages: MovieListResponse[] | undefined): Movie[] {
 export function RecommendationsGrid({
   genres,
   initialMovies,
+  mediaType = "movie",
 }: RecommendationsGridProps) {
-  const query = useDiscoverByGenre(genres);
+  const movieQuery = useDiscoverByGenre(mediaType === "movie" ? genres : "");
+  const tvQuery = useDiscoverTVByGenre(mediaType === "tv" ? genres : "");
+  const query = mediaType === "tv" ? tvQuery : movieQuery;
 
   const movies = useMemo(() => {
     const fromQuery = dedupeMovies(query.data?.pages);
@@ -45,10 +50,12 @@ export function RecommendationsGrid({
     disabled: Boolean(query.error),
   });
 
+  const hrefPrefix = mediaType === "tv" ? "/tv/" : "/movie/";
+
   return (
     <MovieGrid
       movies={movies}
-      hrefPrefix="/movie/"
+      hrefPrefix={hrefPrefix}
       sentinelRef={sentinelRef}
       isFetchingMore={query.isFetchingNextPage}
     />

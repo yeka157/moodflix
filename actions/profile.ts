@@ -7,18 +7,12 @@ import { db } from "@/drizzle";
 import { profiles } from "@/drizzle/schema";
 import { eq } from "drizzle-orm";
 
-const usernameSchema = z
+const displayNameSchema = z
   .string()
-  .max(30, "Username must be 30 characters or less")
-  .regex(
-    /^[a-zA-Z0-9_-]*$/,
-    "Username can only contain letters, numbers, hyphens, and underscores",
-  )
-  .refine((val) => val === "" || val.length >= 2, {
-    message: "Username must be at least 2 characters",
-  });
+  .min(1, "Display name is required")
+  .max(50, "Display name must be 50 characters or less");
 
-export async function updateUsername(username: string) {
+export async function updateDisplayName(displayName: string) {
   try {
     const supabase = await createClient();
     const {
@@ -29,19 +23,19 @@ export async function updateUsername(username: string) {
       return { error: "Not authenticated" };
     }
 
-    const result = usernameSchema.safeParse(username);
+    const result = displayNameSchema.safeParse(displayName.trim());
     if (!result.success) {
-      return { error: result.error.issues[0]?.message ?? "Invalid username" };
+      return { error: result.error.issues[0]?.message ?? "Invalid name" };
     }
 
     await db
       .update(profiles)
-      .set({ username: username || null })
+      .set({ username: result.data })
       .where(eq(profiles.id, user.id));
 
     revalidatePath("/settings");
     return { success: true };
   } catch {
-    return { error: "Failed to update username" };
+    return { error: "Failed to update display name" };
   }
 }

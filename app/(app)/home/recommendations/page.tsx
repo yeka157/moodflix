@@ -2,8 +2,10 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { ArrowLeft, Sparkles } from "lucide-react";
-import { discoverMoviesByGenre } from "@/lib/tmdb";
-import { GENRES } from "@/lib/constants";
+import type { Movie } from "@/types/movie";
+import { discoverMoviesByGenre, discoverTVByGenre } from "@/lib/tmdb";
+import { normalizeTVShow } from "@/types/tv";
+import { GENRES, TV_GENRES } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 import { RecommendationsGrid } from "@/components/ai/recommendations-grid";
 
@@ -16,21 +18,30 @@ export const metadata: Metadata = {
 export default async function RecommendationsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ genres?: string; mood?: string }>;
+  searchParams: Promise<{ genres?: string; mood?: string; type?: string }>;
 }) {
-  const { genres, mood } = await searchParams;
+  const { genres, mood, type } = await searchParams;
 
   if (!genres) redirect("/home");
 
+  const mediaType = type === "tv" ? "tv" : "movie";
   const genreIds = genres.split(",").map(Number).filter(Boolean);
+  const allGenres = { ...GENRES, ...TV_GENRES };
   const genreNames = genreIds
-    .map((id) => GENRES[id])
+    .map((id) => allGenres[id])
     .filter((name): name is string => Boolean(name));
 
-  const firstPage = await discoverMoviesByGenre(genres);
+  let initialMovies: Movie[];
+  if (mediaType === "tv") {
+    const tvPage = await discoverTVByGenre(genres);
+    initialMovies = tvPage.results.map(normalizeTVShow);
+  } else {
+    const moviePage = await discoverMoviesByGenre(genres);
+    initialMovies = moviePage.results;
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       {/* Header */}
       <div className="space-y-4">
         <Link
@@ -69,10 +80,11 @@ export default async function RecommendationsPage({
         </div>
       </div>
 
-      {/* Movie grid */}
+      {/* Grid */}
       <RecommendationsGrid
         genres={genres}
-        initialMovies={firstPage.results}
+        initialMovies={initialMovies}
+        mediaType={mediaType}
       />
     </div>
   );
