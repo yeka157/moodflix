@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Users can discover movies that match their mood and manage what they've watched — the library experience must feel instant and intuitive.
-**Current focus:** v0.3 Content Expansion — Phase 6 (Homepage Polish) complete, Phase 7 next.
+**Current focus:** v0.3 Content Expansion — Phase 07.1 (Bug Fixes & Improvements) complete, Phase 8 next.
 
 ## Current Position
 
-Phase: 7 (UI/UX Revamp)
-Plan: 04 tasks 1-2 complete — paused at checkpoint:human-verify (Task 3)
-Status: Phase in progress — plans 01, 02, 03, 04 (tasks 1-2) executed
-Last activity: 2026-02-24 — Phase 7 Plan 04 tasks 1-2 executed (link-based card navigation + search drawer + navbar deletion)
+Phase: 07.1 (Bug Fixes & Improvements) — COMPLETE
+Plan: All 3 plans executed (01: AI & Grid, 02: Series Rows & TV Episodes, 03: Settings)
+Status: Phase complete — all tasks executed and verified
+Last activity: 2026-02-26 — Phase 07.1 executed
 
-Progress: [##############################] 95% (v0.3 Phase 7, plan 04 awaiting human verify)
+Progress: [##############################] 100% (v0.3 Phase 07.1 complete, Phase 8 next)
 
 ## Performance Metrics
 
@@ -110,6 +110,7 @@ None.
 
 - Phase 7 added: UI/UX Revamp — sidebar navigation, color scheme overhaul, Stremio-inspired layout (Pencil MCP design)
 - Phase 8 added: Landing page revamp
+- Phase 07.1 inserted after Phase 7: Bug Fixes & Improvements (URGENT) — BACKLOG-20, 27, 28, 29, 30, 33
 
 ### Blockers/Concerns
 
@@ -117,6 +118,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-24 (Phase 7 Plan 04 Tasks 1-2 executed)
-Stopped at: 07-04-PLAN.md Task 3 checkpoint:human-verify — awaiting visual verification of complete UI/UX revamp
-Resume at: After human verification of all 10 feature areas in Task 3, mark checkpoint complete and finalize Phase 7
+Last session: 2026-02-26 (Phase 07.1 executed)
+Stopped at: Phase 07.1 complete
+Resume at: Phase 8 (Landing page revamp) — run /gsd:plan-phase 8
