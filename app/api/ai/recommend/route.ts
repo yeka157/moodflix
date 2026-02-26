@@ -12,6 +12,23 @@ const genreList = Object.entries(GENRES)
   .map(([id, name]) => `${name} (${id})`)
   .join(", ");
 
+function isQuotaOrRateLimitError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  if (
+    msg.includes("quota") ||
+    msg.includes("RESOURCE_EXHAUSTED") ||
+    msg.includes("429") ||
+    msg.includes("rate limit") ||
+    msg.includes("Too Many Requests")
+  ) {
+    return true;
+  }
+  if (err instanceof Error && err.cause) {
+    return isQuotaOrRateLimitError(err.cause);
+  }
+  return false;
+}
+
 async function getWatchlistContext(userId: string): Promise<string> {
   const likedMovies = await db
     .select({ title: watchlist.title })
@@ -150,11 +167,23 @@ Keep responses concise: 2-4 sentences. Be warm and conversational.`;
       },
       stopWhen: stepCountIs(3),
       maxOutputTokens: 1000,
+      maxRetries: 0,
+      onError: ({ error }) => {
+        console.error("[AI] stream error:", error);
+      },
     });
 
     return result.toUIMessageStreamResponse();
   } catch (err: unknown) {
     console.error("AI recommend error:", err);
+
+    if (isQuotaOrRateLimitError(err)) {
+      return Response.json(
+        { error: "AI recommendations are temporarily unavailable. Please try again later." },
+        { status: 503 },
+      );
+    }
+
     return Response.json(
       { error: "Failed to generate recommendations. Please try again." },
       { status: 500 },
