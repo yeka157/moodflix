@@ -16,13 +16,13 @@ export function CTASection() {
       >
         {/* Crimson glow shadow */}
         <div
-          className="absolute inset-0 rounded-2xl blur-3xl opacity-20"
+          className="absolute inset-0 rounded-3xl blur-3xl opacity-25"
           style={{
             background: `radial-gradient(circle at 50% 50%, oklch(0.637 0.237 25.331) 0%, transparent 70%)`,
           }}
         />
 
-        <div className="relative">
+        <div className="relative bg-card/40 border border-border/50 rounded-3xl px-8 py-16 sm:px-16">
           <h2 className="text-4xl lg:text-5xl font-bold tracking-tight mb-6">
             Ready to Find Your Next Favorite Movie?
           </h2>
