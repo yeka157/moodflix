@@ -69,10 +69,24 @@ export function DiscoverContent({
   );
   const searchTotal = searchQuery.data?.pages[0]?.total_results ?? 0;
 
+  const paddedSearchMovies = useMemo(() => {
+    if (searchQuery.hasNextPage || searchQuery.isFetchingNextPage) return searchMovies;
+    const remainder = searchMovies.length % 6;
+    if (remainder === 0 || searchMovies.length === 0) return searchMovies;
+    return [...searchMovies, ...Array<null>(6 - remainder).fill(null)];
+  }, [searchMovies, searchQuery.hasNextPage, searchQuery.isFetchingNextPage]);
+
   const genreMovies = useMemo(
     () => dedupeMovies(genreQuery.data?.pages),
     [genreQuery.data],
   );
+
+  const paddedGenreMovies = useMemo(() => {
+    if (genreQuery.hasNextPage || genreQuery.isFetchingNextPage) return genreMovies;
+    const remainder = genreMovies.length % 6;
+    if (remainder === 0 || genreMovies.length === 0) return genreMovies;
+    return [...genreMovies, ...Array<null>(6 - remainder).fill(null)];
+  }, [genreMovies, genreQuery.hasNextPage, genreQuery.isFetchingNextPage]);
 
   const [searchSentinelRef] = useInfiniteScroll({
     loading: searchQuery.isFetchingNextPage,
@@ -210,7 +224,7 @@ export function DiscoverContent({
                 Found {searchTotal.toLocaleString()} results
               </p>
               <MovieGrid
-                movies={searchMovies}
+                movies={paddedSearchMovies}
                 onMovieClick={setSelectedMovie}
                 sentinelRef={searchSentinelRef}
                 isFetchingMore={searchQuery.isFetchingNextPage}
@@ -267,7 +281,7 @@ export function DiscoverContent({
                 movies
               </p>
               <MovieGrid
-                movies={genreMovies}
+                movies={paddedGenreMovies}
                 onMovieClick={setSelectedMovie}
                 sentinelRef={genreSentinelRef}
                 isFetchingMore={genreQuery.isFetchingNextPage}

@@ -6,7 +6,7 @@ import { MovieCard } from "./movie-card";
 import { MovieCardSkeleton } from "./movie-card-skeleton";
 
 interface MovieGridProps {
-  movies: Movie[];
+  movies: (Movie | null)[];
   isLoading?: boolean;
   onMovieClick?: (movie: Movie) => void;
   hrefPrefix?: string;
@@ -31,22 +31,26 @@ export function MovieGrid({ movies, isLoading = false, onMovieClick, hrefPrefix,
     <div>
       {/* Columns: 2 (375px) | 3 (640px) | 4 (768px) | 5 (1024px) | 6 (1280px+) — WCAG verified */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-        {movies.map((movie) => (
-          <motion.div
-            key={movie.id}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.4 }}
-          >
-            <MovieCard
-              movie={movie}
-              href={hrefPrefix ? `${hrefPrefix}${movie.id}` : undefined}
-              onClick={hrefPrefix ? undefined : onMovieClick}
-              readOnly={readOnly}
-            />
-          </motion.div>
-        ))}
+        {movies.map((movie, i) =>
+          movie === null ? (
+            <div key={`pad-${i}`} aria-hidden="true" />
+          ) : (
+            <motion.div
+              key={movie.id}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4 }}
+            >
+              <MovieCard
+                movie={movie}
+                href={hrefPrefix ? `${hrefPrefix}${movie.id}` : undefined}
+                onClick={hrefPrefix ? undefined : onMovieClick}
+                readOnly={readOnly}
+              />
+            </motion.div>
+          ),
+        )}
       </div>
 
       {/* Infinite scroll sentinel */}

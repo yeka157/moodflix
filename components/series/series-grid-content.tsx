@@ -100,6 +100,14 @@ export function SeriesGridContent() {
     [discoverQuery.data],
   );
 
+  const paddedShows = useMemo(() => {
+    if (discoverQuery.hasNextPage || discoverQuery.isFetchingNextPage) return shows;
+    const remainder = shows.length % 6;
+    if (remainder === 0 || shows.length === 0) return shows;
+    const padCount = 6 - remainder;
+    return [...shows, ...Array<null>(padCount).fill(null)];
+  }, [shows, discoverQuery.hasNextPage, discoverQuery.isFetchingNextPage]);
+
   const [sentinelRef] = useInfiniteScroll({
     loading: discoverQuery.isFetchingNextPage,
     hasNextPage: discoverQuery.hasNextPage ?? false,
@@ -207,7 +215,7 @@ export function SeriesGridContent() {
           )}
           {/* TV show cards link to /tv/[id] */}
           <MovieGrid
-            movies={shows}
+            movies={paddedShows}
             hrefPrefix="/tv/"
             sentinelRef={sentinelRef}
             isFetchingMore={discoverQuery.isFetchingNextPage}
