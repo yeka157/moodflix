@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 
 ## Current Position
 
-Phase: 07.1 (Bug Fixes & Improvements) — COMPLETE
-Plan: All 3 plans executed (01: AI & Grid, 02: Series Rows & TV Episodes, 03: Settings)
-Status: Phase complete — all tasks executed and verified
-Last activity: 2026-02-26 — Phase 07.1 executed
+Phase: 08-landing-page-revamp — IN PROGRESS
+Plan: 1 of 4 executed (01: Cinematic Hero — COMPLETE)
+Status: Plan 01 complete — hero section + navbar done, Plan 02 next
+Last activity: 2026-02-27 — Phase 08 Plan 01 executed
 
-Progress: [##############################] 100% (v0.3 Phase 07.1 complete, Phase 8 next)
+Progress: [##############################] 25% (Phase 08 Plan 01 of 4 complete)
 
 ## Performance Metrics
 
@@ -101,6 +101,10 @@ Recent decisions affecting current work:
 - [Phase 07-04]: MovieCard href prop: dual-mode Link/onClick — wraps in Link when href provided, uses onClick callback when not
 - [Phase 07-04]: MovieSearchDrawer: search results use onClick→Sheet drawer; grid/filter results use link navigation
 - [Phase 07-04]: app-navbar.tsx deleted — layout.tsx already used AppSidebar since Plan 01
+- [Phase 08-01]: useScroll targets heroRef element (not window) — scoped scroll progress for parallax precision
+- [Phase 08-01]: Backdrop parallax: y 0%→25%, contentOpacity fades at [0, 0.6] — content exits before backdrop scrolls fully past
+- [Phase 08-01]: Landing navbar: always-on blur (removed scroll-triggered state), Framer Motion entrance animation
+- [Phase 08-01]: page.tsx uses Promise.all for getHeroBackdrop + getShowcasePosters — WIP movie-showcase requires posters prop, parallelized
 
 ### Pending Todos
 
@@ -118,6 +122,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-27 (Phase 8 context gathered)
-Stopped at: Phase 8 context gathered
-Resume file: .planning/phases/08-landing-page-revamp/08-CONTEXT.md
+Last session: 2026-02-27 (Phase 08 Plan 01 executed)
+Stopped at: Completed 08-01-PLAN.md (hero section + landing navbar)
+Resume file: .planning/phases/08-landing-page-revamp/08-02-PLAN.md
