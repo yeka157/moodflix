@@ -122,7 +122,7 @@ Plans:
 **Goal:** Redesign the public-facing landing page to match the current app identity (cinematic dark theme, crimson accents, all v0.3 features) with world-class scroll-triggered animations, real TMDB imagery, and a storytelling flow that converts visitors into signups.
 **Depends on:** Phase 07.1
 **Requirements:** HERO-BACKDROP, HERO-SCREENSHOT, CINEMATIC-THEME, FEATURES-4-EQUAL, SCROLL-ANIMATIONS, AI-DEMO-SECTION, CTA-CONVERSION, STORYTELLING-FLOW, VISUAL-QUALITY, ANIMATION-POLISH
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 - [ ] 08-01-PLAN.md — Cinematic hero section (TMDB backdrop parallax + screenshot overlay + landing navbar)
