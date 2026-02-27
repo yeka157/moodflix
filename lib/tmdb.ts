@@ -195,3 +195,26 @@ export async function getTVDetails(id: number) {
     append_to_response: "credits,watch/providers",
   });
 }
+
+export async function getHeroBackdrop(): Promise<string | null> {
+  try {
+    const url = new URL(`${TMDB_BASE_URL}/trending/movie/week`);
+    const response = await fetch(url.toString(), {
+      headers: {
+        Authorization: `Bearer ${process.env.TMDB_API_READ_KEY}`,
+        "Content-Type": "application/json",
+      },
+      next: { revalidate: 3600 },
+    });
+
+    if (!response.ok) return null;
+
+    const data = (await response.json()) as { results: Array<{ backdrop_path: string | null }> };
+    const movie = data.results.find((m) => m.backdrop_path != null);
+    if (!movie?.backdrop_path) return null;
+
+    return `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`;
+  } catch {
+    return null;
+  }
+}
