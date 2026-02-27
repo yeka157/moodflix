@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 ## Current Position
 
 Phase: 08-landing-page-revamp — IN PROGRESS
-Plan: 1 of 4 executed (01: Cinematic Hero — COMPLETE)
-Status: Plan 01 complete — hero section + navbar done, Plan 02 next
-Last activity: 2026-02-27 — Phase 08 Plan 01 executed
+Plan: 2 of 4 executed (01: Cinematic Hero — COMPLETE, 02: Features + Showcase — COMPLETE)
+Status: Plan 02 complete — features stagger grid + real TMDB poster marquee done, Plan 03 next
+Last activity: 2026-02-27 — Phase 08 Plan 02 executed
 
-Progress: [##############################] 25% (Phase 08 Plan 01 of 4 complete)
+Progress: [##############################] 50% (Phase 08 Plan 02 of 4 complete)
 
 ## Performance Metrics
 
@@ -42,6 +42,7 @@ Progress: [##############################] 25% (Phase 08 Plan 01 of 4 complete)
 | Phase 07-ui-ux-revamp P01 | 2min | 2 tasks | 4 files |
 | Phase 07-ui-ux-revamp P03 | 15min | 2 tasks | 8 files |
 | Phase 07-ui-ux-revamp P04 | 12min | 2 tasks | 12 files |
+| Phase 08 P02 | 6 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -105,6 +106,9 @@ Recent decisions affecting current work:
 - [Phase 08-01]: Backdrop parallax: y 0%→25%, contentOpacity fades at [0, 0.6] — content exits before backdrop scrolls fully past
 - [Phase 08-01]: Landing navbar: always-on blur (removed scroll-triggered state), Framer Motion entrance animation
 - [Phase 08-01]: page.tsx uses Promise.all for getHeroBackdrop + getShowcasePosters — WIP movie-showcase requires posters prop, parallelized
+- [Phase 08]: 08-02: 4-feature stagger grid uses containerVariants staggerChildren, not per-card delay — cleaner Framer Motion orchestration
+- [Phase 08]: 08-02: getShowcasePosters uses w342 TMDB image size — fast loading for marquee cards without quality compromise
+- [Phase 08]: 08-02: ShowcasePoster interface exported from lib/tmdb.ts (not types/) — co-located with fetch function
 
 ### Pending Todos
 
@@ -122,6 +126,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-27 (Phase 08 Plan 01 executed)
-Stopped at: Completed 08-01-PLAN.md (hero section + landing navbar)
-Resume file: .planning/phases/08-landing-page-revamp/08-02-PLAN.md
+Last session: 2026-02-27 (Phase 08 Plan 02 executed)
+Stopped at: Completed 08-02-PLAN.md (features section + movie showcase)
+Resume file: .planning/phases/08-landing-page-revamp/08-03-PLAN.md
