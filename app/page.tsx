@@ -9,13 +9,13 @@ import { Footer } from "@/components/landing/footer";
 import { getHeroBackdrop, getShowcasePosters } from "@/lib/tmdb";
 
 export const metadata: Metadata = {
-  title: "Moodflix - AI-Powered Movie Discovery",
+  title: "Moodflix — Discover Movies That Match Your Mood",
   description:
-    "Discover movies that match your mood with AI-powered recommendations. Build your library, explore trending films, and find your next favorite movie.",
+    "Tell our AI how you're feeling and get personalized movie recommendations instantly. Browse thousands of titles with TMDB, build your personal watchlist, and never miss a great film.",
   openGraph: {
-    title: "Moodflix - AI-Powered Movie Discovery",
+    title: "Moodflix — Discover Movies That Match Your Mood",
     description:
-      "Discover movies that match your mood with AI-powered recommendations. Build your library, explore trending films, and find your next favorite movie.",
+      "Tell our AI how you're feeling and get personalized movie recommendations instantly. Browse thousands of titles with TMDB, build your personal watchlist, and never miss a great film.",
   },
 };
 
