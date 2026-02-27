@@ -117,14 +117,18 @@ Plans:
 - [ ] 07.1-02-PLAN.md — Series page curated rows + TV detail page season breakdown
 - [ ] 07.1-03-PLAN.md — Settings page with profile display and username editing
 
-### Phase 8: Landing page revamp
+### Phase 8: Landing Page Revamp
 
-**Goal:** [To be planned]
+**Goal:** Redesign the public-facing landing page to match the current app identity (cinematic dark theme, crimson accents, all v0.3 features) with world-class scroll-triggered animations, real TMDB imagery, and a storytelling flow that converts visitors into signups.
 **Depends on:** Phase 07.1
-**Plans:** 4/4 plans complete
+**Requirements:** HERO-BACKDROP, HERO-SCREENSHOT, CINEMATIC-THEME, FEATURES-4-EQUAL, SCROLL-ANIMATIONS, AI-DEMO-SECTION, CTA-CONVERSION, STORYTELLING-FLOW, VISUAL-QUALITY, ANIMATION-POLISH
+**Plans:** 4 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 8 to break down)
+- [ ] 08-01-PLAN.md — Cinematic hero section (TMDB backdrop parallax + screenshot overlay + landing navbar)
+- [ ] 08-02-PLAN.md — 4-feature highlights grid + real TMDB poster marquee
+- [ ] 08-03-PLAN.md — AI mood preview section + final CTA + footer
+- [ ] 08-04-PLAN.md — Integration pass + visual verification checkpoint
 
 ---
 
