@@ -6,7 +6,7 @@ import { MovieShowcase } from "@/components/landing/movie-showcase";
 import { AIPreviewSection } from "@/components/landing/ai-preview-section";
 import { CTASection } from "@/components/landing/cta-section";
 import { Footer } from "@/components/landing/footer";
-import { getHeroBackdrop } from "@/lib/tmdb";
+import { getHeroBackdrop, getShowcasePosters } from "@/lib/tmdb";
 
 export const metadata: Metadata = {
   title: "Moodflix - AI-Powered Movie Discovery",
@@ -20,7 +20,10 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  const backdropUrl = await getHeroBackdrop();
+  const [backdropUrl, posters] = await Promise.all([
+    getHeroBackdrop(),
+    getShowcasePosters(),
+  ]);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -52,7 +55,7 @@ export default async function Home() {
       <LandingNavbar />
       <HeroSection backdropUrl={backdropUrl} />
       <FeaturesSection />
-      <MovieShowcase />
+      <MovieShowcase posters={posters} />
       <AIPreviewSection />
       <CTASection />
       <Footer />
