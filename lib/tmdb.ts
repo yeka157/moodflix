@@ -196,6 +196,40 @@ export async function getTVDetails(id: number) {
   });
 }
 
+export interface ShowcasePoster {
+  title: string;
+  posterUrl: string;
+}
+
+export async function getShowcasePosters(): Promise<ShowcasePoster[]> {
+  try {
+    const url = new URL(`${TMDB_BASE_URL}/trending/movie/week`);
+    const response = await fetch(url.toString(), {
+      headers: {
+        Authorization: `Bearer ${process.env.TMDB_API_READ_KEY}`,
+        "Content-Type": "application/json",
+      },
+      next: { revalidate: 3600 },
+    });
+
+    if (!response.ok) return [];
+
+    const data = (await response.json()) as {
+      results: Array<{ title?: string; poster_path: string | null }>;
+    };
+
+    return data.results
+      .filter((m) => m.poster_path != null)
+      .slice(0, 10)
+      .map((m) => ({
+        title: m.title ?? "",
+        posterUrl: `https://image.tmdb.org/t/p/w342${m.poster_path}`,
+      }));
+  } catch {
+    return [];
+  }
+}
+
 export async function getHeroBackdrop(): Promise<string | null> {
   try {
     const url = new URL(`${TMDB_BASE_URL}/trending/movie/week`);
