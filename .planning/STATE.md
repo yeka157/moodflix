@@ -118,6 +118,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-26 (Phase 07.1 executed)
-Stopped at: Phase 07.1 complete
-Resume at: Phase 8 (Landing page revamp) — run /gsd:plan-phase 8
+Last session: 2026-02-27 (Phase 8 context gathered)
+Stopped at: Phase 8 context gathered
+Resume file: .planning/phases/08-landing-page-revamp/08-CONTEXT.md
