@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 ## Current Position
 
 Phase: 08-landing-page-revamp — IN PROGRESS
-Plan: 2 of 4 executed (01: Cinematic Hero — COMPLETE, 02: Features + Showcase — COMPLETE)
-Status: Plan 02 complete — features stagger grid + real TMDB poster marquee done, Plan 03 next
-Last activity: 2026-02-27 — Phase 08 Plan 02 executed
+Plan: 3 of 4 executed (01: Cinematic Hero — COMPLETE, 02: Features + Showcase — COMPLETE, 03: AI Preview + CTA + Footer — COMPLETE)
+Status: Plan 03 complete — AI preview mock chat, CTA section, footer with TMDB attribution done, Plan 04 next
+Last activity: 2026-02-27 — Phase 08 Plan 03 executed
 
-Progress: [##############################] 50% (Phase 08 Plan 02 of 4 complete)
+Progress: [#######################################] 75% (Phase 08 Plan 03 of 4 complete)
 
 ## Performance Metrics
 
@@ -43,6 +43,7 @@ Progress: [##############################] 50% (Phase 08 Plan 02 of 4 complete)
 | Phase 07-ui-ux-revamp P03 | 15min | 2 tasks | 8 files |
 | Phase 07-ui-ux-revamp P04 | 12min | 2 tasks | 12 files |
 | Phase 08 P02 | 6 | 2 tasks | 3 files |
+| Phase 08 P03 | 23min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -109,6 +110,10 @@ Recent decisions affecting current work:
 - [Phase 08]: 08-02: 4-feature stagger grid uses containerVariants staggerChildren, not per-card delay — cleaner Framer Motion orchestration
 - [Phase 08]: 08-02: getShowcasePosters uses w342 TMDB image size — fast loading for marquee cards without quality compromise
 - [Phase 08]: 08-02: ShowcasePoster interface exported from lib/tmdb.ts (not types/) — co-located with fetch function
+- [Phase 08-03]: AI preview uses static mock chat (not interactive) — demonstrates mood-to-genre flow without requiring auth on landing page
+- [Phase 08-03]: Genre pills use inline OKLCH gradient styles — Tailwind v4 can't generate dynamic opacity variants in arbitrary OKLCH values at build time
+- [Phase 08-03]: CTA uses styled Link anchor not Button component — full control over crimson gradient + box-shadow without shadcn overrides
+- [Phase 08-03]: Footer TMDB attribution as external link — required by TMDB API terms of service
 
 ### Pending Todos
 
@@ -126,6 +131,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-27 (Phase 08 Plan 02 executed)
-Stopped at: Completed 08-02-PLAN.md (features section + movie showcase)
-Resume file: .planning/phases/08-landing-page-revamp/08-03-PLAN.md
+Last session: 2026-02-27 (Phase 08 Plan 03 executed)
+Stopped at: Completed 08-03-PLAN.md (AI preview + CTA + footer)
+Resume file: .planning/phases/08-landing-page-revamp/08-04-PLAN.md
