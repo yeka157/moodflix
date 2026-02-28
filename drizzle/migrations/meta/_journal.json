@@ -15,6 +15,13 @@
       "when": 1771336964679,
       "tag": "0001_kind_rick_jones",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1772290635306,
+      "tag": "0002_daffy_jack_murdock",
+      "breakpoints": true
     }
   ]
 }

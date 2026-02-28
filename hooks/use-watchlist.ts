@@ -16,6 +16,7 @@ import type {
   AddToWatchlistInput,
   WatchlistTmdbEntry,
 } from "@/types/watchlist";
+import type { MediaType } from "@/types/media";
 
 export const watchlistKeys = {
   all: ["watchlist"] as const,
@@ -76,6 +77,7 @@ export function useAddToWatchlist() {
             id: "", // Will be replaced on server response
             tmdbId: newItem.tmdbId,
             status: newItem.status ?? "want_to_watch",
+            mediaType: (newItem.mediaType ?? "movie") as MediaType,
           },
         ],
       );
@@ -94,6 +96,7 @@ export function useAddToWatchlist() {
           posterPath: newItem.posterPath,
           status: newItem.status ?? "want_to_watch",
           rating: null,
+          mediaType: (newItem.mediaType ?? "movie") as MediaType,
           addedAt: new Date().toISOString(),
           watchedAt: null,
         },

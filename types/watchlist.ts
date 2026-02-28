@@ -1,3 +1,7 @@
+import type { MediaType } from "@/types/media";
+
+export type { MediaType };
+
 export type WatchlistStatus = "want_to_watch" | "watched";
 
 export type WatchlistFilterStatus = WatchlistStatus | "all";
@@ -10,6 +14,7 @@ export type WatchlistItem = {
   posterPath: string | null;
   status: WatchlistStatus;
   rating: number | null;
+  mediaType: MediaType;
   addedAt: string;
   watchedAt: string | null;
 };
@@ -18,6 +23,7 @@ export type WatchlistTmdbEntry = {
   id: string;
   tmdbId: number;
   status: WatchlistStatus;
+  mediaType: MediaType;
 };
 
 export type AddToWatchlistInput = {
@@ -25,6 +31,7 @@ export type AddToWatchlistInput = {
   title: string;
   posterPath: string | null;
   status?: WatchlistStatus;
+  mediaType?: MediaType;
 };
 
 export type WatchlistActionResult =

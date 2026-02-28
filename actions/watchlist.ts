@@ -13,6 +13,7 @@ import type {
   WatchlistDeleteResult,
   WatchlistTmdbEntry,
 } from "@/types/watchlist";
+import type { MediaType } from "@/types/media";
 
 function serializeItem(
   row: typeof watchlist.$inferSelect,
@@ -25,6 +26,7 @@ function serializeItem(
     posterPath: row.posterPath,
     status: row.status ?? "want_to_watch" as WatchlistStatus,
     rating: row.rating,
+    mediaType: row.mediaType as MediaType,
     addedAt: row.addedAt?.toISOString() ?? new Date().toISOString(),
     watchedAt: row.watchedAt?.toISOString() ?? null,
   };
@@ -62,7 +64,12 @@ export async function getWatchlistTmdbIds(): Promise<WatchlistTmdbEntry[]> {
   if (!userId) return [];
 
   const rows = await db
-    .select({ id: watchlist.id, tmdbId: watchlist.tmdbId, status: watchlist.status })
+    .select({
+      id: watchlist.id,
+      tmdbId: watchlist.tmdbId,
+      status: watchlist.status,
+      mediaType: watchlist.mediaType,
+    })
     .from(watchlist)
     .where(eq(watchlist.userId, userId));
 
@@ -70,6 +77,7 @@ export async function getWatchlistTmdbIds(): Promise<WatchlistTmdbEntry[]> {
     id: r.id,
     tmdbId: r.tmdbId,
     status: r.status ?? "want_to_watch" as WatchlistStatus,
+    mediaType: r.mediaType as MediaType,
   }));
 }
 
@@ -103,6 +111,7 @@ export async function addToWatchlist(
         title: data.title,
         posterPath: data.posterPath,
         status: data.status ?? "want_to_watch",
+        mediaType: data.mediaType ?? "movie",
       })
       .returning();
 
@@ -111,9 +120,9 @@ export async function addToWatchlist(
   } catch (err: unknown) {
     if (
       err instanceof Error &&
-      err.message.includes("watchlist_user_tmdb_unique")
+      err.message.includes("watchlist_user_tmdb_media_unique")
     ) {
-      return { error: "Movie already in library" };
+      return { error: "Already in library" };
     }
     return { error: "Failed to add to library" };
   }
