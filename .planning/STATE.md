@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 9 of 13 (Schema Migration)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-02-28 — v0.4 roadmap created (Phases 9–13)
+Plan: 1 of 2 in current phase
+Status: In progress — awaiting human verification checkpoint (Task 3 of Plan 01)
+Last activity: 2026-02-28 — Plan 01 tasks 1-2 complete, migration applied
 
-Progress: [░░░░░░░░░░] 0% (v0.4 not started)
+Progress: [█░░░░░░░░░] 5% (v0.4 Plan 09-01 partially complete)
 
 ## Accumulated Context
 
@@ -36,11 +36,11 @@ None.
 
 ### Blockers/Concerns
 
-- [Phase 9]: Review generated Drizzle migration SQL before running `db:migrate` — pgEnum + NOT NULL column requires correct ordering (CREATE TYPE → ADD COLUMN → DROP CONSTRAINT → ADD CONSTRAINT). May need manual backfill UPDATE if not auto-generated.
+- [Phase 9 Plan 01 Task 3]: Human must verify database state in Drizzle Studio and apply rls-policies.sql in Supabase Dashboard. Once verified and "approved" signal received, Plan 01 will be complete.
 
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Roadmap created — Phases 9–13 defined, files written
+Stopped at: Plan 09-01 Tasks 1-2 complete — awaiting human verification of database state (checkpoint Task 3)
 Resume file: None
-Next step: `/gsd:plan-phase 9`
+Next step: Verify DB in Drizzle Studio, apply rls-policies.sql in Supabase Dashboard, then signal "approved"

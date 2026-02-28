@@ -15,8 +15,8 @@ Requirements for v0.4 Watchlist & Polish milestone. Each maps to roadmap phases.
 - [ ] **TVWL-04**: User can remove a TV show from their library
 - [ ] **TVWL-05**: Library cards for TV shows link to /tv/[id] (not /movie/[id])
 - [ ] **TVWL-06**: Library cards display a "TV" or "Movie" type badge for content identification
-- [ ] **TVWL-07**: Schema migration adds media_type column to watchlist table with DEFAULT 'movie' backfill
-- [ ] **TVWL-08**: Unique constraint updated to (userId, tmdbId, mediaType) — movie and TV with same TMDB ID can coexist
+- [x] **TVWL-07**: Schema migration adds media_type column to watchlist table with DEFAULT 'movie' backfill
+- [x] **TVWL-08**: Unique constraint updated to (userId, tmdbId, mediaType) — movie and TV with same TMDB ID can coexist
 
 ### Watchlist UX
 
@@ -36,8 +36,8 @@ Requirements for v0.4 Watchlist & Polish milestone. Each maps to roadmap phases.
 - [ ] **AIPOL-02**: AI suggest_genres tool outputs optional origin_country (ISO 3166-1 alpha-2 code) when user requests country-specific content
 - [ ] **AIPOL-03**: Origin country parameter propagates through recommendations page URL to TMDB discover API call
 - [ ] **AIPOL-04**: AI chatbot restricts off-topic queries — redirects non-movie/TV questions back to mood discovery without being hostile
-- [ ] **AIPOL-05**: Full AI conversation (all user + assistant messages) logged to database for analytics when genre suggestion is made
-- [ ] **AIPOL-06**: AI conversation logging is fire-and-forget — does not add latency to streaming response
+- [x] **AIPOL-05**: Full AI conversation (all user + assistant messages) logged to database for analytics when genre suggestion is made
+- [x] **AIPOL-06**: AI conversation logging is fire-and-forget — does not add latency to streaming response
 
 ### My Top 100
 
@@ -97,8 +97,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TVWL-04 | Phase 10 | Pending |
 | TVWL-05 | Phase 10 | Pending |
 | TVWL-06 | Phase 10 | Pending |
-| TVWL-07 | Phase 9 | Pending |
-| TVWL-08 | Phase 9 | Pending |
+| TVWL-07 | Phase 9 | Complete |
+| TVWL-08 | Phase 9 | Complete |
 | WLUX-01 | Phase 10 | Pending |
 | WLUX-02 | Phase 10 | Pending |
 | WLUX-03 | Phase 10 | Pending |
@@ -109,8 +109,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AIPOL-02 | Phase 12 | Pending |
 | AIPOL-03 | Phase 12 | Pending |
 | AIPOL-04 | Phase 12 | Pending |
-| AIPOL-05 | Phase 9 | Pending |
-| AIPOL-06 | Phase 9 | Pending |
+| AIPOL-05 | Phase 9 | Complete |
+| AIPOL-06 | Phase 9 | Complete |
 | TOP-01 | Phase 13 | Pending |
 | TOP-02 | Phase 13 | Pending |
 | TOP-03 | Phase 13 | Pending |
