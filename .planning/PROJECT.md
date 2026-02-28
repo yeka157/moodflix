@@ -2,20 +2,16 @@
 
 ## What This Is
 
-A movie watchlist and recommendation app with AI-powered mood-based discovery. Users browse movies via TMDB, manage a personal library with instant optimistic updates and one-tap status actions, and get AI-generated genre recommendations based on their current mood. Built with Next.js 16, Supabase, and Google Gemini. Deployed on Vercel.
+A movie and TV series watchlist and recommendation app with AI-powered mood-based discovery. Users browse movies and TV shows via TMDB, manage a personal library with instant optimistic updates, and get AI-generated genre recommendations based on their current mood. Features sidebar navigation, Stremio-inspired detail pages, and a cinematic landing page. Built with Next.js 16, Supabase, and Google Gemini. Deployed on Vercel.
 
 ## Core Value
 
-Users can discover movies that match their mood and manage what they've watched — the library experience must feel instant and intuitive.
+Users can discover movies and TV shows that match their mood and manage what they've watched — the library and discovery experience must feel instant and intuitive.
 
-## Current Milestone: v0.3 Content Expansion
+## Current State
 
-**Goal:** Expand the app to include TV series discovery and polish homepage personalization.
-
-**Target features:**
-- TV Series page (`/series`) with Trending TV, Korean Drama, Chinese Drama, and Top Rated rows
-- Skeleton loading color fix — replace vibrant crimson with neutral muted tone
-- Homepage "Because you liked" rows — daily rotation from top-5 pool + sentence variety
+**Shipped version:** v0.3 Content Expansion (2026-02-28)
+**Next milestone:** TBD — use `/gsd:new-milestone` to plan
 
 ## Requirements
 
@@ -46,12 +42,19 @@ Users can discover movies that match their mood and manage what they've watched 
 - ✓ Responsive layouts tested at 375px, 768px, 1280px — 44px touch targets (POLSH-02) — v0.2 Phase 3
 - ✓ Keyboard navigation + WCAG 2.1 AA contrast confirmed (POLSH-03) — v0.2 Phase 3
 - ✓ Zero lint warnings, zero TypeScript errors — clean production build (POLSH-04) — v0.2 Phase 3
+- ✓ TV Series discovery page with K-Drama, C-Drama, Top Rated rows and TV detail modal (TV-01) — v0.3 Phases 4-5
+- ✓ Skeleton loading color uses neutral muted tone (SKEL-01) — v0.3 Phase 6
+- ✓ Homepage personalized rows rotate daily from top-5 pool with varied sentence phrasing (HOME-01) — v0.3 Phase 6
+- ✓ Sidebar navigation replacing top navbar with hover-expand + mobile bottom tab bar (REVAMP-01) — v0.3 Phase 7
+- ✓ Stremio-inspired full-page detail views for movies and TV shows — v0.3 Phase 7
+- ✓ Discover and Series grid layouts with genre/sort/year filter dropdowns — v0.3 Phase 7
+- ✓ AI model upgrade to Gemini 2.5 Flash Lite with quota error handling — v0.3 Phase 07.1
+- ✓ Settings page with profile display and username editing — v0.3 Phase 07.1
+- ✓ Cinematic landing page with parallax hero, TMDB poster marquee, AI preview, CTA — v0.3 Phase 8
 
 ### Active
 
-- [ ] TV Series discovery page (`/series`) with distinct K-Drama, C-Drama, and general TV rows — v0.3
-- [ ] Skeleton loading color uses neutral muted tone instead of crimson accent — v0.3
-- [ ] Homepage personalized rows rotate daily from top-5 pool with varied sentence phrasing — v0.3
+(None — define in next milestone via `/gsd:new-milestone`)
 
 ### Out of Scope
 
@@ -61,16 +64,17 @@ Users can discover movies that match their mood and manage what they've watched 
 - Mobile native app — web-only
 - Premium tier / payments — not for v1
 - Real-time collaborative features — not needed for personal watchlist
-- Sidebar navigation (NAV-01, NAV-02) — deferred to v1.0, top navbar works fine
 - "My Top 100" personal list (FUTURE-02) — future feature
 - Premium AI rate limits (FUTURE-03) — future feature
+- TV show watchlisting — requires schema migration (media_type column)
+- AI mood recommendations for TV shows — deferred
 
 ## Context
 
-- **Codebase state:** v0.2 alpha complete. All core features + polish shipped. ~8,174 lines of TypeScript/TSX across 54+ files. Build clean, lint clean.
+- **Codebase state:** v0.3 shipped. ~13,844 lines of TypeScript/TSX across 130+ files. Build clean, lint clean.
 - **Deployment:** Deployed on Vercel via main branch auto-deploy.
-- **Known issues:** None at v0.2.
-- **v0.3 focus:** TV series discovery + homepage polish.
+- **Known issues:** None at v0.3.
+- **Tech debt:** Phase 08 Task 2 visual verification was accepted without formal checkpoint sign-off.
 
 ## Constraints
 
@@ -98,6 +102,12 @@ Users can discover movies that match their mood and manage what they've watched 
 | `layoutId` omitted entirely when reduced-motion | Setting duration=0 still runs layout animation code path. Omitting prop skips it entirely. | ✓ Good — a11y compliant |
 | `[@media(hover:none)]` for touch targets | Touch-specific 44px sizing without affecting desktop hover experience. | ✓ Good |
 | CTA card frame on landing page | Explicit bg/border/radius gives CTA its own visual bounding box, preventing optical centering illusion from asymmetric section above. | ✓ Good |
+| normalizeTVShow at hook boundary | Normalizes TV data in queryFn, not API route — keeps API routes returning raw TMDB shapes. | ✓ Good — clean separation |
+| Sidebar hover-expand (no click/pin) | Simpler UX — expand on hover, collapse on leave. Mobile uses bottom tab bar. | ✓ Good — feels natural |
+| Full-page detail routes over modal | Stremio-inspired `/movie/[id]` and `/tv/[id]` SSR pages replace in-page modal for richer content. | ✓ Good — better SEO, shareable URLs |
+| Gemini 2.5 Flash Lite over 2.5 Flash | Higher free-tier quota (1000 RPD) for hobby project. | ✓ Good — resolved quota errors |
+| Static mock chat for AI preview on landing | No auth required for landing page, demonstrates mood-to-genre flow visually. | ✓ Good — converts without complexity |
+| Cinematic parallax hero with TMDB backdrop | Real movie imagery creates emotional connection. useScroll + useTransform for smooth parallax. | ✓ Good — visually compelling |
 
 ---
-*Last updated: 2026-02-19 after v0.3 Content Expansion milestone start*
+*Last updated: 2026-02-28 after v0.3 Content Expansion milestone shipped*
