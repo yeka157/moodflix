@@ -49,3 +49,34 @@ DROP POLICY IF EXISTS "Users can insert own recommendations" ON public.ai_recomm
 CREATE POLICY "Users can insert own recommendations"
   ON public.ai_recommendations FOR INSERT
   WITH CHECK (auth.uid() = user_id);
+
+-- AI Conversations: backend insert for analytics logging
+ALTER TABLE public.ai_conversations ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Service can insert conversations" ON public.ai_conversations;
+CREATE POLICY "Service can insert conversations"
+  ON public.ai_conversations FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+-- Top Hundred: full CRUD on own entries
+ALTER TABLE public.top_hundred ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view own top hundred" ON public.top_hundred;
+CREATE POLICY "Users can view own top hundred"
+  ON public.top_hundred FOR SELECT
+  USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert own top hundred" ON public.top_hundred;
+CREATE POLICY "Users can insert own top hundred"
+  ON public.top_hundred FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update own top hundred" ON public.top_hundred;
+CREATE POLICY "Users can update own top hundred"
+  ON public.top_hundred FOR UPDATE
+  USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can delete own top hundred" ON public.top_hundred;
+CREATE POLICY "Users can delete own top hundred"
+  ON public.top_hundred FOR DELETE
+  USING (auth.uid() = user_id);
