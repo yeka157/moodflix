@@ -8,10 +8,22 @@ A movie and TV series watchlist and recommendation app with AI-powered mood-base
 
 Users can discover movies and TV shows that match their mood and manage what they've watched — the library and discovery experience must feel instant and intuitive.
 
+## Current Milestone: v0.4 Watchlist & Polish
+
+**Goal:** Enable TV show watchlisting, fix watchlist UX bugs, improve discovery navigation, add AI guardrails and logging, and introduce My Top 100 personal lists.
+
+**Target features:**
+- TV show watchlisting (schema migration + full CRUD)
+- Watchlist UX fixes (instant sync, card persistence, movie/series filter)
+- Discovery UX (TV search, rename Discover → Movies, rating display)
+- AI polish (origin country filtering, off-topic guardrails)
+- AI conversation logging for analytics
+- My Top 100 personal curated list
+
 ## Current State
 
 **Shipped version:** v0.3 Content Expansion (2026-02-28)
-**Next milestone:** TBD — use `/gsd:new-milestone` to plan
+**Current milestone:** v0.4 Watchlist & Polish
 
 ## Requirements
 
@@ -54,7 +66,16 @@ Users can discover movies and TV shows that match their mood and manage what the
 
 ### Active
 
-(None — define in next milestone via `/gsd:new-milestone`)
+- [ ] TV show watchlisting with media_type schema migration
+- [ ] Watchlist instant sync across all components (BACKLOG-16)
+- [ ] Cards stay in grid after watchlist action, sync flags (BACKLOG-23)
+- [ ] Library movie/series filter (BACKLOG-32)
+- [ ] TV series search bar + rename Discover → Movies (BACKLOG-31)
+- [ ] Rating display fix — show as X/10 or scaled stars (BACKLOG-25)
+- [ ] AI origin country support for specific recommendations (K-drama, etc.)
+- [ ] AI guardrails for off-topic restriction
+- [ ] AI full conversation logging for analytics
+- [ ] My Top 100 personal curated list
 
 ### Out of Scope
 
@@ -110,4 +131,4 @@ Users can discover movies and TV shows that match their mood and manage what the
 | Cinematic parallax hero with TMDB backdrop | Real movie imagery creates emotional connection. useScroll + useTransform for smooth parallax. | ✓ Good — visually compelling |
 
 ---
-*Last updated: 2026-02-28 after v0.3 Content Expansion milestone shipped*
+*Last updated: 2026-02-28 after v0.4 Watchlist & Polish milestone started*
