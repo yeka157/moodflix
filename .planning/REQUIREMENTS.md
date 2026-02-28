@@ -91,39 +91,39 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TVWL-01 | — | Pending |
-| TVWL-02 | — | Pending |
-| TVWL-03 | — | Pending |
-| TVWL-04 | — | Pending |
-| TVWL-05 | — | Pending |
-| TVWL-06 | — | Pending |
-| TVWL-07 | — | Pending |
-| TVWL-08 | — | Pending |
-| WLUX-01 | — | Pending |
-| WLUX-02 | — | Pending |
-| WLUX-03 | — | Pending |
-| DISC-01 | — | Pending |
-| DISC-02 | — | Pending |
-| DISC-03 | — | Pending |
-| AIPOL-01 | — | Pending |
-| AIPOL-02 | — | Pending |
-| AIPOL-03 | — | Pending |
-| AIPOL-04 | — | Pending |
-| AIPOL-05 | — | Pending |
-| AIPOL-06 | — | Pending |
-| TOP-01 | — | Pending |
-| TOP-02 | — | Pending |
-| TOP-03 | — | Pending |
-| TOP-04 | — | Pending |
-| TOP-05 | — | Pending |
-| TOP-06 | — | Pending |
-| TOP-07 | — | Pending |
+| TVWL-01 | Phase 10 | Pending |
+| TVWL-02 | Phase 10 | Pending |
+| TVWL-03 | Phase 10 | Pending |
+| TVWL-04 | Phase 10 | Pending |
+| TVWL-05 | Phase 10 | Pending |
+| TVWL-06 | Phase 10 | Pending |
+| TVWL-07 | Phase 9 | Pending |
+| TVWL-08 | Phase 9 | Pending |
+| WLUX-01 | Phase 10 | Pending |
+| WLUX-02 | Phase 10 | Pending |
+| WLUX-03 | Phase 10 | Pending |
+| DISC-01 | Phase 11 | Pending |
+| DISC-02 | Phase 11 | Pending |
+| DISC-03 | Phase 11 | Pending |
+| AIPOL-01 | Phase 12 | Pending |
+| AIPOL-02 | Phase 12 | Pending |
+| AIPOL-03 | Phase 12 | Pending |
+| AIPOL-04 | Phase 12 | Pending |
+| AIPOL-05 | Phase 9 | Pending |
+| AIPOL-06 | Phase 9 | Pending |
+| TOP-01 | Phase 13 | Pending |
+| TOP-02 | Phase 13 | Pending |
+| TOP-03 | Phase 13 | Pending |
+| TOP-04 | Phase 13 | Pending |
+| TOP-05 | Phase 13 | Pending |
+| TOP-06 | Phase 13 | Pending |
+| TOP-07 | Phase 13 | Pending |
 
 **Coverage:**
 - v0.4 requirements: 27 total
-- Mapped to phases: 0
-- Unmapped: 27 ⚠️
+- Mapped to phases: 27
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-02-28*
-*Last updated: 2026-02-28 after initial definition*
+*Last updated: 2026-02-28 after roadmap creation*
