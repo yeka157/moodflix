@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Users can discover movies and TV shows that match their mood and manage what they've watched — the library and discovery experience must feel instant and intuitive.
-**Current focus:** v0.4 Phase 09.1 — PWA Setup
+**Current focus:** v0.4 Phase 09.1.1 — Homepage TV Series Integration
 
 ## Current Position
 
-Phase: 09.1 of 13 (PWA Setup)
-Plan: 3 of 3 in current phase
-Status: Phase 09.1 Complete — all 3 plans done
-Last activity: 2026-03-02 — Plan 03 complete (PWA icons: cinematic crimson/dark icon set, generation script, human verified end-to-end)
+Phase: 09.1.1 of 13 (Homepage TV Series Integration)
+Plan: 1 of 1 in current phase
+Status: Phase 09.1.1 Complete — all 1 plans done
+Last activity: 2026-03-02 — Plan 01 complete (Homepage TV trending row + Browse Series feature card)
 
-Progress: [████░░░░░░] 20% (v0.4 Phase 09.1 complete, all 3/3 plans done)
+Progress: [████░░░░░░] 21% (v0.4 Phase 09.1.1 complete, all 1/1 plans done)
 
 ## Accumulated Context
 
@@ -39,6 +39,9 @@ Key decisions for v0.4 (from research):
 - [Phase 09.1-03]: Icon background #09090b matches manifest theme_color — consistent dark theming across OS chrome
 - [Phase 09.1-03]: M lettermark at 70% canvas for standard icons, 60% for maskable (Android safe zone spec)
 - [Phase 09.1-03]: sharp accessed via @img/sharp-darwin-arm64 (Next.js dep) — no extra package needed for icon generation
+- [Phase 09.1.1-01]: TV trending fetch in existing Promise.all with .catch() guard — parallel execution, resilient to TMDB TV API failures
+- [Phase 09.1.1-01]: trendingTV prop optional with default [] on HomeMovies — graceful degradation; TV row hidden when array is empty
+- [Phase 09.1.1-01]: mediaType="tv" (not hrefPrefix) on TV MovieRow — normalizeTVShow doesn't set media_type, so mediaType prop is routing fallback
 
 ### Pending Todos
 
@@ -47,6 +50,7 @@ None.
 ### Roadmap Evolution
 
 - Phase 09.1 inserted after Phase 9: PWA Setup (URGENT)
+- Phase 09.1.1 inserted after Phase 09.1: Homepage TV Series Integration (URGENT)
 
 ### Blockers/Concerns
 
@@ -55,6 +59,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed Plan 09.1-03 (PWA icons — cinematic crimson/dark icon set, scripts/generate-pwa-icons.js, human verified full PWA stack end-to-end)
+Stopped at: Phase 09.1.1 Homepage TV Series Integration — Plan 01 complete (Trending TV Shows row + Browse Series feature card on homepage)
 Resume file: None
-Next step: Begin next phase in v0.4 roadmap (run /gsd:execute-phase for next phase)
+Next step: Phase 09.1.1 complete. User wants to run /gsd:new-milestone — decide whether to close v0.4 (phases 10-13 still pending) or start a post-v0.4 milestone. Run in fresh context window.

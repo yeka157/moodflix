@@ -72,7 +72,7 @@ Plans:
 
 **Goal:** The homepage surfaces TV series content alongside movies — a "Trending TV Shows" row appears below the movie trending row, and a "Browse Series" feature card links to the /series page.
 **Depends on:** Phase 09.1
-**Plans:** 1 plan
+**Plans:** 3/3 plans complete
 
 Plans:
 - [ ] 09.1.1-01-PLAN.md — Add TV trending row and Browse Series feature card to homepage
