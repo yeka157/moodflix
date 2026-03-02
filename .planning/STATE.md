@@ -35,6 +35,10 @@ Key decisions for v0.4 (from research):
 
 None.
 
+### Roadmap Evolution
+
+- Phase 09.1 inserted after Phase 9: PWA Setup (URGENT)
+
 ### Blockers/Concerns
 
 None.
