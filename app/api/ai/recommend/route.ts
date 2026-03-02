@@ -121,9 +121,11 @@ If the user refines their preferences, call suggest_genres again with updated ge
 
 If the user is vague, ask ONE clarifying question instead of guessing.
 
-Available TMDB movie genres: ${movieGenreList}
-Available TMDB TV genres: ${tvGenreList}
-Note: Some genres overlap between movies and TV. Use the correct ID for the media_type you choose.
+CRITICAL: You MUST only use genre IDs and names from the lists below. NEVER invent genre names or IDs. Country names (e.g. "Korean", "Japanese"), moods (e.g. "Cozy"), or content types (e.g. "Anime") are NOT genres — map them to the closest TMDB genres instead. For example: "Korean comedy" → Comedy (35) with media_type "tv"; "anime" → Animation (16); "cozy movie" → Romance (10749) or Family (10751).
+
+Available TMDB movie genres (use these when media_type is "movie"): ${movieGenreList}
+Available TMDB TV genres (use these when media_type is "tv"): ${tvGenreList}
+Shared genres (valid for both movie and TV): Comedy (35), Drama (18), Animation (16), Crime (80), Documentary (99), Family (10751), Mystery (9648), Romance (10749), Western (37)
 ${watchlistInstruction}
 Keep responses concise: 2-4 sentences. Be warm and conversational.`;
 
@@ -158,6 +160,23 @@ Keep responses concise: 2-4 sentences. Be warm and conversational.`;
               .default("movie"),
           }),
           execute: async (params) => {
+            // Validate genre IDs against known TMDB genres
+            const validGenres = { ...GENRES, ...TV_GENRES };
+            const filteredGenres = params.genres.filter(
+              (g) => validGenres[g.id] !== undefined,
+            );
+            const validatedParams = {
+              ...params,
+              // Use validated genres (with correct TMDB names), fall back to original if all filtered out
+              genres:
+                filteredGenres.length > 0
+                  ? filteredGenres.map((g) => ({
+                      id: g.id,
+                      name: validGenres[g.id] ?? g.name,
+                    }))
+                  : params.genres,
+            };
+
             // Store recommendation in DB (fire-and-forget)
             const moodPrompt = lastMessageText || "mood chat";
 
@@ -165,13 +184,13 @@ Keep responses concise: 2-4 sentences. Be warm and conversational.`;
               .values({
                 userId,
                 prompt: moodPrompt,
-                recommendations: params,
+                recommendations: validatedParams,
               })
               .catch(() => {
                 // Non-critical: silently fail
               });
 
-            return { ...params, confirmed: true };
+            return { ...validatedParams, confirmed: true };
           },
         }),
       },

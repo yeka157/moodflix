@@ -201,7 +201,10 @@ export interface ShowcasePoster {
   posterUrl: string;
 }
 
-export async function getShowcasePosters(): Promise<ShowcasePoster[]> {
+export async function getShowcasePosters(
+  count = 10,
+  size: "w342" | "w500" = "w342",
+): Promise<ShowcasePoster[]> {
   try {
     const url = new URL(`${TMDB_BASE_URL}/trending/movie/week`);
     const response = await fetch(url.toString(), {
@@ -220,10 +223,10 @@ export async function getShowcasePosters(): Promise<ShowcasePoster[]> {
 
     return data.results
       .filter((m) => m.poster_path != null)
-      .slice(0, 10)
+      .slice(0, count)
       .map((m) => ({
         title: m.title ?? "",
-        posterUrl: `https://image.tmdb.org/t/p/w342${m.poster_path}`,
+        posterUrl: `https://image.tmdb.org/t/p/${size}${m.poster_path}`,
       }));
   } catch {
     return [];

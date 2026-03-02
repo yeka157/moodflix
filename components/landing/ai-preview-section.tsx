@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { Sparkles, MessageSquare, Clapperboard, ChevronRight } from "lucide-react";
+import Link from "next/link";
 
 const containerVariants = {
   hidden: {},
@@ -51,7 +52,7 @@ const steps = [
   },
 ];
 
-export function AIPreviewSection() {
+export function AIPreviewSection({ actionHref }: { actionHref: string }) {
   const shouldReduceMotion = useReducedMotion();
 
   const initial = shouldReduceMotion ? "visible" : "hidden";
@@ -184,17 +185,20 @@ export function AIPreviewSection() {
                 </div>
               </div>
 
-              {/* Typing indicator / CTA row */}
-              <div className="flex items-center gap-3 pt-4 border-t border-border/60">
-                <div className="flex-1 bg-background/60 border border-border/60 rounded-xl px-4 py-2.5">
-                  <p className="text-sm text-muted-foreground/50 select-none">
+              {/* Interactive CTA row — links to app or login */}
+              <Link
+                href={actionHref}
+                className="flex items-center gap-3 pt-4 border-t border-border/60 group cursor-pointer"
+              >
+                <div className="flex-1 bg-background/60 border border-border/60 rounded-xl px-4 py-2.5 transition-colors group-hover:border-accent/40 group-hover:bg-accent/5">
+                  <p className="text-sm text-muted-foreground/50 select-none group-hover:text-muted-foreground/70 transition-colors">
                     Describe your mood…
                   </p>
                 </div>
-                <div className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center flex-shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105 group-active:scale-95">
                   <Sparkles className="w-4 h-4 text-white" />
                 </div>
-              </div>
+              </Link>
             </div>
           </motion.div>
         </div>

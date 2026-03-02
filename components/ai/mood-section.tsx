@@ -74,7 +74,7 @@ export function MoodSection() {
       <div className="p-6 space-y-4">
         {/* Header */}
         <div className="flex flex-col items-center text-center space-y-2">
-          <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center">
+          <div className="size-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shadow-[0_0_20px_rgba(251,44,54,0.15)]">
             <Sparkles className="size-6 text-primary" />
           </div>
           <h2 className="text-xl font-semibold">
@@ -110,7 +110,7 @@ export function MoodSection() {
                 {msg.role === "assistant" && (
                   <div className="flex justify-start">
                     <div className="flex gap-2.5 max-w-[85%]">
-                      <div className="size-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <div className="size-7 rounded-lg bg-gradient-to-br from-primary/25 to-primary/5 flex items-center justify-center shrink-0 mt-0.5">
                         <Sparkles className="size-3.5 text-primary" />
                       </div>
                       <div className="bg-secondary rounded-2xl rounded-bl-sm px-4 py-2.5 text-sm text-foreground">
@@ -132,7 +132,7 @@ export function MoodSection() {
             {isStreaming && (
               <div className="flex justify-start">
                 <div className="flex gap-2.5">
-                  <div className="size-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <div className="size-7 rounded-lg bg-gradient-to-br from-primary/25 to-primary/5 flex items-center justify-center shrink-0">
                     <Sparkles className="size-3.5 text-primary" />
                   </div>
                   <div className="bg-secondary rounded-2xl px-4 py-3">

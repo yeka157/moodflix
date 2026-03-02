@@ -54,7 +54,7 @@ export function FeatureCardGrid({ cards }: FeatureCardGridProps) {
             <Link href={card.href} className="block group">
               <Card className="h-full p-6 bg-card border border-border hover:border-primary/50 transition-all duration-300">
                 <div className="flex flex-col gap-4">
-                  <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <div className="size-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shadow-[0_0_20px_rgba(251,44,54,0.15)]">
                     <Icon className="size-6 text-primary" />
                   </div>
                   <div className="flex-1">

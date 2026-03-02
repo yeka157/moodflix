@@ -58,7 +58,7 @@ export function PersonalizedSection({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.3 }}
       >
-        <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+        <div className="size-8 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(251,44,54,0.12)]">
           <Sparkles className="size-4 text-primary" />
         </div>
         <p className="text-lg text-muted-foreground italic">

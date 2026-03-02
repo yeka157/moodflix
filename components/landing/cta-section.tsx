@@ -29,7 +29,7 @@ const trustSignals = [
   "Cancel anytime",
 ];
 
-export function CTASection() {
+export function CTASection({ actionHref }: { actionHref: string }) {
   const shouldReduceMotion = useReducedMotion();
   const initial = shouldReduceMotion ? "visible" : "hidden";
 
@@ -79,7 +79,7 @@ export function CTASection() {
 
             <motion.div variants={fadeUpVariants}>
               <Link
-                href="/signup"
+                href={actionHref}
                 className="inline-flex items-center gap-2 text-base font-semibold px-10 py-4 rounded-xl min-h-[52px] transition-all duration-200 hover:opacity-90 hover:gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98]"
                 style={{
                   background:

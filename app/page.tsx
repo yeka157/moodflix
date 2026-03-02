@@ -7,6 +7,7 @@ import { AIPreviewSection } from "@/components/landing/ai-preview-section";
 import { CTASection } from "@/components/landing/cta-section";
 import { Footer } from "@/components/landing/footer";
 import { getHeroBackdrop, getShowcasePosters } from "@/lib/tmdb";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Moodflix — Discover Movies That Match Your Mood",
@@ -20,10 +21,14 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  const [backdropUrl, posters] = await Promise.all([
+  const supabase = await createClient();
+  const [{ data: { user } }, backdropUrl, posters] = await Promise.all([
+    supabase.auth.getUser(),
     getHeroBackdrop(),
-    getShowcasePosters(),
+    getShowcasePosters(20, "w500"),
   ]);
+
+  const actionHref = user ? "/home" : "/login";
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -53,11 +58,11 @@ export default async function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <LandingNavbar />
-      <HeroSection backdropUrl={backdropUrl} />
+      <HeroSection backdropUrl={backdropUrl} actionHref={actionHref} />
       <FeaturesSection />
       <MovieShowcase posters={posters} />
-      <AIPreviewSection />
-      <CTASection />
+      <AIPreviewSection actionHref={actionHref} />
+      <CTASection actionHref={actionHref} />
       <Footer />
     </>
   );
