@@ -10,7 +10,8 @@ export const metadata: Metadata = {
       "Discover movies that match your mood with AI-powered recommendations.",
   },
 };
-import { getTrendingMovies, getPopularMoviesInRegion } from "@/lib/tmdb";
+import { getTrendingMovies, getPopularMoviesInRegion, getTrendingTV } from "@/lib/tmdb";
+import { normalizeTVShow } from "@/types/tv";
 import { getCountryFromHeaders } from "@/lib/country";
 import { getPersonalizedData } from "@/lib/recommendations";
 import { HeroBanner } from "@/components/movies/hero-banner";
@@ -27,10 +28,13 @@ export default async function HomePage() {
   const displayName = user?.email?.split("@")[0] || "Explorer";
 
   // Fetch trending and personalized data in parallel
-  const [trending, personalizedData] = await Promise.all([
+  const [trending, trendingTV, personalizedData] = await Promise.all([
     getTrendingMovies(),
+    getTrendingTV().catch(() => ({ results: [], page: 1, total_pages: 0, total_results: 0 })),
     user ? getPersonalizedData(user.id) : Promise.resolve(null),
   ]);
+
+  const trendingTVMovies = trendingTV.results.map(normalizeTVShow);
 
   // For users without personalized data, fetch regional popular movies
   const headersList = await headers();
@@ -49,6 +53,12 @@ export default async function HomePage() {
       title: "Discover Movies",
       description:
         "Browse trending movies and search for your next favorite film",
+    },
+    {
+      href: "/series",
+      icon: "Tv",
+      title: "Browse Series",
+      description: "Explore trending TV shows, K-dramas, and top rated series",
     },
     {
       href: "/library",
@@ -71,6 +81,7 @@ export default async function HomePage() {
 
         <HomeMovies
           trending={trending.results}
+          trendingTV={trendingTVMovies}
           personalizedData={personalizedData}
           regionalPopular={regionalPopular?.results}
         />

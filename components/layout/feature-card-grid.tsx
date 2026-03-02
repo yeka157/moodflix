@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, Compass, Bookmark, Sparkles } from "lucide-react";
+import { ArrowRight, Compass, Bookmark, Sparkles, Tv } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
@@ -10,6 +10,7 @@ const iconMap: Record<string, LucideIcon> = {
   Compass,
   Bookmark,
   Sparkles,
+  Tv,
 };
 
 interface FeatureCard {

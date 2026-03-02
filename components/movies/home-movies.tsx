@@ -6,12 +6,14 @@ import { PersonalizedSection } from "./personalized-section";
 
 interface HomeMoviesProps {
   trending: Movie[];
+  trendingTV?: Movie[];
   personalizedData?: PersonalizedData | null;
   regionalPopular?: Movie[];
 }
 
 export function HomeMovies({
   trending,
+  trendingTV = [],
   personalizedData,
   regionalPopular,
 }: HomeMoviesProps) {
@@ -22,6 +24,14 @@ export function HomeMovies({
         movies={trending}
         mediaType="movie"
       />
+
+      {trendingTV.length > 0 && (
+        <MovieRow
+          title="Trending TV Shows"
+          movies={trendingTV}
+          mediaType="tv"
+        />
+      )}
 
       {personalizedData && (
         <PersonalizedSection
