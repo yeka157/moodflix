@@ -7,9 +7,11 @@ export default function manifest(): MetadataRoute.Manifest {
     description:
       "Your personal movie library with AI-powered mood-based discovery. Find the perfect movie for any mood.",
     start_url: "/home",
+    scope: "/",
     display: "standalone",
-    background_color: "#0a0a0a",
-    theme_color: "#FB2C36",
+    background_color: "#09090b",
+    theme_color: "#09090b",
+    orientation: "any",
     icons: [
       {
         src: "/favicon.ico",

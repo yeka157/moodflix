@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Geist_Mono, Bebas_Neue } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
+import { SwRegister } from "@/components/pwa/sw-register";
 import "./globals.css";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
@@ -40,7 +41,6 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Moodflix" }],
   creator: "Moodflix",
-  manifest: "/site.webmanifest",
   openGraph: {
     title: "Moodflix - AI-Powered Movie Discovery",
     description:
@@ -68,12 +68,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
+      <head>
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta
+          name="apple-mobile-web-app-status-bar-style"
+          content="black-translucent"
+        />
+      </head>
       <body
         className={`${inter.variable} ${geistMono.variable} ${bebasNeue.variable} font-sans antialiased`}
       >
-        {children}
-        <SpeedInsights />
-        <Toaster />
+        <SwRegister>
+          {children}
+          <SpeedInsights />
+          <Toaster />
+        </SwRegister>
       </body>
     </html>
   );
