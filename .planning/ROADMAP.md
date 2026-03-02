@@ -37,7 +37,7 @@ See: `.planning/milestones/v0.3-ROADMAP.md` for full details.
 
 **Milestone Goal:** Enable TV show watchlisting, fix watchlist UX bugs, improve discovery navigation, add AI guardrails and origin country filtering with conversation logging, and introduce My Top 100 personal lists.
 
-- [ ] **Phase 9: Schema Migration** — Add media_type to watchlist, update unique constraint, add messages column to ai_recommendations, create top_hundred table
+- [x] **Phase 9: Schema Migration** — Add media_type to watchlist, update unique constraint, add messages column to ai_recommendations, create top_hundred table (completed 2026-03-02)
 - [ ] **Phase 10: TV Watchlisting & Watchlist UX** — Full TV watchlist CRUD from the TV detail page, library card routing, type badges, instant sync, and media type filter
 - [ ] **Phase 11: Discovery UX** — TV series search bar, rename Discover to Movies in sidebar, standardize rating display to X/10 format
 - [ ] **Phase 12: AI Polish** — Origin country filtering for country-specific recommendations, off-topic guardrails, and fire-and-forget conversation logging
@@ -117,7 +117,7 @@ See: `.planning/milestones/v0.3-ROADMAP.md` for full details.
 | 7. UI/UX Revamp | v0.3 | 4/4 | Complete | 2026-02-23 |
 | 07.1. Bug Fixes & Improvements | v0.3 | 3/3 | Complete | 2026-02-25 |
 | 8. Landing Page Revamp | v0.3 | 4/4 | Complete | 2026-02-27 |
-| 9. Schema Migration | v0.4 | 2/2 | Complete | 2026-03-01 |
+| 9. Schema Migration | v0.4 | Complete    | 2026-03-02 | 2026-03-01 |
 | 10. TV Watchlisting & Watchlist UX | v0.4 | 0/TBD | Not started | - |
 | 11. Discovery UX | v0.4 | 0/TBD | Not started | - |
 | 12. AI Polish | v0.4 | 0/TBD | Not started | - |
