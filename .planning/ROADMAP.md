@@ -57,6 +57,17 @@ See: `.planning/milestones/v0.3-ROADMAP.md` for full details.
   5. `npm run build` and `npm run lint` pass clean after all type updates propagate through `types/watchlist.ts`, `types/ai.ts`, and new `types/top-hundred.ts`
 **Plans**: TBD
 
+### Phase 09.1: PWA Setup (INSERTED)
+
+**Goal:** Moodflix is installable as a Progressive Web App with a precached app shell, runtime caching for TMDB images and API responses, offline fallback page, connectivity toast notifications, Chrome/Android install prompt, and cinematic brand-aligned icons.
+**Depends on:** Phase 9
+**Plans:** 3 plans
+
+Plans:
+- [ ] 09.1-01-PLAN.md — Core PWA infrastructure (Serwist service worker, manifest, offline page, SerwistProvider)
+- [ ] 09.1-02-PLAN.md — Offline UX (connectivity toast, install prompt banner, hooks)
+- [ ] 09.1-03-PLAN.md — Cinematic icon generation + end-to-end PWA verification
+
 ### Phase 10: TV Watchlisting & Watchlist UX
 **Goal**: Users can add TV shows to their library from the TV detail page, and all watchlist state syncs instantly across every card on every page without a refresh.
 **Depends on**: Phase 9
