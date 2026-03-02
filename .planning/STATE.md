@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 09.1 of 13 (PWA Setup)
-Plan: 2 of 3 in current phase
-Status: In Progress — Plan 02 complete
-Last activity: 2026-03-02 — Plan 02 complete (PWA offline UX: useOnlineStatus, usePwaInstall, OfflineToast, InstallPrompt)
+Plan: 3 of 3 in current phase
+Status: Phase 09.1 Complete — all 3 plans done
+Last activity: 2026-03-02 — Plan 03 complete (PWA icons: cinematic crimson/dark icon set, generation script, human verified end-to-end)
 
-Progress: [████░░░░░░] 18% (v0.4 Phase 09.1 in progress, Plan 02/03 done)
+Progress: [████░░░░░░] 20% (v0.4 Phase 09.1 complete, all 3/3 plans done)
 
 ## Accumulated Context
 
@@ -36,6 +36,9 @@ Key decisions for v0.4 (from research):
 - [Phase 09.1-02]: hasMounted ref guard in OfflineToast prevents "Back online" toast on initial page load
 - [Phase 09.1-02]: Install banner positioned bottom-16 md:bottom-0 to sit above mobile tab bar
 - [Phase 09.1-02]: Session-only dismiss (no localStorage) for install prompt — sufficient for MVP
+- [Phase 09.1-03]: Icon background #09090b matches manifest theme_color — consistent dark theming across OS chrome
+- [Phase 09.1-03]: M lettermark at 70% canvas for standard icons, 60% for maskable (Android safe zone spec)
+- [Phase 09.1-03]: sharp accessed via @img/sharp-darwin-arm64 (Next.js dep) — no extra package needed for icon generation
 
 ### Pending Todos
 
@@ -52,6 +55,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed Plan 09.1-02 (PWA offline UX — useOnlineStatus, usePwaInstall, OfflineToast, InstallPrompt wired into app layout)
+Stopped at: Completed Plan 09.1-03 (PWA icons — cinematic crimson/dark icon set, scripts/generate-pwa-icons.js, human verified full PWA stack end-to-end)
 Resume file: None
-Next step: Execute Phase 09.1 Plan 03 (PWA icons)
+Next step: Begin next phase in v0.4 roadmap (run /gsd:execute-phase for next phase)
