@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Users can discover movies and TV shows that match their mood and manage what they've watched — the library and discovery experience must feel instant and intuitive.
-**Current focus:** v0.4 Phase 9 — Schema Migration
+**Current focus:** v0.4 Phase 09.1 — PWA Setup
 
 ## Current Position
 
-Phase: 9 of 13 (Schema Migration)
-Plan: 2 of 2 in current phase
-Status: Complete — all plans in phase executed
-Last activity: 2026-03-01 — Plan 02 complete (type layer fully updated, AiConversation type added)
+Phase: 09.1 of 13 (PWA Setup)
+Plan: 1 of 3 in current phase
+Status: In Progress — Plan 01 complete
+Last activity: 2026-03-02 — Plan 01 complete (PWA core infrastructure: Serwist SW, offline page, unified manifest, SerwistProvider)
 
-Progress: [███░░░░░░░] 15% (v0.4 Phase 09 complete, Phase 10 next)
+Progress: [███░░░░░░░] 15% (v0.4 Phase 09.1 in progress, Plan 01/03 done)
 
 ## Accumulated Context
 
@@ -30,6 +30,9 @@ Key decisions for v0.4 (from research):
 - **Top 100 reorder**: Move up/down buttons (not drag-and-drop) — avoids DnD library conflicts with Framer Motion
 - **Route rename**: Label-only change ("Discover" → "Movies" in sidebar) — `/discover` route stays unchanged
 - **AiConversation.messages type**: Typed as `unknown` (not AI SDK v5 type) — avoids coupling DB schema to third-party SDK version
+- [Phase 09.1]: Use @serwist/turbopack (route handler mode) to avoid Sentry webpack plugin conflict
+- [Phase 09.1]: Exclude app/sw.ts from tsconfig.json to prevent webworker type conflicts with DOM types
+- [Phase 09.1]: theme_color: #09090b (dark) — crimson accent looks off as browser chrome/toolbar color
 
 ### Pending Todos
 
@@ -45,7 +48,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-01
-Stopped at: Completed Plan 09-02 (type layer updates — AiConversation type added, build+lint clean)
+Last session: 2026-03-02
+Stopped at: Completed Plan 09.1-01 (PWA core infrastructure — Serwist SW, offline page, unified manifest, SerwistProvider, tsconfig sw.ts exclusion)
 Resume file: None
-Next step: Execute Phase 10 (TV Watchlist)
+Next step: Execute Phase 09.1 Plan 02 (PWA icons)
