@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 09.1 of 13 (PWA Setup)
-Plan: 1 of 3 in current phase
-Status: In Progress — Plan 01 complete
-Last activity: 2026-03-02 — Plan 01 complete (PWA core infrastructure: Serwist SW, offline page, unified manifest, SerwistProvider)
+Plan: 2 of 3 in current phase
+Status: In Progress — Plan 02 complete
+Last activity: 2026-03-02 — Plan 02 complete (PWA offline UX: useOnlineStatus, usePwaInstall, OfflineToast, InstallPrompt)
 
-Progress: [███░░░░░░░] 15% (v0.4 Phase 09.1 in progress, Plan 01/03 done)
+Progress: [████░░░░░░] 18% (v0.4 Phase 09.1 in progress, Plan 02/03 done)
 
 ## Accumulated Context
 
@@ -33,6 +33,9 @@ Key decisions for v0.4 (from research):
 - [Phase 09.1]: Use @serwist/turbopack (route handler mode) to avoid Sentry webpack plugin conflict
 - [Phase 09.1]: Exclude app/sw.ts from tsconfig.json to prevent webworker type conflicts with DOM types
 - [Phase 09.1]: theme_color: #09090b (dark) — crimson accent looks off as browser chrome/toolbar color
+- [Phase 09.1-02]: hasMounted ref guard in OfflineToast prevents "Back online" toast on initial page load
+- [Phase 09.1-02]: Install banner positioned bottom-16 md:bottom-0 to sit above mobile tab bar
+- [Phase 09.1-02]: Session-only dismiss (no localStorage) for install prompt — sufficient for MVP
 
 ### Pending Todos
 
@@ -49,6 +52,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed Plan 09.1-01 (PWA core infrastructure — Serwist SW, offline page, unified manifest, SerwistProvider, tsconfig sw.ts exclusion)
+Stopped at: Completed Plan 09.1-02 (PWA offline UX — useOnlineStatus, usePwaInstall, OfflineToast, InstallPrompt wired into app layout)
 Resume file: None
-Next step: Execute Phase 09.1 Plan 02 (PWA icons)
+Next step: Execute Phase 09.1 Plan 03 (PWA icons)
