@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { BottomTabBar } from "@/components/layout/bottom-tab-bar";
 import { Providers } from "@/components/providers";
+import { OfflineToast } from "@/components/pwa/offline-toast";
+import { InstallPrompt } from "@/components/pwa/install-prompt";
 import NextTopLoader from "nextjs-toploader";
 
 export default async function AppLayout({
@@ -33,6 +35,8 @@ export default async function AppLayout({
       <main className="md:pl-[60px] pb-16 md:pb-0">
         <Providers>{children}</Providers>
       </main>
+      <OfflineToast />
+      <InstallPrompt />
     </div>
   );
 }
