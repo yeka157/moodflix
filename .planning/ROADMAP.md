@@ -68,6 +68,15 @@ Plans:
 - [ ] 09.1-02-PLAN.md — Offline UX (connectivity toast, install prompt banner, hooks)
 - [ ] 09.1-03-PLAN.md — Cinematic icon generation + end-to-end PWA verification
 
+### Phase 09.1.1: Homepage TV Series Integration (INSERTED)
+
+**Goal:** The homepage surfaces TV series content alongside movies — a "Trending TV Shows" row appears below the movie trending row, and a "Browse Series" feature card links to the /series page.
+**Depends on:** Phase 09.1
+**Plans:** 1 plan
+
+Plans:
+- [ ] 09.1.1-01-PLAN.md — Add TV trending row and Browse Series feature card to homepage
+
 ### Phase 10: TV Watchlisting & Watchlist UX
 **Goal**: Users can add TV shows to their library from the TV detail page, and all watchlist state syncs instantly across every card on every page without a refresh.
 **Depends on**: Phase 9
