@@ -1,551 +1,857 @@
-# Architecture Research
+# Architecture Patterns
 
-**Domain:** TV series discovery integration into existing Moodflix movie architecture
-**Researched:** 2026-02-19
-**Confidence:** HIGH (based on direct codebase inspection + stable TMDB API knowledge)
+**Domain:** v0.4 Watchlist & Polish — TV watchlisting, watchlist UX fixes, discovery UX, AI polish, AI logging, My Top 100
+**Researched:** 2026-02-28
+**Confidence:** HIGH (direct codebase inspection of all affected files)
 
 ---
 
 ## Context: What This Research Answers
 
-This file specifically answers the four integration questions for adding a `/series` page to Moodflix:
+This document answers how six feature groups integrate into the existing Moodflix architecture:
 
-1. New `/api/tv` route or extend `/api/movies`?
-2. How to normalize TVShow fields (`name`, `first_air_date`) for reuse of `MovieCard` and `MovieRow`?
-3. Minimum changes to `MovieDetailModal` for TV details?
-4. Where does `/series` page fit in the file structure?
-
----
-
-## Standard Architecture
-
-### System Overview — TV Integration Layer
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     UI Components (REUSED)                   │
-│  MovieCard (Movie)   MovieRow (Movie[])   MovieDetailModal   │
-│       ↑                    ↑                    ↑            │
-│  [normalizeTVShow()]  [normalizeTVShow()]  [media type flag] │
-├─────────────────────────────────────────────────────────────┤
-│                  NEW: TV-Specific Layer                       │
-│  ┌────────────────┐  ┌──────────────┐  ┌──────────────────┐ │
-│  │ hooks/use-tv.ts│  │ lib/tmdb.ts  │  │ app/api/tv/      │ │
-│  │ (TQ hooks)     │  │ (TV fns)     │  │ route.ts + [id]  │ │
-│  └────────────────┘  └──────────────┘  └──────────────────┘ │
-├─────────────────────────────────────────────────────────────┤
-│                  types/tv.ts (NEW)                           │
-│  TVShow | TVDetails | TVListResponse | TVDetailsResponse     │
-│  + normalizeTVShow(tv: TVShow): Movie  ← single adapter fn  │
-├─────────────────────────────────────────────────────────────┤
-│                  TMDB API                                     │
-│  /trending/tv/week   /tv/popular   /tv/top_rated             │
-│  /tv/on_the_air      /search/tv    /discover/tv              │
-│  /tv/{id}?append_to_response=credits,watch/providers         │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Component Responsibilities
-
-| Component | Responsibility | Modified for TV? |
-|-----------|----------------|------------------|
-| `MovieCard` | Poster card with watchlist actions | No — receives normalized `Movie` |
-| `MovieRow` | Horizontal scroll row | No — receives `Movie[]` |
-| `MovieDetailModal` | Netflix-style detail sheet | Yes — small extension for TV-specific fields |
-| `types/tv.ts` (new) | Raw TMDB TV types + `normalizeTVShow()` | New file |
-| `lib/tmdb.ts` | TMDB fetch helper | Add TV functions only |
-| `app/api/tv/` (new) | TV proxy routes | New route group |
-| `hooks/use-tv.ts` (new) | TanStack Query hooks for TV | New file |
-| `app/(app)/series/` (new) | SSR series discovery page | New route |
+1. **TV watchlisting** — schema migration (`media_type` column), unique constraint change, type propagation
+2. **Watchlist UX fixes** — instant sync, card persistence, movie/series filter
+3. **Discovery UX** — TV search, rename Discover → Movies, rating display as X/10
+4. **AI polish** — origin country TMDB filtering, off-topic guardrails
+5. **AI conversation logging** — full conversation storage for analytics
+6. **My Top 100** — personal curated list, new schema table, new routes
 
 ---
 
-## The Normalization Decision
+## System Overview
 
-### Where to Normalize: `types/tv.ts` — Not the API Route, Not the Hook
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                         App Routes (App Router)                      │
+│  /home   /discover(→Movies)   /series   /library   /settings        │
+│  /movie/[id]   /tv/[id]   /library/top-100 (NEW)                    │
+├─────────────────────────────────────────────────────────────────────┤
+│                      Client Components                               │
+│  WatchlistContent (MODIFIED)   WatchlistCard (MODIFIED)             │
+│  TVDetailPageContent (MODIFIED — add watchlist buttons)             │
+│  MovieDetailPageContent (NO CHANGE)                                  │
+│  MoodSection (NO CHANGE)   LibraryContent (NO CHANGE)               │
+│  TopHundredContent (NEW)                                             │
+├─────────────────────────────────────────────────────────────────────┤
+│                      Server Actions                                  │
+│  actions/watchlist.ts (MODIFIED — media_type field throughout)      │
+│  actions/top-hundred.ts (NEW)                                        │
+├─────────────────────────────────────────────────────────────────────┤
+│                      TanStack Query Hooks                            │
+│  hooks/use-watchlist.ts (MODIFIED — media_type in keys + types)     │
+│  hooks/use-top-hundred.ts (NEW)                                      │
+├─────────────────────────────────────────────────────────────────────┤
+│                      API Routes                                      │
+│  /api/ai/recommend (MODIFIED — guardrails, country filter, logging) │
+├─────────────────────────────────────────────────────────────────────┤
+│                      Database (Drizzle ORM)                          │
+│  watchlist table (MODIFIED — +media_type column, unique constraint) │
+│  ai_recommendations (MODIFIED — +full conversation messages column) │
+│  top_hundred (NEW table)                                             │
+├─────────────────────────────────────────────────────────────────────┤
+│                      External                                        │
+│  TMDB API   Supabase Auth   Google Gemini (AI SDK v5)               │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
-**Rule: normalize at the type boundary, once, at the earliest point after fetch.**
+---
 
-Three candidate locations:
+## Feature 1: TV Watchlisting (Schema Migration)
 
-| Location | Problem |
-|----------|---------|
-| API route (`/api/tv/route.ts`) | Transforms server-side response; hook still gets raw JSON over the wire. Requires duplicating field mapping in the hook's type annotation. |
-| Hook (`hooks/use-tv.ts`) | Normalization runs in the browser on every render. Hooks receive raw API response and must cast — two representations in flight. |
-| **`types/tv.ts` adapter function** | Single function. Hook calls it on fetched data. API route can optionally call it server-side. Components see only `Movie`. One source of truth. |
+### The Core Problem
 
-**Decision: Export `normalizeTVShow(tv: TVShow): Movie` from `types/tv.ts`. Call it inside the hook's `queryFn` after fetch, before returning to component.**
+The current schema has a unique constraint `watchlist_user_tmdb_unique` on `(userId, tmdbId)`. TMDB movie and TV IDs are in separate integer ID spaces — a movie with `id=1396` and a TV show with `id=1396` are different content. Without `media_type`, the watchlist cannot distinguish them. The unique constraint must change from `(userId, tmdbId)` to `(userId, tmdbId, mediaType)`.
 
-This means:
-- Components never see `TVShow` — they only ever receive `Movie`
-- `MovieCard`, `MovieRow`, `MovieDetailModal` require zero changes for list display
-- The adapter is testable in isolation
-
-### TMDB Field Mapping
-
-TMDB TV show list items return these fields that differ from `Movie`:
-
-| TMDB TV Field | TMDB Movie Field | Notes |
-|---------------|-----------------|-------|
-| `name` | `title` | Primary display title |
-| `original_name` | `original_title` | Original language title |
-| `first_air_date` | `release_date` | Format identical: `"YYYY-MM-DD"` |
-| `episode_run_time: number[]` | `runtime: number` | Array, not scalar; take `[0]` or average |
-| `origin_country: string[]` | _(not present)_ | TV-only |
-| `number_of_seasons` | _(not present)_ | TV details only |
-| `number_of_episodes` | _(not present)_ | TV details only |
-| `created_by` | _(director via credits)_ | TV details only |
-
-Fields that are **identical** (no mapping needed): `id`, `overview`, `poster_path`, `backdrop_path`, `vote_average`, `vote_count`, `genre_ids`, `popularity`, `adult`, `original_language`.
-
-The `video` field does not exist on TV show objects — default to `false`.
-
-**Confidence: HIGH** — TMDB API field names for TV vs movie are stable and well-documented. The field differences above have been consistent across TMDB API v3 for years.
-
-### Adapter Implementation
+### Schema Change
 
 ```typescript
-// types/tv.ts
+// drizzle/schema.ts — MODIFIED
 
-export type TVShow = {
-  id: number;
-  name: string;
-  original_name: string;
-  overview: string;
-  poster_path: string | null;
-  backdrop_path: string | null;
-  first_air_date: string;
-  vote_average: number;
-  vote_count: number;
-  genre_ids: number[];
-  popularity: number;
-  adult: boolean;
-  original_language: string;
-  origin_country: string[];
-  // video field is absent on TV shows
-};
+export const mediaTypeEnum = pgEnum("media_type", ["movie", "tv"]);  // NEW
 
-export type TVListResponse = {
-  page: number;
-  results: TVShow[];
-  total_pages: number;
-  total_results: number;
-};
-
-export type TVCategory = "trending" | "popular" | "top_rated" | "on_the_air";
-
-export type TVDetails = {
-  id: number;
-  name: string;
-  original_name: string;
-  overview: string;
-  poster_path: string | null;
-  backdrop_path: string | null;
-  first_air_date: string;
-  vote_average: number;
-  vote_count: number;
-  genres: { id: number; name: string }[];
-  popularity: number;
-  adult: boolean;
-  original_language: string;
-  episode_run_time: number[];
-  number_of_seasons: number;
-  number_of_episodes: number;
-  tagline: string | null;
-  status: string;
-  created_by: { id: number; name: string; profile_path: string | null }[];
-};
-
-export type TVDetailsWithExtras = TVDetails & {
-  credits: import("@/types/movie").MovieCredits;
-  "watch/providers": import("@/types/movie").WatchProvidersResponse;
-};
-
-export type TVDetailsResponse = TVDetailsWithExtras & {
-  watchProviders: import("@/types/movie").WatchProviderResult | null;
-  watchCountry: string;
-  mediaType: "tv";
-};
-
-// The single normalization function — called once in queryFn, never in components
-export function normalizeTVShow(tv: TVShow): import("@/types/movie").Movie {
-  return {
-    id: tv.id,
-    title: tv.name,
-    original_title: tv.original_name,
-    overview: tv.overview,
-    poster_path: tv.poster_path,
-    backdrop_path: tv.backdrop_path,
-    release_date: tv.first_air_date,
-    vote_average: tv.vote_average,
-    vote_count: tv.vote_count,
-    genre_ids: tv.genre_ids,
-    popularity: tv.popularity,
-    adult: tv.adult,
-    original_language: tv.original_language,
-    video: false, // TV shows have no video flag
-  };
-}
-```
-
----
-
-## New API Route: `/api/tv` (Separate from `/api/movies`)
-
-**Decision: Create `/api/tv/route.ts` and `/api/tv/[id]/route.ts` — do NOT extend `/api/movies`.**
-
-Rationale:
-- `/api/movies` is already tightly typed to `MovieListResponse` — adding a `?type=tv` parameter would require casting at the route level and confuses the type contract
-- TV detail responses have extra fields (`number_of_seasons`, `created_by`, etc.) that the existing `MovieDetailsResponse` type doesn't accommodate
-- Separate routes means hooks can point to typed endpoints (`/api/movies` returns `Movie[]`, `/api/tv` returns `TVShow[]` — normalization happens in the hook, not in the route)
-- Consistent with how the codebase already separates `/api/movies/route.ts` (list) from `/api/movies/[id]/route.ts` (details)
-
-**`/api/tv/route.ts`** handles: trending, popular, top_rated, on_the_air categories + search + genre discover for TV.
-
-**`/api/tv/[id]/route.ts`** handles: TV series details with `append_to_response=credits,watch/providers` + country-aware watch providers (same pattern as `/api/movies/[id]/route.ts`).
-
-The route returns raw `TVShow` / `TVDetailsWithExtras` — normalization is done in the hook, not the route. This keeps the API route dumb and the type contract clean.
-
----
-
-## `MovieDetailModal` — Minimum Changes for TV Support
-
-The modal currently hardcodes movie-specific fields:
-- `movie.title` — display title
-- `movie.release_date` — year
-- `details.runtime` (via `formatRuntime`) — runtime
-- `details.credits.crew.find(c => c.job === "Director")` — director lookup
-
-For TV, those fields need TV-aware equivalents. The strategy is to **add a `mediaType` prop** and branch only in the places that differ.
-
-### What Changes
-
-```typescript
-// Add to MovieDetailModalProps:
-interface MovieDetailModalProps {
-  movie: Movie | null;
-  onClose: () => void;
-  // NEW — defaults to "movie" for backward compat
-  tvDetails?: TVDetailsResponse | null;
-  mediaType?: "movie" | "tv";
-}
-```
-
-| Current (movie) | TV equivalent | Change |
-|-----------------|---------------|--------|
-| `formatRuntime(details.runtime)` | `formatRuntime(tvDetails.episode_run_time[0])` + "/ ep" label | Branch on `mediaType` |
-| `details.credits.crew.find(c => c.job === "Director")` | `tvDetails.created_by[0]?.name` | Branch on `mediaType` |
-| `"Director:"` label | `"Created by:"` label | String swap |
-| No season/episode info | `"X seasons · Y episodes"` | TV-only addition |
-| `movie.title` (from prop) | `movie.title` (already normalized via `normalizeTVShow`) | No change needed |
-| `movie.release_date.slice(0, 4)` | `movie.release_date.slice(0, 4)` (normalized from `first_air_date`) | No change needed |
-
-The watchlist CRUD actions (`handleAddToLibrary`, `handleMarkWatched`, `handleRemove`) use `movie.id`, `movie.title`, `movie.poster_path` — all of which are present on normalized `Movie` objects. **No watchlist action changes needed.**
-
-The modal hooks `useMovieDetails` vs a new `useTVDetails` — the modal needs to know which to call. The cleanest approach: pass a separate `tvDetails` prop when `mediaType === "tv"`, and skip calling `useMovieDetails` (use `enabled: mediaType !== "tv"`).
-
-### Concrete Modal Change Pattern
-
-```typescript
-// In MovieDetailModal:
-const { data: movieDetails } = useMovieDetails(
-  mediaType !== "tv" ? (movie?.id ?? null) : null
+export const watchlist = pgTable(
+  "watchlist",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+    tmdbId: integer("tmdb_id").notNull(),
+    mediaType: mediaTypeEnum("media_type").notNull().default("movie"),  // NEW COLUMN
+    title: text("title").notNull(),
+    posterPath: text("poster_path"),
+    status: watchlistStatusEnum("status").default("want_to_watch"),
+    rating: integer("rating"),
+    addedAt: timestamp("added_at", { withTimezone: true }).defaultNow(),
+    watchedAt: timestamp("watched_at", { withTimezone: true }),
+  },
+  (table) => [
+    // CHANGED: was (table.userId, table.tmdbId) — now includes mediaType
+    unique("watchlist_user_tmdb_media_unique").on(table.userId, table.tmdbId, table.mediaType),
+  ],
 );
-
-// tvDetails is passed as a prop when mediaType === "tv"
-const details = mediaType === "tv" ? tvDetails : movieDetails;
-
-// Branched display:
-const runtimeLabel = mediaType === "tv"
-  ? tvDetails?.episode_run_time?.[0]
-    ? `${tvDetails.episode_run_time[0]}m / ep`
-    : null
-  : formatRuntime(movieDetails?.runtime ?? null);
-
-const creatorLabel = mediaType === "tv"
-  ? tvDetails?.created_by?.[0]?.name ?? null
-  : movieDetails?.credits?.crew?.find(c => c.job === "Director")?.name ?? null;
-
-const creatorRole = mediaType === "tv" ? "Created by:" : "Director:";
 ```
 
-**Scope of modal changes: ~20 lines of additions. No existing rendering logic is removed.**
+### Migration Sequence
 
----
+The Drizzle migration must be additive to avoid data loss:
 
-## File Structure
+1. Add `media_type` column with `DEFAULT 'movie'` — existing rows become `'movie'` automatically
+2. Drop old constraint `watchlist_user_tmdb_unique`
+3. Add new constraint `watchlist_user_tmdb_media_unique` on `(userId, tmdbId, mediaType)`
+4. Set `NOT NULL` on the column after backfill is confirmed
 
-```
-moodflix/
-├── types/
-│   ├── movie.ts              # UNCHANGED
-│   └── tv.ts                 # NEW — TVShow, TVDetails, normalizeTVShow()
-│
-├── lib/
-│   └── tmdb.ts               # MODIFIED — add TV functions (getTrendingTV, etc.)
-│
-├── app/
-│   └── api/
-│       ├── movies/            # UNCHANGED
-│       └── tv/                # NEW
-│           ├── route.ts       # TV list: trending/popular/top_rated/on_the_air/search/genre
-│           └── [id]/
-│               └── route.ts   # TV details + watch providers
-│
-├── hooks/
-│   ├── use-movies.ts          # UNCHANGED
-│   └── use-tv.ts              # NEW — TanStack Query hooks, calls normalizeTVShow in queryFn
-│
-├── components/
-│   ├── movies/
-│   │   ├── movie-card.tsx          # UNCHANGED
-│   │   ├── movie-row.tsx           # UNCHANGED
-│   │   ├── movie-detail-modal.tsx  # MODIFIED — ~20 lines for TV branching
-│   │   └── movie-grid.tsx          # UNCHANGED
-│   └── series/                     # NEW — mirrors components/movies/ structure
-│       └── series-content.tsx      # Client component for /series page
-│
-└── app/
-    └── (app)/
-        ├── discover/          # UNCHANGED
-        └── series/            # NEW
-            ├── page.tsx       # SSR — calls getTrendingTV, getPopularTV, getTopRatedTV
-            └── loading.tsx    # Skeleton (reuse same skeleton as discover/loading.tsx)
-```
+The `DEFAULT 'movie'` handles all existing rows without manual data surgery. No existing watchlist items will break.
 
-### Structure Rationale
+### Type Propagation
 
-- **`types/tv.ts` is separate from `movie.ts`**: TV types are a parallel domain, not a subset. Mixing them would require union types throughout the codebase. The adapter function lives here too, keeping normalization logic co-located with the types.
-- **`components/series/`**: Exists because `series-content.tsx` will have TV-specific search placeholder text, TV genre list (TV genres partially overlap movies but have unique entries like Talk Show, Reality), and on_the_air category. It is not a clone of `discover-content.tsx` — it shares all child components but has different state.
-- **`app/(app)/series/` not `/tv/`**: "Series" is the user-facing term (Netflix uses it); `/tv/` would be a confusing URL.
+Every type that touches the watchlist must gain `mediaType`:
 
----
-
-## Architectural Patterns
-
-### Pattern 1: Adapt at the Hook Boundary
-
-**What:** `normalizeTVShow()` is called inside `queryFn` in `hooks/use-tv.ts`, converting `TVListResponse` to `MovieListResponse` before TanStack Query caches it.
-
-**When to use:** Any time a foreign data shape must flow into components that expect a known type.
-
-**Trade-offs:** TanStack Query cache stores `Movie[]` not `TVShow[]` — cannot retrieve raw TV fields from cache. Acceptable here because TV-specific fields are only needed in the detail modal, which fetches separately.
-
-**Example:**
 ```typescript
-// hooks/use-tv.ts
-async function fetchTVCategory(
-  category: TVCategory,
-  page: number,
-): Promise<MovieListResponse> {
-  const res = await fetch(`/api/tv?category=${category}&page=${page}`);
-  if (!res.ok) throw new Error("Failed to fetch TV shows");
-  const data: TVListResponse = await res.json();
-  // Normalize here — components never see TVShow
-  return {
-    ...data,
-    results: data.results.map(normalizeTVShow),
-  };
+// types/watchlist.ts — MODIFIED
+
+export type MediaType = "movie" | "tv";  // NEW
+
+export type WatchlistItem = {
+  id: string;
+  userId: string;
+  tmdbId: number;
+  mediaType: MediaType;  // NEW
+  title: string;
+  posterPath: string | null;
+  status: WatchlistStatus;
+  rating: number | null;
+  addedAt: string;
+  watchedAt: string | null;
+};
+
+export type WatchlistTmdbEntry = {
+  id: string;
+  tmdbId: number;
+  mediaType: MediaType;  // NEW — critical for card state lookups
+  status: WatchlistStatus;
+};
+
+export type AddToWatchlistInput = {
+  tmdbId: number;
+  mediaType: MediaType;  // NEW
+  title: string;
+  posterPath: string | null;
+  status?: WatchlistStatus;
+};
+```
+
+### Actions: `actions/watchlist.ts` Changes
+
+Every server action needs `media_type` awareness:
+
+| Action | Change |
+|--------|--------|
+| `serializeItem` | Add `mediaType: row.mediaType` to returned object |
+| `getWatchlist` | Accept optional `mediaType?: MediaType` filter param |
+| `getWatchlistTmdbIds` | Return `mediaType` in each entry |
+| `getWatchlistItemByTmdbId` | Add `mediaType` to WHERE clause: `and(userId, tmdbId, mediaType)` |
+| `addToWatchlist` | Accept `data.mediaType`, write it to DB; update unique conflict message |
+| `removeFromWatchlist` | No change — uses `watchlistItemId` (UUID), not tmdbId |
+| `updateWatchlistStatus` | No change — uses UUID |
+| `rateWatchlistItem` | No change — uses UUID |
+
+Critical: `getWatchlistItemByTmdbId` must now take `(tmdbId: number, mediaType: MediaType)` — without `mediaType`, a movie and TV show with the same numeric ID would clash. Update all callers.
+
+### Hook Changes: `hooks/use-watchlist.ts`
+
+Query key factory needs `mediaType` dimension:
+
+```typescript
+// hooks/use-watchlist.ts — MODIFIED
+
+export const watchlistKeys = {
+  all: ["watchlist"] as const,
+  list: (status?: WatchlistStatus, mediaType?: MediaType) =>
+    [...watchlistKeys.all, "list", status ?? "all", mediaType ?? "all"] as const,
+  tmdbIds: () => [...watchlistKeys.all, "tmdbIds"] as const,
+  check: (tmdbId: number, mediaType: MediaType) =>
+    [...watchlistKeys.all, "check", tmdbId, mediaType] as const,  // CHANGED
+};
+```
+
+The `check` key change is the most disruptive — every call to `watchlistKeys.check(tmdbId)` becomes `watchlistKeys.check(tmdbId, mediaType)`. Callers: `movie-detail-page.tsx`, `tv-detail-page.tsx`, optimistic update logic in `useAddToWatchlist`.
+
+Optimistic update in `useAddToWatchlist.onMutate` must populate `mediaType` in the fake entry:
+
+```typescript
+// In useAddToWatchlist.onMutate:
+queryClient.setQueryData<WatchlistTmdbEntry[]>(
+  watchlistKeys.tmdbIds(),
+  (old) => [
+    ...(old ?? []),
+    {
+      id: "",
+      tmdbId: newItem.tmdbId,
+      mediaType: newItem.mediaType,  // NEW
+      status: newItem.status ?? "want_to_watch",
+    },
+  ],
+);
+```
+
+### TV Detail Page: Adding Watchlist Buttons
+
+`TVDetailPageContent` currently renders no watchlist controls. This is the primary feature gap. The pattern to follow is `movie-detail-page.tsx` which already uses `useWatchlistCheck`, `useAddToWatchlist`, `useRemoveFromWatchlist`, `useUpdateWatchlistStatus`, `useRateWatchlistItem`.
+
+Add to `TVDetailPageContent`:
+
+```typescript
+// components/movies/tv-detail-page.tsx — MODIFIED (add watchlist section)
+
+const tvId = details.id;
+const tvTitle = details.name;
+const tvPoster = details.poster_path;
+
+const { data: watchlistItem } = useWatchlistCheck(tvId, "tv");  // mediaType="tv"
+const addMutation = useAddToWatchlist();
+const removeMutation = useRemoveFromWatchlist();
+const statusMutation = useUpdateWatchlistStatus();
+const rateMutation = useRateWatchlistItem();
+```
+
+The watchlist action buttons (Bookmark, CircleCheck, ThumbsUp, ThumbsDown) are already built in `movie-detail-page.tsx`. Extract them into a shared component or copy the pattern into `tv-detail-page.tsx`. Given the current file structure, copy is lower risk than extraction (no risk of breaking the movie detail page mid-milestone).
+
+### WatchlistCard: Adding `media_type` Awareness
+
+`WatchlistCard` renders a poster that links to `/movie/${item.tmdbId}`. With TV shows in the watchlist, this must route to `/tv/${item.tmdbId}` for TV items.
+
+```typescript
+// components/watchlist/watchlist-card.tsx — MODIFIED
+
+const detailHref = item.mediaType === "tv"
+  ? `/tv/${item.tmdbId}`
+  : `/movie/${item.tmdbId}`;
+
+// Replace hardcoded `/movie/${item.tmdbId}` with `detailHref` in Link and anchor
+```
+
+Also display a "TV" or "Movie" type badge to help users identify content type at a glance.
+
+---
+
+## Feature 2: Watchlist UX Fixes
+
+### Instant Sync (BACKLOG-16)
+
+**Problem:** Watchlist state (bookmark/watched icons) on movie cards in `/home` and `/discover` does not update until the next page refresh after a mutation from the detail page.
+
+**Root cause:** `useWatchlistTmdbIds` has `staleTime: 30_000`. After `addToWatchlist`, `onSettled` calls `invalidateQueries({ queryKey: watchlistKeys.all })` which marks the query stale, but the refetch only happens when the component re-renders with focus. If the user navigates back to the card without a window focus event, the card shows the pre-mutation state.
+
+**Fix:** In `useAddToWatchlist.onSettled` and all mutation `onSettled` handlers, change invalidation to trigger an immediate refetch:
+
+```typescript
+onSettled: () => {
+  queryClient.invalidateQueries({ queryKey: watchlistKeys.all });
+  // Force immediate refetch of tmdbIds so cards update without window focus:
+  queryClient.refetchQueries({ queryKey: watchlistKeys.tmdbIds() });
+},
+```
+
+The optimistic update already covers the instant visual response. The forced refetch ensures the server-confirmed state arrives promptly.
+
+### Card Persistence (BACKLOG-23)
+
+**Problem:** After marking a movie as "watched" in the library tab, the card disappears from the "Want to Watch" tab but does not appear in the "Watched" tab until the user switches tabs and back (or refreshes).
+
+**Root cause:** The `useWatchlistTmdbIds` cache and `watchlistKeys.list("watched")` cache are not updated atomically. The item is removed from `want_to_watch` list immediately (optimistic), but the `watched` list cache only receives the item when it invalidates and refetches.
+
+**Fix:** The existing `useUpdateWatchlistStatus.onMutate` already handles this — it directly updates both the `want_to_watch` and `watched` list caches optimistically. The bug is that it looks up the item from `watchlistKeys.list()` (the "all" list) which may be stale.
+
+The fix is to use the `WatchlistItem` from the check cache (`watchlistKeys.check(tmdbId, mediaType)`) as the fallback source when the all-list cache is empty or doesn't contain the item:
+
+```typescript
+// Prefer check cache if all-list doesn't have the item yet
+const item = previousLists[JSON.stringify(watchlistKeys.list())]?.find(i => i.id === params.id)
+  ?? previousCheck;
+```
+
+### Library Movie/Series Filter (BACKLOG-32)
+
+**Problem:** Library shows all items. Users need to filter to see only movies or only TV shows.
+
+**Solution:** Add a "Media Type" filter to `WatchlistContent` alongside the existing status tabs.
+
+`WatchlistContent` currently calls `useWatchlist(statusFilter)`. Extend the hook to accept `mediaType?`:
+
+```typescript
+// hooks/use-watchlist.ts
+export function useWatchlist(status?: WatchlistStatus, mediaType?: MediaType) {
+  return useQuery({
+    queryKey: watchlistKeys.list(status, mediaType),
+    queryFn: () => getWatchlist(status, mediaType),
+    ...
+  });
 }
 ```
 
-### Pattern 2: Media Type Prop for Modal Branching
+In `WatchlistContent`, add a filter UI using shadcn `ToggleGroup` (already used in the discover page for genre filtering):
 
-**What:** `MovieDetailModal` accepts `mediaType?: "movie" | "tv"` and `tvDetails?: TVDetailsResponse`. Branches on `mediaType` only in the handful of places that differ.
+```typescript
+// components/watchlist/watchlist-content.tsx — MODIFIED
+const [mediaFilter, setMediaFilter] = useState<MediaType | "all">("all");
+const mediaTypeFilter: MediaType | undefined = mediaFilter === "all" ? undefined : mediaFilter;
+const { data: items } = useWatchlist(statusFilter, mediaTypeFilter);
+```
 
-**When to use:** Extending a component for a closely related domain without forking it.
+The `getWatchlist` server action accepts the new filter:
 
-**Trade-offs:** Modal takes on a second responsibility. Acceptable because TV and movie detail UIs are 90% identical. Forking the modal would mean maintaining two nearly-identical 600-line components.
-
-### Pattern 3: Parallel Route/Hook/Type Triplet
-
-**What:** Each media type has its own: `app/api/{type}/`, `hooks/use-{type}.ts`, types in `types/{type}.ts`. They share components via normalization.
-
-**When to use:** When adding a second media type (TV) that has a parallel but distinct TMDB API surface.
-
-**Trade-offs:** More files, but clean separation. Adding a third type (e.g., anime) follows the same pattern without touching existing code.
+```typescript
+// actions/watchlist.ts
+export async function getWatchlist(
+  status?: WatchlistStatus,
+  mediaType?: MediaType,
+): Promise<WatchlistItem[]> {
+  const conditions = and(
+    eq(watchlist.userId, userId),
+    status ? eq(watchlist.status, status) : undefined,
+    mediaType ? eq(watchlist.mediaType, mediaType) : undefined,
+  );
+  ...
+}
+```
 
 ---
 
-## Data Flow
+## Feature 3: Discovery UX
 
-### Series Page Request Flow
+### TV Search (BACKLOG-31)
 
-```
-[SSR: app/(app)/series/page.tsx]
-    ↓ Promise.all
-[lib/tmdb.ts: getTrendingTV(), getPopularTV(), getTopRatedTV()]
-    ↓ TMDB API /trending/tv/week, /tv/popular, /tv/top_rated
-[TVListResponse] → normalizeTVShow() per result → Movie[]
-    ↓ passed as props
-[components/series/series-content.tsx]
-    ↓ renders with
-[MovieRow, MovieCard] ← already typed to Movie[], no changes
-```
+**Problem:** The `/series` page has no search input. Users must rely on browsing rows only.
 
-### TV Detail Flow
+**Solution:** The `/series` page renders `SeriesContent` (a client component). Add a `SearchInput` to `SeriesContent` mirroring the search in `DiscoverContent`. The TV search uses the existing `searchTV` function from `lib/tmdb.ts` via `/api/tv?query=...`.
 
-```
-[User clicks TV show card in series-content.tsx]
-    ↓ setSelectedShow(movie)
-[MovieDetailModal opens with mediaType="tv"]
-    ↓ hook disabled for movie details
-[useTVDetails(show.id)] → fetch /api/tv/{id}
-    ↓ /api/tv/[id]/route.ts → lib/tmdb.ts: getTVDetails()
-[TVDetailsResponse] → passed as tvDetails prop to modal
-    ↓ modal branches on mediaType
-[Renders: seasons count, episode runtime, "Created by:"]
+Add `useSearchTV` hook to `hooks/use-tv.ts`:
+
+```typescript
+export function useSearchTV(query: string) {
+  return useInfiniteQuery({
+    queryKey: tvKeys.search(query),
+    queryFn: ({ pageParam = 1 }) => fetchTVSearch(query, pageParam),
+    enabled: query.length > 1,
+    ...
+  });
+}
 ```
 
-### Watchlist Flow (Unchanged)
+This is a pure addition — no existing code changes.
 
-```
-[User adds TV show to watchlist via MovieDetailModal]
-    ↓ handleAddToLibrary — uses movie.id (tmdbId), movie.title, movie.poster_path
-[addToWatchlist server action] → Drizzle → PostgreSQL
+### Rename Discover → Movies (BACKLOG-31)
+
+**Scope:** UI label change, not a route rename. The route stays `/discover` (changing the route would break bookmarks and is out of scope for a polish milestone).
+
+Files to update:
+- `components/layout/sidebar.tsx` (or `app-navbar.tsx`) — nav link label "Discover" → "Movies"
+- `app/(app)/discover/page.tsx` — page metadata title
+- `app/(app)/home/page.tsx` — feature cards array ("Discover Movies" label)
+- Any hardcoded "Discover" strings in `DiscoverContent`
+
+This is a text substitution pass — no logic changes.
+
+### Rating Display Fix (BACKLOG-25)
+
+**Problem:** Rating stored as `vote_average` (0-10 float from TMDB) is displayed inconsistently. Some places show `8.5 ★`, others show raw values.
+
+**Solution:** Standardize on `X/10` format throughout. Create a shared `formatRating` utility:
+
+```typescript
+// lib/utils.ts — ADD
+export function formatRating(voteAverage: number | null | undefined): string {
+  if (!voteAverage || voteAverage === 0) return "N/A";
+  return `${voteAverage.toFixed(1)}/10`;
+}
 ```
 
-**Note:** The watchlist schema has no `mediaType` column. TV show and movie TMDB IDs are in separate ID spaces (TMDB guarantees no collision between `movie.id` and `tv.id`), so the existing unique constraint `(userId, tmdbId)` is safe. If future disambiguation is needed (e.g., showing "TV" badge in library), add a `mediaType text` column via a new Drizzle migration. Do not add it now — YAGNI until library needs it.
+Apply in:
+- `movie-detail-page.tsx` — replace `rating ★` with `formatRating(details.vote_average)`
+- `tv-detail-page.tsx` — same
+- `movie-card.tsx` — if rating is shown on hover overlay
+- `watchlist-card.tsx` — N/A (watchlist shows like/dislike, not TMDB rating)
 
 ---
 
-## Build Order
+## Feature 4: AI Polish — Origin Country Filtering
 
-Build in this order to unblock each subsequent step:
+### Problem
 
-1. **`types/tv.ts`** — Define `TVShow`, `TVListResponse`, `TVDetails`, `TVDetailsResponse`, `TVCategory`, `normalizeTVShow()`. Zero runtime risk, pure types + function.
+When a user says "Korean drama" or "Japanese anime," the AI correctly sets `media_type: "tv"` and genre IDs. But `discoverTVByGenre` in `lib/tmdb.ts` does not pass `with_origin_country` — the results include all nationalities.
 
-2. **`lib/tmdb.ts` additions** — Add `getTrendingTV`, `getPopularTV`, `getTopRatedTV`, `getOnTheAirTV`, `searchTV`, `discoverTVByGenre`, `getTVDetails`. Use same `tmdbFetch<T>` helper. Mirror the existing movie function signatures exactly.
+### Solution: Extend `suggest_genres` Tool Output
 
-3. **`app/api/tv/route.ts`** — Mirror `app/api/movies/route.ts`. Returns raw `TVListResponse` (normalization is hook responsibility). Add `on_the_air` as a valid category.
+Add an optional `origin_country` field to the `suggest_genres` tool's `inputSchema`:
 
-4. **`app/api/tv/[id]/route.ts`** — Mirror `app/api/movies/[id]/route.ts`. Calls `getTVDetails(id)` which uses `append_to_response=credits,watch/providers`.
+```typescript
+// app/api/ai/recommend/route.ts — MODIFIED
 
-5. **`hooks/use-tv.ts`** — Mirror `hooks/use-movies.ts` structure. Call `normalizeTVShow()` inside each `queryFn`. Export `tvKeys` query key factory.
+inputSchema: z.object({
+  genres: z.array(z.object({
+    id: z.number(),
+    name: z.string(),
+  })).min(1).max(3),
+  moodSummary: z.string(),
+  media_type: z.enum(["movie", "tv"]).default("movie"),
+  origin_country: z.string().optional()
+    .describe("ISO 3166-1 alpha-2 country code (e.g. 'KR' for Korea, 'JP' for Japan). Only set when user explicitly requests content from a specific country."),
+}),
+```
 
-6. **`components/series/series-content.tsx`** — Client component. Accepts `trending: Movie[]`, `popular: Movie[]`, `topRated: Movie[]` props (already normalized). Manages search, genre filter state. Renders `MovieRow`, `MovieGrid`, `MovieDetailModal` with `mediaType="tv"`.
+Update the system prompt to instruct the model when to set `origin_country`:
 
-7. **`app/(app)/series/page.tsx`** — SSR page. Calls `getTrendingTV()`, `getPopularTV()`, `getTopRatedTV()` in `Promise.all`. Normalizes results via `normalizeTVShow()`. Passes to `SeriesContent`.
+```
+When the user requests content from a specific country (e.g. "Korean drama", "Japanese anime",
+"French film"), set origin_country to the ISO 3166-1 alpha-2 code (KR, JP, FR, etc.).
+Do NOT set origin_country unless the user explicitly requests a specific nationality.
+```
 
-8. **`app/(app)/series/loading.tsx`** — Reuse the same skeleton JSX as `app/(app)/discover/loading.tsx`.
+### Propagation to TMDB Discover
 
-9. **`components/movies/movie-detail-modal.tsx` modifications** — Add `mediaType` prop, `tvDetails` prop, branch the runtime/creator/seasons display. This step is last because it can be tested in isolation once step 6 is wired up.
+The `suggest_genres` tool's return value flows to the `home/recommendations` page via URL params. Update the URL construction in `MoodSection.handleShowMovies`:
 
-10. **`components/layout/app-navbar.tsx`** — Add "Series" nav link pointing to `/series` with an appropriate icon (e.g., `Tv` from lucide-react).
+```typescript
+// components/ai/mood-section.tsx — MODIFIED
 
-**Why this order:** Types first means TypeScript catches errors at every subsequent step. API routes before hooks means hooks can be tested against real endpoints. SSR page before modal modifications means the happy path (browsing) works before the detail overlay is wired up.
+const handleShowMovies = () => {
+  if (!genreSuggestion) return;
+  const genreIds = genreSuggestion.genres.map(g => g.id).join(",");
+  const mood = encodeURIComponent(genreSuggestion.moodSummary);
+  const mediaType = genreSuggestion.media_type ?? "movie";
+  // Add country param:
+  const country = genreSuggestion.origin_country
+    ? `&country=${genreSuggestion.origin_country}`
+    : "";
+  router.push(`/home/recommendations?genres=${genreIds}&mood=${mood}&type=${mediaType}${country}`);
+};
+```
+
+Update `discoverTV` in `lib/tmdb.ts` to accept `with_origin_country`:
+
+```typescript
+// lib/tmdb.ts — MODIFIED
+export async function discoverTV(opts: {
+  genreIds?: string;
+  sortBy?: string;
+  year?: string;
+  originCountry?: string;  // NEW
+  page?: number;
+} = {}) {
+  const params: Record<string, string> = { ... };
+  if (opts.originCountry) params.with_origin_country = opts.originCountry;
+  ...
+}
+```
+
+The recommendations page reads `?country=` from the URL and passes it to `discoverTV`. No new routes needed.
+
+### Update `GenreSuggestion` Type
+
+```typescript
+// types/ai.ts — MODIFIED
+export type GenreSuggestion = {
+  genres: Array<{ id: number; name: string }>;
+  moodSummary: string;
+  media_type: "movie" | "tv";
+  origin_country?: string;  // NEW
+  confirmed: boolean;
+};
+```
 
 ---
 
-## Anti-Patterns
+## Feature 5: AI Guardrails (Off-Topic Restriction)
 
-### Anti-Pattern 1: Normalizing in the API Route
+### Problem
 
-**What people do:** Map `name → title` in `/api/tv/route.ts` before returning JSON, so the client receives `Movie`-shaped objects.
+Users can send messages like "write me a poem" or "what's 2+2?" and the AI will respond helpfully instead of staying on the movie/TV topic.
 
-**Why it's wrong:** The API route loses type information — it returns `Movie` but TypeScript thinks it's returning `TVListResponse`. The raw TV fields (`episode_run_time`, `number_of_seasons`) needed by the detail modal are lost server-side before the hook can forward them. Also makes the route harder to debug — the response no longer matches what TMDB sends.
+### Solution: System Prompt Addition
 
-**Do this instead:** Return raw TMDB response from the route. Normalize in the hook's `queryFn` where TypeScript can enforce the transformation.
+No new infrastructure needed. Add a guardrail instruction to the existing system prompt in `app/api/ai/recommend/route.ts`:
 
-### Anti-Pattern 2: Adding `?type=tv` to `/api/movies`
+```
+STRICT SCOPE: You ONLY help users find movies and TV shows based on their mood.
+If the user asks about anything unrelated to movies, TV shows, or entertainment,
+respond with exactly: "I can only help you find movies and TV shows that match
+your mood. What are you in the mood to watch?"
+Do NOT engage with, answer, or expand on any off-topic requests.
+```
 
-**What people do:** Extend the existing movies route with a `type` query param to serve both movies and TV shows.
+This is a prompt engineering change — zero code infrastructure changes. Place the guardrail instruction at the top of the system prompt before all other instructions, so it takes priority.
 
-**Why it's wrong:** The route is already typed to `MovieListResponse` in `lib/tmdb.ts` functions. Adding a conditional return type forces `as unknown as MovieListResponse` casting throughout. The movie and TV TMDB endpoints have different parameters (`on_the_air` vs `now_playing`). One route trying to do both creates a branchy mess that is hard to test.
+**Trade-off:** Prompt-only guardrails can be bypassed by jailbreak attempts. For a hobby SaaS, this is acceptable. A production system would add a classification step or content filter API call, but that adds latency and cost.
 
-**Do this instead:** Separate `/api/tv/` route — same pattern, parallel implementation, zero coupling.
+---
 
-### Anti-Pattern 3: Forking `MovieDetailModal` into `TVDetailModal`
+## Feature 6: AI Conversation Logging
 
-**What people do:** Copy `movie-detail-modal.tsx` to `tv-detail-modal.tsx` and adjust.
+### Problem
 
-**Why it's wrong:** Two 600-line files to maintain. Any fix to the modal (e.g., provider display bug, animation tweak) must be applied twice. The TV and movie UIs are 90% identical.
+`aiRecommendations` currently stores only the final mood prompt and the genre suggestion output. There is no record of the full conversation (all user/assistant turns), which makes it impossible to analyze what conversation patterns lead to recommendations.
 
-**Do this instead:** Add `mediaType` prop to the existing modal. Branch only where the fields differ (~20 lines). Use `tvDetails` prop pattern so the modal doesn't need to know which hook to call internally.
+### Schema Change
 
-### Anti-Pattern 4: Adding `mediaType` Column to Watchlist Now
+Extend the existing `ai_recommendations` table:
 
-**What people do:** Preemptively add `mediaType: text("media_type").default("movie")` to the watchlist schema.
+```typescript
+// drizzle/schema.ts — MODIFIED
 
-**Why it's wrong:** Requires a Drizzle migration + RLS policy update + server action changes + type changes — none of which are needed for the `/series` page to work. TMDB movie and TV IDs are in separate integer namespaces with no overlap, so the existing `(userId, tmdbId)` unique constraint is safe.
+export const aiRecommendations = pgTable("ai_recommendations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  prompt: text("prompt").notNull(),          // UNCHANGED — last user message (for backward compat)
+  recommendations: jsonb("recommendations").notNull(), // UNCHANGED — genre suggestion output
+  messages: jsonb("messages"),               // NEW — full conversation array, nullable for old rows
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+```
 
-**Do this instead:** Add `mediaType` only when the Library page needs to display "TV" badges or filter by type. Defer the migration.
+The `messages` column is `jsonb` and nullable so existing rows are unaffected. No data migration needed.
+
+### Route Change: `app/api/ai/recommend/route.ts`
+
+In the `suggest_genres.execute` function where the DB insert happens, pass the full message array:
+
+```typescript
+// app/api/ai/recommend/route.ts — MODIFIED (in suggest_genres.execute)
+
+db.insert(aiRecommendations)
+  .values({
+    userId,
+    prompt: moodPrompt,
+    recommendations: validatedParams,
+    messages: uiMessages,  // NEW — store full conversation
+  })
+  .catch(() => {
+    // Non-critical: silently fail
+  });
+```
+
+`uiMessages` is already in scope at the point of the tool's `execute` call (it's captured from the POST handler's outer scope). The conversation is stored as a JSONB array — the AI SDK `UIMessage[]` format, which is serializable.
+
+**Storage consideration:** Each conversation is typically 2-6 messages, each 50-200 tokens. At 10 requests/day per free user, storage growth is negligible for a hobby project. No pagination or cleanup mechanism needed initially.
+
+---
+
+## Feature 7: My Top 100
+
+### Schema: New Table
+
+```typescript
+// drizzle/schema.ts — ADD
+
+export const topHundred = pgTable(
+  "top_hundred",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+    tmdbId: integer("tmdb_id").notNull(),
+    mediaType: mediaTypeEnum("media_type").notNull().default("movie"),
+    title: text("title").notNull(),
+    posterPath: text("poster_path"),
+    rank: integer("rank").notNull(),           // 1-100
+    addedAt: timestamp("added_at", { withTimezone: true }).defaultNow(),
+  },
+  (table) => [
+    unique("top_hundred_user_tmdb_unique").on(table.userId, table.tmdbId, table.mediaType),
+    // Rank must be unique per user (no two items at rank 5)
+    unique("top_hundred_user_rank_unique").on(table.userId, table.rank),
+  ],
+);
+```
+
+The `rank` column enables ordered display and drag-to-reorder. The unique constraint on `(userId, rank)` enforces list integrity — no duplicate ranks.
+
+### New Types: `types/top-hundred.ts`
+
+```typescript
+export type TopHundredItem = {
+  id: string;
+  userId: string;
+  tmdbId: number;
+  mediaType: "movie" | "tv";
+  title: string;
+  posterPath: string | null;
+  rank: number;
+  addedAt: string;
+};
+
+export type AddToTopHundredInput = {
+  tmdbId: number;
+  mediaType: "movie" | "tv";
+  title: string;
+  posterPath: string | null;
+  rank?: number;  // If omitted, appended at end (next available rank)
+};
+
+export type ReorderTopHundredInput = {
+  itemId: string;
+  newRank: number;
+};
+```
+
+### New Server Actions: `actions/top-hundred.ts`
+
+```typescript
+// actions/top-hundred.ts (NEW)
+// getTopHundred() → TopHundredItem[] ordered by rank
+// addToTopHundred(data) → TopHundredItem (auto-assigns next rank if not provided)
+// removeFromTopHundred(itemId) → void
+// reorderTopHundred(itemId, newRank) → shifts other items to maintain sequence
+```
+
+The reorder operation is a multi-row update. Use Drizzle's transaction support:
+
+```typescript
+await db.transaction(async (tx) => {
+  // Shift items between old and new rank
+  // Update the target item's rank
+});
+```
+
+### New Hook: `hooks/use-top-hundred.ts`
+
+Follows the same TanStack Query pattern as `hooks/use-watchlist.ts`:
+- `useTopHundred()` — list query
+- `useAddToTopHundred()` — mutation with optimistic insert
+- `useRemoveFromTopHundred()` — mutation with optimistic remove
+- `useReorderTopHundred()` — mutation with optimistic reorder
+
+### New Route: `/library/top-100`
+
+Place under the existing `/library` route group for navigation consistency.
+
+```
+app/(app)/library/
+  page.tsx          # Existing watchlist/library
+  top-100/
+    page.tsx        # NEW — My Top 100
+    loading.tsx     # NEW
+```
+
+URL: `/library/top-100` (not `/top-100` at root — keeps it scoped to the library section).
+
+### New Component: `components/library/top-hundred-content.tsx`
+
+Renders the ranked list. Two views:
+- **Display mode:** Numbered list with poster, title, media type badge
+- **Edit mode:** Drag-to-reorder (use `@hello-pangea/dnd` or CSS-based rank swap with +/- buttons)
+
+**Recommendation on drag-to-reorder:** Defer drag-and-drop for v0.4. Use simple "move up / move down" arrow buttons instead. Drag-and-drop requires a DnD library that must not conflict with Framer Motion. For 100 items, arrow buttons are functional and have no new dependencies.
+
+### Navigation Integration
+
+Add a "Top 100" link in the library section. Two options:
+1. As a sidebar item under `/library` (separate nav entry)
+2. As a tab within the library page itself
+
+Recommendation: Tab within `/library/page.tsx` (a "Top 100" tab alongside "All", "Want to Watch", "Watched"). This avoids adding another top-level nav item to the already full sidebar. But it means `WatchlistContent` and `TopHundredContent` share the `/library` page with a tab switcher. Implement as a top-level tab array update in `WatchlistContent`, rendering `TopHundredContent` when the "Top 100" tab is active.
+
+---
+
+## Component Boundaries: New vs Modified
+
+| Component | Status | Description |
+|-----------|--------|-------------|
+| `drizzle/schema.ts` | MODIFIED | `+media_type` on watchlist, `+messages` on ai_recommendations, new `top_hundred` table |
+| `types/watchlist.ts` | MODIFIED | `+MediaType`, `+mediaType` on all types |
+| `types/ai.ts` | MODIFIED | `+origin_country` on `GenreSuggestion` |
+| `types/top-hundred.ts` | NEW | `TopHundredItem`, `AddToTopHundredInput`, `ReorderTopHundredInput` |
+| `lib/tmdb.ts` | MODIFIED | `discoverTV` gets `+originCountry` option; `discoverMoviesByGenre` unchanged |
+| `lib/utils.ts` | MODIFIED | `+formatRating()` utility |
+| `actions/watchlist.ts` | MODIFIED | All actions gain `mediaType` awareness |
+| `actions/top-hundred.ts` | NEW | CRUD for top 100 list |
+| `hooks/use-watchlist.ts` | MODIFIED | `+mediaType` in keys, types, mutations |
+| `hooks/use-top-hundred.ts` | NEW | TanStack Query hooks for Top 100 |
+| `app/api/ai/recommend/route.ts` | MODIFIED | `+origin_country` in tool schema, guardrail prompt, `+messages` in DB insert |
+| `components/watchlist/watchlist-content.tsx` | MODIFIED | `+mediaType` filter toggle, Top 100 tab |
+| `components/watchlist/watchlist-card.tsx` | MODIFIED | Route to `/tv/[id]` for TV items, type badge |
+| `components/movies/tv-detail-page.tsx` | MODIFIED | Add watchlist buttons (bookmark, watched, like/dislike) |
+| `components/movies/movie-detail-page.tsx` | NO CHANGE | Already fully functional |
+| `components/ai/mood-section.tsx` | MODIFIED | `+origin_country` in URL param construction |
+| `components/library/top-hundred-content.tsx` | NEW | Ranked list display + rank editing |
+| `app/(app)/library/top-100/page.tsx` | NEW | Route shell for Top 100 |
+| `app/(app)/library/top-100/loading.tsx` | NEW | Skeleton |
+| Sidebar / nav label | MODIFIED | "Discover" → "Movies" label only |
+
+---
+
+## Data Flow Changes
+
+### TV Watchlisting Flow (NEW)
+
+```
+[User on /tv/[id] page]
+    ↓ clicks bookmark button (NEW in TVDetailPageContent)
+[useAddToWatchlist().mutate({ tmdbId, mediaType: "tv", title, posterPath })]
+    ↓ optimistic update: adds to tmdbIds cache with mediaType: "tv"
+    ↓ optimistic update: sets watchlistKeys.check(tmdbId, "tv")
+[addToWatchlist server action]
+    ↓ INSERT into watchlist with media_type = 'tv'
+    ↓ unique constraint: (userId, tmdbId, 'tv') — no collision with movie of same ID
+[onSettled: invalidate + refetch watchlistKeys.all]
+    ↓ /library shows TV show with correct link /tv/[id]
+```
+
+### AI Mood with Country Filter Flow (MODIFIED)
+
+```
+[User: "I want Korean drama"]
+    ↓ POST /api/ai/recommend
+[Gemini: suggest_genres tool called with origin_country: "KR", media_type: "tv", genres: [18]]
+    ↓ tool.execute: insert to ai_recommendations with messages=full_conversation
+[Return to client: genreSuggestion with origin_country: "KR"]
+    ↓ handleShowMovies in MoodSection
+[router.push("/home/recommendations?genres=18&mood=...&type=tv&country=KR")]
+    ↓ recommendations page reads country param
+[discoverTV({ genreIds: "18", originCountry: "KR" })]
+    ↓ TMDB /discover/tv?with_genres=18&with_origin_country=KR
+[Korean drama results]
+```
+
+### Top 100 Reorder Flow (NEW)
+
+```
+[User presses ↑ on item at rank 5]
+[useReorderTopHundred().mutate({ itemId, newRank: 4 })]
+    ↓ optimistic: swap ranks 4 and 5 in cache
+[reorderTopHundred server action]
+    ↓ db.transaction: update rank=4 item to rank=5, then target to rank=4
+[onSettled: invalidate top-hundred query]
+```
 
 ---
 
 ## Integration Points
 
-### External Services
+### TMDB API
 
-| Service | Integration Pattern | Notes |
-|---------|---------------------|-------|
-| TMDB `/trending/tv/week` | `tmdbFetch<TVListResponse>` in `lib/tmdb.ts` | Same auth header, same ISR revalidate 300s |
-| TMDB `/tv/{id}?append_to_response=credits,watch/providers` | Same `append_to_response` pattern as movies | `credits` returns same `MovieCredits` shape; `watch/providers` returns same `WatchProvidersResponse` shape |
-| TMDB `/search/tv` | Same query param pattern as `/search/movie` | |
-| TMDB `/discover/tv` | Same `with_genres`, `sort_by`, `page` params as `/discover/movie` | TV has additional genre IDs: Talk (10767), Reality (10764), News (10763), Soap (10766), Kids (10762) |
+| New Parameter | Endpoint | Notes |
+|---------------|----------|-------|
+| `with_origin_country=KR` | `/discover/tv` | TMDB supports ISO 3166-1 alpha-2 codes. HIGH confidence — documented TMDB parameter. |
+| `with_original_language=ko` | `/discover/tv` | More precise than country for language-specific content. Consider adding alongside `with_origin_country`. |
 
-### TV-Specific TMDB Genre IDs (Not in Current `GENRES` Map)
+**Recommendation:** Use `with_origin_country` (not `with_original_language`) as the primary filter. K-dramas are `KR`, not just `ko` language — some Korean-language shows air internationally. Country of origin is the more accurate signal for the "K-drama" use case.
 
-The existing `GENRES` constant in `lib/constants.ts` covers movie genres. TV has overlapping genre IDs plus TV-only additions. Extend `GENRES` or create a separate `TV_GENRES` constant. Recommendation: create `TV_GENRES` in `lib/constants.ts` to avoid polluting the movie genre filter on the Discover page.
+### Drizzle ORM / Supabase
 
-```typescript
-// lib/constants.ts — add alongside GENRES
-export const TV_GENRES: Record<number, string> = {
-  // Overlapping with movies (same IDs):
-  28: "Action & Adventure", // Note: TV uses "Action & Adventure" not "Action"
-  16: "Animation",
-  35: "Comedy",
-  80: "Crime",
-  99: "Documentary",
-  18: "Drama",
-  10751: "Family",
-  14: "Fantasy",
-  9648: "Mystery",
-  10749: "Romance",
-  878: "Sci-Fi & Fantasy",
-  10752: "War & Politics",
-  // TV-only:
-  10759: "Action & Adventure",
-  10762: "Kids",
-  10763: "News",
-  10764: "Reality",
-  10765: "Sci-Fi & Fantasy",
-  10766: "Soap",
-  10767: "Talk",
-  10768: "War & Politics",
-  37: "Western",
-};
-```
+The `media_type` column uses a new pg enum `media_type`. Drizzle will generate a migration that:
+1. Creates the enum type
+2. Adds the column
+3. Drops old constraint
+4. Adds new constraint
 
-**Confidence: MEDIUM** — TV genre IDs verified from TMDB documentation training data. Verify exact IDs at implementation time against TMDB's `/genre/tv/list` endpoint.
+After `npm run db:generate`, review the generated SQL before applying. The migration is reversible (can drop column + enum + restore old constraint) but doing so would lose any TV watchlist entries added after migration.
 
-### Internal Boundaries
+RLS policies need updating. The existing policy `watchlist_rls` (in `drizzle/rls-policies.sql`) allows `SELECT/INSERT/UPDATE/DELETE WHERE auth.uid() = user_id`. Since the new `media_type` column is non-null with a default, existing RLS policies continue to work without changes — no explicit filter on `media_type` is needed in the policy itself.
 
-| Boundary | Communication | Notes |
-|----------|---------------|-------|
-| `hooks/use-tv.ts` ↔ `components/series/series-content.tsx` | Props (`Movie[]`) via normalized data | No direct coupling |
-| `components/movies/movie-detail-modal.tsx` ↔ `hooks/use-tv.ts` | `tvDetails` prop passed from `series-content.tsx` | Modal does not import `use-tv.ts` directly |
-| `drizzle/schema.ts` | Unchanged | TV shows added to watchlist as `tmdbId` with no `mediaType` column |
-| `app-navbar.tsx` ↔ new `/series` route | Add nav link | `pathname.startsWith("/series")` for active state |
+The new `top_hundred` table needs its own RLS policy added to `drizzle/rls-policies.sql`.
 
 ---
 
-## Scaling Considerations
+## Build Order
 
-| Scale | Architecture Adjustments |
-|-------|--------------------------|
-| 0-1k users | Current approach fine — TMDB ISR caching handles load |
-| 1k-100k users | Add Redis for TMDB response caching (not in-memory ISR) — but only if TMDB rate limits become an issue |
-| 100k+ users | TMDB has a generous rate limit (50 requests/second) — TV discovery at this scale would not require architectural changes |
+Build in this order — each step unblocks the next:
+
+### Step 1: Schema + Types (Foundation — No UI Risk)
+1. `drizzle/schema.ts` — Add `mediaTypeEnum`, `media_type` column to watchlist, `messages` to `ai_recommendations`, new `top_hundred` table
+2. `npm run db:generate` — Generate migration
+3. Review migration SQL — confirm `DEFAULT 'movie'` backfill and constraint rename
+4. `npm run db:migrate` — Apply migration
+5. `types/watchlist.ts` — Add `MediaType`, propagate `mediaType` field
+6. `types/ai.ts` — Add `origin_country` to `GenreSuggestion`
+7. `types/top-hundred.ts` — New file
+
+### Step 2: Server Actions + Hooks (Data Layer — TypeScript will enforce completeness)
+8. `actions/watchlist.ts` — Add `mediaType` throughout; `getWatchlistItemByTmdbId` takes `mediaType` param
+9. `actions/top-hundred.ts` — New file: `getTopHundred`, `addToTopHundred`, `removeFromTopHundred`, `reorderTopHundred`
+10. `lib/utils.ts` — Add `formatRating()` utility
+11. `lib/tmdb.ts` — Add `originCountry` option to `discoverTV`
+12. `hooks/use-watchlist.ts` — Update key factory, add `mediaType` to all mutation inputs
+13. `hooks/use-top-hundred.ts` — New file
+
+### Step 3: AI Route (Self-Contained — No UI Dependencies)
+14. `app/api/ai/recommend/route.ts` — Add guardrail to system prompt, `origin_country` to tool schema, full messages to DB insert
+
+### Step 4: TV Watchlisting UI (Now That Data Layer Is Ready)
+15. `components/movies/tv-detail-page.tsx` — Add watchlist buttons (import same hooks as movie-detail-page)
+16. `components/watchlist/watchlist-card.tsx` — Route to `/tv/[id]` for TV items, add type badge
+17. `components/ai/mood-section.tsx` — Add `origin_country` to URL param
+
+### Step 5: Library UX Fixes
+18. `components/watchlist/watchlist-content.tsx` — Add media type filter toggle, fix card persistence
+19. `hooks/use-watchlist.ts` `onSettled` — Add forced refetch for instant sync fix
+
+### Step 6: Discovery UX
+20. Sidebar/nav — Rename "Discover" → "Movies" label
+21. `app/(app)/discover/page.tsx` — Update metadata title
+22. `app/(app)/home/page.tsx` — Update feature card label
+23. Apply `formatRating()` in `movie-detail-page.tsx`, `tv-detail-page.tsx`
+
+### Step 7: Top 100
+24. `components/library/top-hundred-content.tsx` — New component
+25. `app/(app)/library/top-100/page.tsx` — New route
+26. `app/(app)/library/top-100/loading.tsx` — Skeleton
+27. `components/watchlist/watchlist-content.tsx` — Add "Top 100" tab
+28. RLS policy update for `top_hundred` table in Supabase Dashboard
+
+---
+
+## Anti-Patterns to Avoid
+
+### Anti-Pattern 1: Changing the Unique Constraint Without a DEFAULT
+
+**What goes wrong:** Running `ALTER TABLE watchlist ADD COLUMN media_type media_type NOT NULL` without a default fails immediately because existing rows cannot satisfy NOT NULL.
+
+**Prevention:** Always add with `DEFAULT 'movie'` first, let it backfill, then (optionally) tighten the constraint.
+
+### Anti-Pattern 2: Using `watchlistKeys.check(tmdbId)` Without `mediaType` After Migration
+
+**What goes wrong:** A movie with `tmdbId=1396` and a TV show with `tmdbId=1396` would share the same TanStack Query cache key. Adding one to the watchlist would appear to add the other.
+
+**Prevention:** The key factory change to `watchlistKeys.check(tmdbId, mediaType)` is enforced at the type level. TypeScript will flag all callers missing the second argument.
+
+### Anti-Pattern 3: Storing Messages in a Separate Table
+
+**What goes wrong:** Creating a `ai_conversation_messages` table with one row per message is over-engineered for analytics on a hobby app. Joins are expensive; querying a single conversation requires `WHERE conversation_id = ?` with ordering.
+
+**Prevention:** Store the entire `UIMessage[]` array as a JSONB column on `ai_recommendations`. For analytics, query the JSONB column with PostgreSQL's `->` and `->>` operators. Restructure only if query patterns prove this insufficient (they won't for a hobby project).
+
+### Anti-Pattern 4: Adding Drag-to-Reorder in v0.4
+
+**What goes wrong:** DnD libraries (`@dnd-kit/core`, `@hello-pangea/dnd`) conflict with Framer Motion layout animations. The `top-hundred-content.tsx` will likely use Framer Motion for list entry animations. Mixing two animation systems for the same DOM elements causes z-index conflicts and double-animation jank.
+
+**Prevention:** Use simple "move up / move down" buttons for rank changes in v0.4. Add drag-to-reorder in a dedicated v0.5 polish pass after the list animation behavior is confirmed stable.
+
+### Anti-Pattern 5: Renaming `/discover` Route
+
+**What goes wrong:** The backlog says "rename Discover → Movies" — if interpreted as a route change to `/movies`, it breaks all existing bookmarks, og-image routes, and the NProgress bar which uses `pathname.startsWith("/discover")`.
+
+**Prevention:** Only rename the UI label in the sidebar and page title metadata. The route `/discover` stays as-is.
+
+---
+
+## Scalability Considerations
+
+| Concern | Current (hobby) | At 10k users |
+|---------|----------------|--------------|
+| `getWatchlistTmdbIds` query | Full table scan per user (small tables) | Add index on `watchlist(user_id)` — already implicitly indexed by FK |
+| `top_hundred` reorder transaction | Single user, sequential updates | Optimistic locking needed if concurrent edits possible — not a concern for personal lists |
+| AI conversation JSONB storage | ~1-5 KB per row | At 10k users × 10 req/day × 30 days = 3M rows, ~3-15 GB — consider pruning old rows after 90 days |
+| TMDB `with_origin_country` filter | No performance concern | TMDB handles server-side; not a client-side concern |
 
 ---
 
 ## Sources
 
-- Direct inspection of `lib/tmdb.ts`, `types/movie.ts`, `app/api/movies/route.ts`, `hooks/use-movies.ts`, `components/movies/movie-card.tsx`, `components/movies/movie-row.tsx`, `components/movies/movie-detail-modal.tsx`, `components/movies/discover-content.tsx`, `drizzle/schema.ts`, `app/(app)/discover/page.tsx`, `components/layout/app-navbar.tsx` (HIGH confidence — primary source)
-- TMDB API v3 TV endpoints: field names, response shapes (HIGH confidence — stable, well-established API surface verified against training data)
-- TanStack Query v5 patterns — `queryFn` as normalization boundary (HIGH confidence — Context7/official docs pattern)
+- Direct inspection of `drizzle/schema.ts`, `actions/watchlist.ts`, `hooks/use-watchlist.ts`, `types/watchlist.ts`, `components/watchlist/watchlist-content.tsx`, `components/watchlist/watchlist-card.tsx`, `components/movies/tv-detail-page.tsx`, `components/movies/movie-detail-page.tsx`, `app/api/ai/recommend/route.ts`, `components/ai/mood-section.tsx`, `lib/tmdb.ts`, `app/(app)/library/page.tsx`, `app/(app)/home/page.tsx` (HIGH confidence — primary source)
+- TMDB API `with_origin_country` parameter: documented in TMDB discover endpoint (MEDIUM confidence — stable API surface, verify at implementation against TMDB docs)
+- TanStack Query v5 optimistic update patterns with `onMutate`/`onSettled` (HIGH confidence — consistent with existing codebase patterns)
+- Drizzle ORM additive migration strategy with DEFAULT backfill (HIGH confidence — standard PostgreSQL DDL pattern)
 
 ---
-*Architecture research for: TV series discovery integration into Moodflix*
-*Researched: 2026-02-19*
+
+*Architecture research for: v0.4 Watchlist & Polish milestone*
+*Researched: 2026-02-28*

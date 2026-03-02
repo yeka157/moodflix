@@ -1,370 +1,562 @@
 # Pitfalls Research
 
-**Domain:** TV series discovery added to existing movie-only Next.js + TMDB app (Moodflix v0.3)
-**Researched:** 2026-02-19
-**Confidence:** HIGH (codebase analysis + verified TMDB API schema knowledge)
+**Domain:** Adding TV watchlisting, AI guardrails/logging, origin country filtering, and My Top 100 to existing Next.js 16 + Supabase + Drizzle ORM app (Moodflix v0.4)
+**Researched:** 2026-02-28
+**Confidence:** HIGH (direct codebase analysis — schema, actions, hooks, and AI route all read verbatim)
 
 ---
 
 ## Critical Pitfalls
 
-### Pitfall 1: TMDB Field Name Mismatch — `title`/`release_date` vs `name`/`first_air_date`
+### Pitfall 1: Unique Constraint Name Hardcoded in Error Handler Will Miss After Migration
 
 **What goes wrong:**
-The existing `Movie` type uses `title` and `release_date`. The TMDB TV series API returns `name` and `first_air_date` in their place. Every component that reads `movie.title` or `movie.release_date` will silently produce `undefined` when fed a TV show object — TypeScript will not catch this if the shared display type uses the movie shape.
-
-Specifically in the current codebase:
-
-- `MovieCard` line 37: `movie.release_date?.slice(0, 4)` → `"N/A"` for every TV show
-- `MovieCard` line 39: `movie.title` in the alt text and overlay heading → `undefined` rendered as empty
-- `MovieDetailModal` line 125: `movie?.release_date?.slice(0, 4)` → `"N/A"`
-- `MovieDetailModal` line 273: `{movie.title}` in backdrop overlay → blank heading
-- `MovieDetailModal` line 238: `{movie?.title ?? "Movie Details"}` in DialogTitle → falls back to "Movie Details" for every TV show
-- `addToWatchlist` called with `title: movie.title` → stores `undefined` in DB
-
-**Why it happens:**
-Developers normalize TV shows into the existing `Movie` type to reuse components. They assume numeric `id`, `poster_path`, `backdrop_path`, `overview`, `vote_average`, and `genre_ids` are shared — they are. But `title`→`name` and `release_date`→`first_air_date` are silent field renames, not omissions. TypeScript won't error if the TV API response is cast as `Movie` because the type doesn't mark those fields as required with literal types — it just says `string`.
-
-**How to avoid:**
-Create a `TVShow` type mirroring the TMDB TV response, then create a normalized `MediaItem` union or mapped type:
+`actions/watchlist.ts` line 114 catches the unique constraint violation by matching the string `"watchlist_user_tmdb_unique"`:
 
 ```typescript
-// types/tv.ts
-export type TVShow = {
-  id: number;
-  name: string;               // NOT title
-  original_name: string;      // NOT original_title
-  first_air_date: string;     // NOT release_date
-  overview: string;
-  poster_path: string | null;
-  backdrop_path: string | null;
-  vote_average: number;
-  vote_count: number;
-  genre_ids: number[];
-  popularity: number;
-  adult: boolean;
-  original_language: string;
-  origin_country: string[];   // TV-only field
-};
-
-// types/media.ts — normalized shape for shared components
-export type MediaItem = {
-  id: number;
-  mediaType: "movie" | "tv";
-  title: string;              // normalized: movie.title | tv.name
-  releaseDate: string;        // normalized: movie.release_date | tv.first_air_date
-  overview: string;
-  poster_path: string | null;
-  backdrop_path: string | null;
-  vote_average: number;
-  vote_count: number;
-  genre_ids: number[];
-  popularity: number;
-  adult: boolean;
-  original_language: string;
-};
+if (err instanceof Error && err.message.includes("watchlist_user_tmdb_unique")) {
+  return { error: "Movie already in library" };
+}
 ```
 
-Normalize at the API boundary (in `lib/tmdb.ts` TV functions or in the `/api/series` route handler) before the data reaches any component or hook. Never pass raw TMDB TV responses into `Movie`-typed props.
+When the migration adds `media_type` to the unique constraint, the constraint must be renamed (e.g., `watchlist_user_tmdb_media_unique`). If the string in the catch block is not updated at the same time, the old constraint name no longer exists in the error message — so ALL unique violations from the new constraint fall through to the generic `"Failed to add to library"` error. The user sees the wrong error message and gets no actionable feedback.
 
-**Warning signs:**
-- Movie cards showing blank titles in the series grid
-- Year displaying "N/A" on every TV show card
-- `movie.title` appearing as `undefined` in watchlist DB rows (check Drizzle Studio)
-- TypeScript not erroring — this is the hidden danger, it will compile fine if cast wrong
+Additionally, the error message says `"Movie already in library"` — which will be wrong for TV shows. A user who tries to re-add a TV series they already saved will be told "Movie already in library."
 
-**Phase to address:** Phase 1, task 1 — define `TVShow` and `MediaItem` types BEFORE writing any TV API functions or components. The type contract must exist before implementation.
+**Why it happens:**
+String-matching on constraint names is a fragile pattern. The old constraint was named `watchlist_user_tmdb_unique` and this string appears in two places: the schema definition and the catch block. Renaming it in the schema generates a migration that drops and recreates the constraint under a new name, but the catch block is pure application code — Drizzle does not update it.
+
+**Consequences:**
+- Double-add attempts on TV shows return `"Failed to add to library"` (generic error, no user guidance)
+- Potential silent failure if `onSettled` invalidation masks it
+- Wrong noun in error message ("Movie" for a TV show)
+
+**Prevention:**
+Update the catch block at the same time as the schema migration. Rename the constraint explicitly in the `unique()` call:
+
+```typescript
+// drizzle/schema.ts
+unique("watchlist_user_tmdb_media_unique").on(
+  table.userId,
+  table.tmdbId,
+  table.mediaType,
+)
+```
+
+```typescript
+// actions/watchlist.ts — update catch block
+if (
+  err instanceof Error &&
+  err.message.includes("watchlist_user_tmdb_media_unique")
+) {
+  return { error: "Already in library" };  // media-type-neutral
+}
+```
+
+Treat the schema migration and the catch block fix as a single atomic commit. Use a shared constant for the constraint name to prevent future drift:
+
+```typescript
+// drizzle/schema.ts
+export const WATCHLIST_UNIQUE_CONSTRAINT = "watchlist_user_tmdb_media_unique";
+```
+
+**Detection:**
+- Add a TV show, leave page, return and try to add again — if you see "Failed to add to library" instead of "Already in library," the constraint name is not updated
+- Check the generated migration SQL — if it drops `watchlist_user_tmdb_unique` and creates `watchlist_user_tmdb_media_unique`, the old string in the catch block is now dead
+
+**Phase to address:** Phase 1 (schema migration) — must be fixed in the same commit as the schema change.
 
 ---
 
-### Pitfall 2: TMDB ID Collision Between Movies and TV Shows
+### Pitfall 2: TanStack Query Optimistic Updates Match on `tmdbId` Alone — Will Break After `mediaType` Added
 
 **What goes wrong:**
-Movie ID `1399` is Game of Thrones (TV). Movie ID `550` is Fight Club. These ID spaces are entirely separate in TMDB — the same integer ID (e.g., `1234`) can exist as both a movie and a TV show. The current watchlist schema has:
-
-```sql
-UNIQUE (user_id, tmdb_id)   -- watchlist_user_tmdb_unique
-```
-
-This constraint treats movie ID `1234` and TV show ID `1234` as the same row. A user who saves the movie with TMDB ID `1234` cannot then save the TV show with TMDB ID `1234` — the insert will throw `watchlist_user_tmdb_unique` violation and the `addToWatchlist` action returns `"Movie already in library"` (wrong error message and wrong behavior).
-
-Beyond the constraint, `useWatchlistTmdbIds` returns a flat array of `{ tmdbId, status }`. The `MovieCard` does `tmdbEntries?.find((e) => e.tmdbId === movie.id)` — if a movie and TV show share the same numeric ID, the TV show card will show as already-in-library (incorrectly), and vice versa.
-
-**Why it happens:**
-The current design implicitly assumes all `tmdbId` values come from a single namespace. This was correct when only movies existed. The mistake is not adding a `media_type` discriminator to the watchlist table.
-
-**How to avoid:**
-Add a `media_type` column to the `watchlist` table in a Drizzle migration **before** building any TV series feature:
+`hooks/use-watchlist.ts` optimistic update in `useRemoveFromWatchlist` filters the `tmdbIds` cache entry to remove by `tmdbId` only:
 
 ```typescript
-// drizzle/schema.ts addition
-export const mediaTypeEnum = pgEnum("media_type", ["movie", "tv"]);
-
-export const watchlist = pgTable(
-  "watchlist",
-  {
-    // ... existing columns ...
-    mediaType: mediaTypeEnum("media_type").notNull().default("movie"),
-  },
-  (table) => [
-    // REPLACE the old unique constraint:
-    unique("watchlist_user_tmdb_media_unique").on(
-      table.userId,
-      table.tmdbId,
-      table.mediaType,   // now (userId, tmdbId, mediaType) is the unique key
-    ),
-  ],
+// use-watchlist.ts line 139
+queryClient.setQueryData<WatchlistTmdbEntry[]>(
+  watchlistKeys.tmdbIds(),
+  (old) => old?.filter((entry) => entry.tmdbId !== params.tmdbId) ?? [],
 );
 ```
 
-Update `AddToWatchlistInput`, `WatchlistItem`, `WatchlistTmdbEntry` types to include `mediaType`. Update all queries, actions, and optimistic update logic that currently matches on `tmdbId` alone to also match on `mediaType`.
+After adding `mediaType` to `WatchlistTmdbEntry`, a user with both movie ID 1234 and TV show ID 1234 in their library would have two entries with the same `tmdbId` but different `mediaType`. A remove action on the movie would incorrectly remove both entries from the optimistic cache — leaving the TV show card briefly showing "not in library" until invalidation refetches.
 
-**Warning signs:**
-- User reports they can't save a TV show (unique constraint error)
-- TV show card shows "In Library" bookmark even though user never saved it (ID collision false positive)
-- `addToWatchlist` returns `"Movie already in library"` for a TV show the user has never seen
+The same single-field match appears in `useUpdateWatchlistStatus` (line 217: `find((e) => e.id === params.id)?.tmdbId`) — this one matches by `id` so it is safe. But `useAddToWatchlist` builds the optimistic entry without `mediaType`:
 
-**Phase to address:** Phase 1, task 1 — schema migration must be the absolute first deliverable. All subsequent TV work depends on it. Do NOT build any TV UI before this migration is applied and tested.
+```typescript
+// use-watchlist.ts line 75-80
+{
+  id: "", // Will be replaced on server response
+  tmdbId: newItem.tmdbId,
+  status: newItem.status ?? "want_to_watch",
+  // mediaType missing — TypeScript will error once the type is updated
+}
+```
+
+**Why it happens:**
+`WatchlistTmdbEntry` currently has no `mediaType` field. After the schema migration, this type gains `mediaType`. TypeScript will catch the missing field in the optimistic update object, but only if `mediaType` is non-optional in the type. If it is added as optional (`mediaType?: "movie" | "tv"`), TypeScript will not error and the incomplete entry silently enters the cache.
+
+**Consequences:**
+- Wrong bookmark state on cards until cache invalidation fires (~30s staleTime or next window focus)
+- TMDB ID collision edge case: removing a movie removes the TV show's optimistic bookmark state too
+- The `useWatchlistCheck` hook queries by `tmdbId` alone — after `mediaType` is added, `getWatchlistItemByTmdbId` in the server action also needs `mediaType` as a parameter, or it may return the wrong entry (movie vs TV)
+
+**Prevention:**
+1. Make `mediaType` **required** (not optional) on `WatchlistTmdbEntry` so TypeScript forces updates everywhere
+2. Update the optimistic entry in `useAddToWatchlist` to include `mediaType: newItem.mediaType`
+3. Update the filter in `useRemoveFromWatchlist` to match on `(tmdbId, mediaType)` pair, not `tmdbId` alone
+4. Update `watchlistKeys.check(tmdbId)` to `watchlistKeys.check(tmdbId, mediaType)` so the check cache is scoped per media type
+
+```typescript
+// types/watchlist.ts — after migration
+export type WatchlistTmdbEntry = {
+  id: string;
+  tmdbId: number;
+  mediaType: "movie" | "tv";   // required, not optional
+  status: WatchlistStatus;
+};
+
+// hooks/use-watchlist.ts — remove filter
+(old) => old?.filter(
+  (entry) => !(entry.tmdbId === params.tmdbId && entry.mediaType === params.mediaType)
+) ?? []
+```
+
+**Detection:**
+- Enable TypeScript strict mode and run `npm run build` after changing `WatchlistTmdbEntry` — TypeScript will surface all sites that must be updated
+- Test: add movie ID X, add TV show ID X (same numeric ID), remove movie → verify TV show card still shows bookmark
+
+**Phase to address:** Phase 1 (schema migration + type cascade) — update all type sites before building any UI.
 
 ---
 
-### Pitfall 3: TV Detail Endpoint and `runtime` Field Structure Difference
+### Pitfall 3: Drizzle pgEnum Migration for `media_type` Is Not as Simple as Adding a Column
 
 **What goes wrong:**
-The current `MovieDetails` type has `runtime: number | null` — a single integer (total minutes). The TMDB TV series detail endpoint (`/tv/{id}`) returns `episode_run_time: number[]` — an array of episode durations in minutes, often empty `[]`, sometimes with one element, occasionally multiple (for shows with variable-length episodes). There is no single `runtime` field.
+Adding a new PostgreSQL enum type via Drizzle Kit requires careful ordering. The generated migration will attempt to:
 
-The current `movie-detail-modal.tsx` calls `formatRuntime(details.runtime)` and shows `"2h 14m"` style. For TV shows:
-- `details.runtime` will be `undefined` (field doesn't exist) → `formatRuntime(undefined)` returns `""` → runtime simply disappears
-- More useful TV metadata: `number_of_seasons`, `number_of_episodes`, episode count per season
+1. Create the new `media_type` enum type (`CREATE TYPE "public"."media_type" AS ENUM('movie', 'tv')`)
+2. Add the column with `.notNull().default("movie")`
+3. Drop the old unique constraint
+4. Add the new unique constraint with `media_type`
 
-If the modal is naively reused for TV details, the runtime row goes blank with no TV-specific replacement.
+Drizzle Kit's `db:generate` will produce all of this correctly **in most cases**. The dangerous case is if the developer uses `db:push` instead of `db:generate` + `db:migrate` during prototyping — `db:push` can silently skip constraint renames or produce DDL that breaks on a live database with existing rows.
 
-**How to avoid:**
-Define a `TVShowDetails` type that mirrors what `/tv/{id}?append_to_response=credits,watch/providers` actually returns:
+A second danger: Drizzle Kit generates the constraint drop before the column add. If the order is wrong in the generated SQL, the new constraint references a column that doesn't exist yet. This order-dependency has historically caused issues with Drizzle Kit on complex multi-step migrations (confirmed pattern from community reports).
+
+**Consequences:**
+- Failed migration leaves database in partially-migrated state
+- Rollback requires manual SQL in Supabase Dashboard
+- Existing watchlist rows are blocked from insert/update while migration is in flight
+
+**Prevention:**
+1. Always use `db:generate` + `db:migrate` (never `db:push` for production schema changes)
+2. After `npm run db:generate`, **read the generated SQL** before running `npm run db:migrate`
+3. Verify the SQL order: CREATE TYPE → ALTER TABLE ADD COLUMN → DROP CONSTRAINT → ADD CONSTRAINT
+4. Test the migration against a staging Supabase project first if possible
+5. Include the data backfill in the migration for existing rows:
+
+```sql
+-- Add to the generated migration if not auto-included:
+UPDATE "watchlist" SET "media_type" = 'movie' WHERE "media_type" IS NULL;
+```
+
+The `.default("movie")` in the Drizzle schema handles new inserts, but existing rows (written before the column exists) will have NULL until the UPDATE runs. Because the column is `.notNull()`, the migration must run the UPDATE before setting NOT NULL — Drizzle Kit may not automatically include this backfill.
+
+**Detection:**
+- Run `db:generate`, check generated SQL for UPDATE statement on existing rows
+- If UPDATE is missing and the column is `.notNull()`, manually add it before running `db:migrate`
+- After migration: open Drizzle Studio → watchlist table → verify `media_type` column exists and all rows show `"movie"` (not NULL)
+
+**Phase to address:** Phase 1 (schema migration) — review the generated SQL before applying, not after.
+
+---
+
+### Pitfall 4: AI Guardrails That Block Mood Queries That Mention Country Names
+
+**What goes wrong:**
+The current system prompt explicitly instructs the AI that "Country names (e.g. 'Korean', 'Japanese'), moods (e.g. 'Cozy'), or content types (e.g. 'Anime') are NOT genres." This is correct behavior — but adding an off-topic guardrail risks the model also refusing or over-qualifying responses for mood inputs that mention nationalities as mood context, not as genre requests.
+
+A user who says "I want something cozy like the Japanese movies I grew up with" is expressing a mood. If the guardrail is implemented as a restrictive system prompt instruction ("refuse anything not related to movies or TV"), the model may refuse this as "mentioning non-genre country content." The guardrail needs to distinguish between:
+- Off-topic queries: "Help me write an essay about climate change" → refuse
+- Mood queries that happen to mention countries/culture: "I want something like a warm Studio Ghibli film" → accept and map to Animation
+
+**Why it happens:**
+LLM guardrails implemented via system prompt instructions are pattern-matched by the model, not logically parsed. A rule like "only answer movie/TV questions" is interpreted by the model by matching surface features of the input, not by understanding intent. Legitimate mood queries that superficially resemble off-topic requests (because they mention non-movie concepts like "Japan" or "childhood" or "cozy afternoons") may trip the guardrail.
+
+**Consequences:**
+- Users with culturally-specific mood descriptions get refused or receive overly-hedged responses
+- The guardrail feels hostile for the primary use case (mood-based discovery)
+- Guardrails that are too strict are worse than none — they create a bad UX without providing security value (the AI endpoint is auth-gated anyway)
+
+**Prevention:**
+Frame the guardrail as topic-steering rather than topic-blocking. Instead of "refuse off-topic queries," use:
+
+```
+If the user asks about something completely unrelated to movies, TV shows, or entertainment (e.g., asking you to write code, do math, give medical advice), gently redirect: "I'm here to help you find great movies and shows! Tell me how you're feeling and I'll find something perfect."
+
+Always interpret cultural references, country mentions, and mood descriptions charitably — they are almost always trying to describe what kind of movie/show they want.
+```
+
+This approach steers without blocking. Test the guardrail against 10 legitimate mood inputs and 5 genuinely off-topic inputs before shipping.
+
+**Detection:**
+- Manual test: "I want something like a warm Japanese anime film" → should produce Animation suggestions, not a refusal
+- Manual test: "help me write a cover letter" → should redirect gracefully without being abrupt
+- If the model asks "could you clarify what you mean?" for a cultural mood input, the guardrail is too restrictive
+
+**Phase to address:** Phase for AI polish — test guardrail with diverse mood inputs including cultural references before deploying.
+
+---
+
+### Pitfall 5: TMDB `with_origin_country` Does Not Work as an AND Filter for AI Recommendations
+
+**What goes wrong:**
+When the AI suggest_genres tool returns `media_type: "tv"` and the user asked for K-drama, the discover endpoint currently only filters by `with_genres`. There is no mechanism to pass `with_origin_country=KR` from the AI tool output to the TMDB discover call.
+
+If origin country filtering is added to the discover endpoint (e.g., `discoverTVByGenre` accepts an optional `originCountry` param), then the AI tool's `inputSchema` must also be extended to emit `originCountry`. But the AI tool is constrained to return `genres`, `moodSummary`, and `media_type`. Adding `originCountry` to the tool output requires:
+
+1. Updating the Zod schema in `app/api/ai/recommend/route.ts`
+2. Updating the `GenreSuggestion` type in `types/ai.ts`
+3. Updating the `extractLatestGenreSuggestion` return type
+4. Updating the recommendations page to pass `originCountry` to the discover hook
+
+If any one link in this chain is missed, `originCountry` will be `undefined` in the TMDB call and no filtering will happen — no error, just silently wrong results (non-Korean shows in a "K-drama" recommendation set).
+
+**Why it happens:**
+The AI → genre suggestion → TMDB discover pipeline has multiple type boundaries. Adding a new field to tool output requires updating three separate type files, two API handlers, and one hook. The silent failure mode (undefined origin country = no filter = wrong results) makes this easy to miss in testing if the tester doesn't know to specifically check for Korean-only results.
+
+**Consequences:**
+- "K-drama" requests return international drama mix instead of Korean content
+- No error surfaced to user or in logs — the response looks correct but has wrong content
+- Inconsistency: K-drama filter on the `/series` page works, but AI recommendations don't apply it
+
+**Prevention:**
+Treat the tool schema, `GenreSuggestion` type, and the discover call as a single change unit. Before starting, trace the full data path:
+
+```
+AI tool output → GenreSuggestion type → extractLatestGenreSuggestion → recommendations page query string → discover hook → TMDB API param
+```
+
+Write a TypeScript type that makes `originCountry` explicit rather than stringly-typed:
 
 ```typescript
-export type TVShowDetails = {
-  id: number;
-  name: string;
-  original_name: string;
-  overview: string;
-  poster_path: string | null;
-  backdrop_path: string | null;
-  first_air_date: string;
-  vote_average: number;
-  vote_count: number;
+// types/ai.ts
+export type GenreSuggestion = {
   genres: { id: number; name: string }[];
-  popularity: number;
-  adult: boolean;
-  original_language: string;
-  episode_run_time: number[];          // array, NOT a single number
-  number_of_seasons: number;
-  number_of_episodes: number;
-  status: string;                      // "Returning Series" | "Ended" | "Canceled" etc.
-  tagline: string | null;
-  // TV credits use "created_by" not "crew" for show creator
-  created_by: { id: number; name: string; profile_path: string | null }[];
-  credits: MovieCredits;               // cast structure is same
-  "watch/providers": WatchProvidersResponse;  // same structure
+  moodSummary: string;
+  media_type: "movie" | "tv";
+  originCountry?: string;  // ISO 3166-1 alpha-2, e.g. "KR", "JP"
 };
 ```
 
-In the detail modal for TV shows: replace the runtime display with season/episode count (`2 Seasons · 16 Episodes`), and replace "Director:" with "Created by:". Create a `MediaDetailModal` that branches on `mediaType` to render the correct metadata.
+Test end-to-end: ask "recommend me some K-dramas" → confirm TMDB discover call has `with_origin_country=KR` in the network tab.
 
-**Warning signs:**
-- TV detail modal shows no runtime at all
-- TV detail modal says "Director: undefined" or shows no director section
-- TypeScript errors when accessing `details.name` on a `MovieDetails` type
+**Detection:**
+- Open Network tab, trigger a "K-drama" AI recommendation → inspect the `/api/movies?...` or `/api/series?...` fetch → check for `with_origin_country=KR` query param
+- If absent: the chain has a missing link — add `console.log(originCountry)` at each boundary to find the break
 
-**Phase to address:** Phase 2 (TV detail modal) — when building `/api/tv/[id]` route and the detail display.
+**Phase to address:** AI polish phase — after the tool schema change, audit all five chain links before shipping.
 
 ---
 
-### Pitfall 4: TV Series Genre IDs Are a Separate Namespace from Movie Genre IDs
+## Moderate Pitfalls
+
+### Pitfall 6: AI Conversation Logging Adds Latency to Streaming Response If Awaited
 
 **What goes wrong:**
-The existing `GENRES` constant in `lib/constants.ts` maps movie genre IDs to names (e.g., `28: "Action"`, `18: "Drama"`). The TMDB TV genre endpoint returns a different set of IDs for what appear to be the same genres. Overlapping IDs may map to different genre names:
-
-| ID | Movie genre | TV genre |
-|----|------------|---------|
-| 10759 | (doesn't exist) | Action & Adventure |
-| 10762 | (doesn't exist) | Kids |
-| 10763 | (doesn't exist) | News |
-| 10764 | (doesn't exist) | Reality |
-| 10765 | (doesn't exist) | Sci-Fi & Fantasy |
-| 10766 | (doesn't exist) | Soap |
-| 10767 | (doesn't exist) | Talk |
-| 10768 | (doesn't exist) | War & Politics |
-| 16 | Animation (movie) | Animation (TV) — same ID, same name |
-| 35 | Comedy (movie) | Comedy (TV) — same ID, same name |
-| 18 | Drama (movie) | Drama (TV) — same ID, same name |
-
-The `MovieCard` component does `movie.genre_ids.slice(0, 2).map((id) => GENRES[id]).filter(Boolean)`. TV shows with TV-only genre IDs (10759, 10762, etc.) will silently produce no genre badges — `GENRES[10759]` is `undefined`, filtered out.
-
-**How to avoid:**
-Add TV genre IDs to `lib/constants.ts`:
+The current AI route stores recommendations as fire-and-forget:
 
 ```typescript
-export const TV_GENRES: Record<number, string> = {
-  10759: "Action & Adventure",
-  10762: "Kids",
-  10763: "News",
-  10764: "Reality",
-  10765: "Sci-Fi & Fantasy",
-  10766: "Soap",
-  10767: "Talk",
-  10768: "War & Politics",
-  16: "Animation",
-  35: "Comedy",
-  18: "Drama",
-  80: "Crime",
-  99: "Documentary",
-  9648: "Mystery",
-  10749: "Romance",
-  37: "Western",
-  14: "Fantasy",
-  27: "Horror",
-  36: "History",
-  10751: "Family",
-};
-
-// Unified lookup — safe to use for both
-export const ALL_GENRES: Record<number, string> = { ...GENRES, ...TV_GENRES };
+// app/api/ai/recommend/route.ts line 183
+db.insert(aiRecommendations)
+  .values({ userId, prompt: moodPrompt, recommendations: validatedParams })
+  .catch(() => { /* non-critical: silently fail */ });
 ```
 
-Update `MovieCard` (or the future `MediaCard`) to use `ALL_GENRES` so TV-specific genre IDs render correctly.
+v0.4 adds full conversation logging for analytics. If logging is changed from fire-and-forget to `await`, the streaming response is delayed by the DB insert latency (typically 50-200ms on Supabase pooler). During streaming, this delay is felt by the user as a pause before the first token appears.
 
-**Warning signs:**
-- TV show cards show no genre badges at all
-- Genre filter on `/series` page shows no genre options for TV shows
-- `displayGenres` array is always empty for TV items
+**Consequences:**
+- Streaming chat feels sluggish if DB insert is awaited before stream begins
+- If the DB insert fails and is awaited, a failed insert could block the entire response
 
-**Phase to address:** Phase 1, task 2 (constants update) — before building any TV UI, add TV genre IDs to the lookup map.
-
----
-
-### Pitfall 5: K-Drama / C-Drama Filter Reliability via TMDB Discover
-
-**What goes wrong:**
-TMDB's discover endpoint for TV (`/discover/tv`) supports `with_origin_country` and `with_original_language` parameters. Filtering K-Dramas uses `with_origin_country=KR&with_original_language=ko`. This works but has reliability issues:
-
-1. **Coverage gap**: Many Korean co-productions list `origin_country: ["KR", "US"]` — they appear in KR-filtered results but users expecting pure Korean dramas may see Netflix originals that feel more Western.
-2. **Language vs country mismatch**: Some Korean-language dramas are listed with `origin_country: ["KR"]` but `original_language: "zh"` (e.g., Chinese co-productions). Filtering on both narrows too aggressively.
-3. **C-Drama filtering**: `with_origin_country=CN` is unreliable because many mainland Chinese productions are registered under Hong Kong (`HK`) or Taiwan (`TW`) for political/legal reasons on TMDB. A C-Drama filter using only `CN` will miss a significant portion of Chinese-language shows.
-4. **No dedicated "K-Drama genre"**: TMDB has no official K-Drama genre ID. The filter is purely country+language, which includes Korean variety shows, documentaries, and news — not just dramas. You must combine `with_origin_country=KR&with_original_language=ko&with_genres=18` (Drama genre ID 18) to get drama-specific results, but this still includes Korean movies of the Drama genre if the endpoint is wrong.
-5. **Result count volatility**: The `total_results` count for Korean drama filters can swing significantly between API calls because TMDB users continuously add/edit country metadata. Don't rely on `total_results` for progress tracking.
-
-**How to avoid:**
-- Always combine `with_origin_country` + `with_original_language` + `with_genres=18` for K-Drama/C-Drama filters
-- For C-Drama, query three times: `CN`, `HK`, `TW` origin countries and deduplicate by ID, or use `with_original_language=zh` alone (broader but more reliable)
-- Display as "Korean Drama" not "K-Drama from Korea" to set appropriate expectations
-- Add a note in UI: "Results from TMDB community data — some shows may vary"
-- Deduplicate results by `id` (same technique already in place for movies)
-
-**Warning signs:**
-- K-Drama filter returns Korean variety shows (Running Man, etc.)
-- C-Drama filter returns very few results (missing HK/TW-registered shows)
-- Same show appearing multiple times when union-querying multiple origin countries
-
-**Phase to address:** Phase 3 (series browse filters) — implement the multi-country union query and deduplication when building the `/series` filter UI.
-
----
-
-### Pitfall 6: Watch Provider Data Differences for TV vs Movies
-
-**What goes wrong:**
-The TMDB watch provider structure (`/tv/{id}?append_to_response=watch/providers`) returns the same `flatrate`/`rent`/`buy` shape — this part is shared. However:
-
-1. **TV shows rarely have `buy` providers** — most streaming-native TV is flatrate only. The current modal logic picks `defaultTab` as the first non-empty tab (stream → rent → buy). For TV shows without buy/rent, this works fine. But the error case "Not available for streaming in your region" will trigger much more often for older/international TV shows — this is expected behavior, not a bug.
-2. **Provider data for TV is per-series, not per-season** — TMDB aggregates providers at the series level, but availability can vary by season (e.g., only Seasons 1-3 on Netflix, Season 4 on Hulu). There is no per-season provider breakdown in the TMDB API. Users may follow the "Where to Watch" link and find the specific season they want is not available. This is a data limitation, not a bug, but users will blame the app.
-3. **`append_to_response` for TV uses the same syntax** — `/tv/{id}?append_to_response=credits,watch/providers` works identically to the movie equivalent. The TV credits endpoint returns the same `cast` array structure but uses `aggregate_credits` for merged cast across seasons; `credits` returns only episode-level credits. Using `credits` (as the movie endpoint does) returns a narrower cast list for long-running TV shows.
-
-**How to avoid:**
-- Reuse the existing `WatchProvidersResponse` type — the structure is identical
-- For cast: use `credits` (same as movies) for consistency, accept that long-running shows show partial cast
-- Add UI copy: "Streaming availability shown for current season" to set expectations
-- The `ProviderGrid` component can be reused as-is — no changes needed
-
-**Warning signs:**
-- TypeScript errors on `details["watch/providers"]` — won't happen if the type is declared correctly on the TV details type
-- Users reporting wrong providers — this is a TMDB data quality issue, not a code bug
-
-**Phase to address:** Phase 2 (TV detail modal) — mostly a copy of movie implementation, low risk here.
-
----
-
-### Pitfall 7: `useMovieDetails` Hook and `/api/movies/[id]` Called for TV Shows
-
-**What goes wrong:**
-The current `MovieDetailModal` calls `useMovieDetails(movie?.id)` which hits `/api/movies/${id}`. If this component is naively reused for TV shows (by passing a TV show as the `movie` prop), it will call `/api/movies/1234` for a TV show with TMDB ID `1234`, which calls TMDB's `/movie/1234` endpoint — returning a completely different (movie) record, or a 404.
-
-The `placeholderData` in `useMovieDetails` searches existing `MovieListResponse` caches for an item with matching `id`. If both a movie and a TV show with the same ID exist in cache, the placeholder shows wrong data.
-
-**How to avoid:**
-Route detail fetching based on `mediaType`. Options:
-
-- **Option A (recommended):** Create `/api/tv/[id]` route and `useTVDetails(id)` hook separately. In `MediaDetailModal`, branch on `item.mediaType` to call the correct hook.
-- **Option B:** Create a unified `/api/media/[type]/[id]` route that accepts `type=movie|tv` and delegates to the correct TMDB endpoint.
-
-Do NOT add a `type` query param to the existing `/api/movies/[id]` route — that route's name implies movies and changes to it risk breaking existing movie functionality.
-
-**Warning signs:**
-- TV detail modal shows a completely different movie's data
-- Console error: "TMDB API error: 404" when opening TV show details
-- `details.title` is defined but wrong (it's a movie title for a different film)
-
-**Phase to address:** Phase 2 (TV detail API route) — create `/api/tv/[id]` before building the detail modal.
-
----
-
-### Pitfall 8: TanStack Query Key Namespace Collision
-
-**What goes wrong:**
-Current query keys use `["movies"]` as the root:
+**Prevention:**
+Keep analytics inserts as fire-and-forget. Log the full conversation (not just tool output) by capturing it from the `messages` array passed to `streamText`:
 
 ```typescript
-export const movieKeys = {
-  all: ["movies"] as const,
-  details: (id: number) => [...movieKeys.all, "details", id] as const,
-};
+// Capture conversation asynchronously after stream starts
+const userPromptText = lastMessageText || "mood chat";
+
+// Non-blocking: start stream immediately
+const result = streamText({ ... });
+
+// Fire-and-forget conversation log (don't await)
+logConversation(userId, userPromptText, uiMessages).catch(() => {});
+
+return result.toUIMessageStreamResponse();
 ```
 
-If TV series hooks are added carelessly under a similar root:
+If the analytics logging ever needs to be reliable (not fire-and-forget), use a background job queue — not `await` in the request handler.
 
-```typescript
-// Bad — same "details" + numeric id structure
-export const tvKeys = {
-  all: ["tv"] as const,
-  details: (id: number) => [...tvKeys.all, "details", id] as const,
-};
-```
+**Detection:**
+- Compare streaming TTFB (Time to First Byte) before and after adding logging
+- If TTFB increases by >200ms, the insert is in the critical path — move it out
 
-This is actually fine because the root differs (`"movies"` vs `"tv"`). The real risk is if someone reuses `movieKeys.details(id)` to cache TV details — then `queryClient.getQueriesData({ queryKey: movieKeys.all })` in `useMovieDetails`'s `placeholderData` will find TV detail data and use it as a `MovieDetailsResponse`, causing type confusion and potentially wrong renders.
-
-The `placeholderData` function in `useMovieDetails` (line 116-127 in `hooks/use-movies.ts`) casts found items as `unknown as MovieDetailsResponse` — this is already a type escape hatch. If TV show data ends up in the movies cache, it will be returned as placeholder data with `undefined` for `title`, causing the modal to briefly flash no title.
-
-**How to avoid:**
-- Use a separate `tvKeys` query key factory with `["tv"]` root — keep it isolated
-- Never pass TV show data through movie-typed hooks
-- The `placeholderData` casting is already unsafe (`as unknown as MovieDetailsResponse`) — for TV, create a separate `useTVDetails` hook with its own `tvKeys.details` and its own placeholder lookup scoped to TV list caches only
-
-**Warning signs:**
-- Detail modal briefly shows data from a different item before loading completes
-- `queryClient.invalidateQueries({ queryKey: movieKeys.all })` accidentally invalidates TV queries (won't happen with separate roots, but check)
-
-**Phase to address:** Phase 1, task 3 (query key architecture) — define `tvKeys` factory before writing any TV hooks.
+**Phase to address:** AI logging phase — confirm fire-and-forget pattern is preserved regardless of what else is logged.
 
 ---
 
-## Technical Debt Patterns
+### Pitfall 7: `useWatchlistCheck` Query Key Does Not Include `mediaType` — Returns Wrong Item
 
-| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
-|----------|-------------------|----------------|-----------------|
-| Cast TV response as `Movie` type | Zero new types, reuses all components | Silent undefined for `title`/`release_date`, watchlist stores `undefined` | Never — causes data corruption in DB |
-| Skip `mediaType` column in watchlist | No migration needed | ID collision breaks watchlist for any user who saves both a movie and TV show with same numeric TMDB ID | Never — will definitely occur at scale |
-| Use movie genre map for TV | No new constants | TV-specific genre IDs (10759, 10765, etc.) silently show no genre badges | Never — invisible to developer, confusing to user |
-| Reuse `/api/movies/[id]` for TV | No new route | Returns wrong TMDB entity; 404 for IDs that don't exist as movies | Never |
-| Use `GENRES` only, not `ALL_GENRES` | One lookup map | TV genre badges always empty | Never |
+**What goes wrong:**
+`watchlistKeys.check(tmdbId)` is used in `useWatchlistCheck` to get the full `WatchlistItem` for a specific TMDB ID. After adding `mediaType`, two entries can share the same `tmdbId` (one movie, one TV show). The server action `getWatchlistItemByTmdbId` returns the first match:
+
+```typescript
+// actions/watchlist.ts line 85
+.where(and(eq(watchlist.userId, userId), eq(watchlist.tmdbId, tmdbId)))
+.limit(1)
+```
+
+If a user has both movie ID 1234 and TV show ID 1234 in their library, `getWatchlistItemByTmdbId(1234)` returns whichever row the database returns first (undefined order). The TV show's detail page would see the movie's watchlist state (wrong status, wrong rating).
+
+**Prevention:**
+Add `mediaType` to the server action signature:
+
+```typescript
+export async function getWatchlistItemByTmdbId(
+  tmdbId: number,
+  mediaType: "movie" | "tv",
+): Promise<WatchlistItem | null>
+```
+
+And update the query key factory:
+
+```typescript
+check: (tmdbId: number, mediaType: "movie" | "tv") =>
+  [...watchlistKeys.all, "check", tmdbId, mediaType] as const,
+```
+
+This keeps movie and TV watch state in separate cache slots.
+
+**Detection:**
+- Find two TMDB IDs that exist as both a movie and a TV show (e.g., TMDB movie 1234 and TV 1234 — use TMDB docs to find collision examples)
+- Add both to library, open TV show detail page → verify it shows TV show status, not movie status
+
+**Phase to address:** Phase 1 (schema migration + type cascade) — update before building TV watchlist UI.
+
+---
+
+### Pitfall 8: My Top 100 Table Needs a Composite Unique on `(userId, tmdbId, mediaType, position)` — Not Just Position
+
+**What goes wrong:**
+My Top 100 is a personal ranked list. A naive schema design uses a simple `position` integer column:
+
+```sql
+CREATE TABLE top_100 (
+  id uuid PRIMARY KEY,
+  user_id uuid,
+  tmdb_id integer,
+  position integer
+);
+```
+
+Without a unique constraint on `(userId, position)`, two items can occupy the same position, or a user can have 200 items in their "Top 100." Without a constraint on `(userId, tmdbId, mediaType)`, a movie can be added twice.
+
+A second schema mistake: using sequential auto-increment position instead of allowing gaps. If position is auto-incremented and items are deleted, gaps appear (positions 1, 2, 4, 5 after deleting position 3). Reorder operations then need to update every item's position after a delete, which is N updates for N items.
+
+**Prevention:**
+Use a floating-point `position` or a dedicated reorder pattern to avoid mass-update rewrites:
+
+Option A (simple, correct): Use `integer` position, allow gaps, implement reorder as a transaction that updates all affected rows:
+
+```typescript
+// When moving item from position 5 to position 2:
+// UPDATE top_100 SET position = position + 1 WHERE position >= 2 AND position < 5 AND user_id = ?
+// UPDATE top_100 SET position = 2 WHERE id = ?
+```
+
+Option B (scalable): Use `real` (float) position, insert between existing positions:
+- Insert at 1.5 to place between 1 and 2
+- Rebalance only when floats run out of precision (rare)
+
+For 100 items, Option A (integer with range UPDATE) is simpler and correct. Enforce constraints:
+
+```typescript
+unique("top_100_user_position_unique").on(table.userId, table.position),
+unique("top_100_user_media_unique").on(table.userId, table.tmdbId, table.mediaType),
+// Optional: check constraint for position range
+```
+
+**Detection:**
+- Try to add the same movie twice → should return "Already in your Top 100"
+- Try to move item to position 50 when list has 30 items → verify no gap > 100 total items possible
+- Concurrent drag-and-drop reorder: simulate two rapid reorders → verify no duplicate positions in DB
+
+**Phase to address:** My Top 100 phase — define schema before building the drag-and-drop UI.
+
+---
+
+### Pitfall 9: Watchlist Card Persistence After Remove Requires Consistent `id`-Based Filtering, Not `tmdbId`
+
+**What goes wrong:**
+The BACKLOG-23 requirement states "Cards stay in grid after watchlist action, sync flags." This means removing an item from the watchlist page should remove only that card, not cause a full grid re-render that resets scroll position.
+
+The current `useRemoveFromWatchlist` optimistically filters by `item.id` (the UUID) in list caches, which is correct. But `useWatchlistTmdbIds` is filtered by `entry.tmdbId` only:
+
+```typescript
+// use-watchlist.ts line 139 (current)
+(old) => old?.filter((entry) => entry.tmdbId !== params.tmdbId) ?? [],
+```
+
+After adding `mediaType`, this filter incorrectly removes ALL entries with that `tmdbId` (both movie and TV show if IDs collide). The correct filter after migration is:
+
+```typescript
+(old) => old?.filter(
+  (entry) => !(entry.tmdbId === params.tmdbId && entry.mediaType === params.mediaType)
+) ?? [],
+```
+
+A second persistence issue: the watchlist library page filters by `status` tab. When a user removes an item from the "Want to Watch" tab, the card disappears immediately (optimistic). But if `onSettled` triggers `invalidateQueries({ queryKey: watchlistKeys.all })`, it causes a full refetch of all list variants — which re-renders the grid and resets scroll position.
+
+**Prevention:**
+For card persistence without scroll reset:
+1. Keep the optimistic remove in list caches (already implemented)
+2. Make `invalidateQueries` narrower: invalidate only `watchlistKeys.tmdbIds()` (for bookmark state across pages) and the specific `watchlistKeys.list(currentStatus)` (for the active tab)
+3. Do NOT invalidate all watchlist queries on every mutation — the broad invalidation is the root cause of full re-renders
+
+**Detection:**
+- Add 20 items to watchlist, scroll down, remove item 15 → verify scroll position does not jump to top
+- If scroll resets: the invalidation is too broad
+
+**Phase to address:** Watchlist UX fixes phase.
+
+---
+
+### Pitfall 10: Origin Country Filter for TV Search Has No TMDB API for Multi-Search Across Seasons
+
+**What goes wrong:**
+The TV search endpoint (`/search/tv`) accepts a query string but does NOT accept `with_origin_country` as a filter parameter. Origin country filtering only works on `/discover/tv`. This means:
+
+- "TV Series Search" feature (BACKLOG-31) using `/search/tv` cannot filter by country of origin
+- Adding `with_origin_country=KR` to a search request has no effect — TMDB ignores unknown parameters on search endpoints silently
+
+If the discover and search paths are combined in the frontend (user types "crime" and also selects "Korean" origin), the UI must branch: when there is a text query, use `/search/tv` (no country filter); when there is no text query (browse mode), use `/discover/tv` (country filter works). Trying to apply country filter during a text search returns incorrect results or silently ignores the filter.
+
+**Consequences:**
+- Users on the TV search who also want "Korean crime shows" find that the "Korean" filter is silently ignored when they type a search term
+- No error is thrown — TMDB just returns global results
+
+**Prevention:**
+Implement clear UI separation:
+- Browse mode (no text query): uses `/discover/tv` with full filter support including `with_origin_country`
+- Search mode (text query active): uses `/search/tv` with genre filter only, hide/disable origin country filter with a tooltip "Country filter not available during search"
+
+Document this TMDB limitation in a code comment on the TV search handler so future developers don't try to "fix" what is actually a TMDB API limitation.
+
+**Detection:**
+- In browser network tab: when a text search is active and "Korean" filter is selected, check if `with_origin_country=KR` appears in the request URL to `/search/tv` → it should not, confirming the branch is working
+- Verify correct behavior by comparing search results with and without the country filter active during text search — results should be identical
+
+**Phase to address:** TV discovery UX phase — implement the search/discover branch before building the filter UI.
+
+---
+
+## Minor Pitfalls
+
+### Pitfall 11: `aiRecommendations` Table Has No Conversation Structure — Full Logging Requires New Schema
+
+**What goes wrong:**
+The current `ai_recommendations` table stores only the tool output (genre suggestion) per interaction:
+
+```typescript
+export const aiRecommendations = pgTable("ai_recommendations", {
+  id: uuid(...),
+  userId: uuid(...),
+  prompt: text("prompt").notNull(),          // the user's first message only
+  recommendations: jsonb("recommendations"), // the tool output JSON
+  createdAt: timestamp(...),
+});
+```
+
+"Full conversation logging for analytics" (as listed in v0.4 requirements) needs the entire message array (user turns + assistant turns + tool calls), not just the last user message and tool result. The current schema cannot store multi-turn conversation history without storing the entire `messages` array in the `recommendations` JSONB column (a semantic mismatch — that column was designed for genre suggestions, not conversation transcripts).
+
+**Prevention:**
+Add a separate column or redesign the table for conversation logging:
+
+```typescript
+export const aiRecommendations = pgTable("ai_recommendations", {
+  // ... existing columns ...
+  conversationMessages: jsonb("conversation_messages"),  // full UIMessage array
+  modelName: text("model_name"),                        // which Gemini model was used
+  promptTokens: integer("prompt_tokens"),               // for quota tracking
+  turnCount: integer("turn_count"),                     // number of back-and-forth turns
+});
+```
+
+Or create a separate `ai_conversations` table and keep `ai_recommendations` for tool outputs only. Either way, this requires a new Drizzle migration.
+
+**Detection:**
+- Check Drizzle Studio: after a multi-turn conversation, does the `ai_recommendations` row contain all turns or just the final message?
+- If `prompt` contains only the last user message, the logging is incomplete for analytics
+
+**Phase to address:** AI logging phase — decide on schema before writing the logging code.
+
+---
+
+### Pitfall 12: Rating Display Fix for `vote_average` Truncation Feels Wrong at 7.3 vs 73%
+
+**What goes wrong:**
+TMDB returns `vote_average` as a float between 0 and 10 (e.g., `7.3`). The existing UI may display it as a percentage or raw float depending on which component. BACKLOG-25 specifies showing as "X/10" or scaled stars.
+
+The minor pitfall: if a developer implements stars, they must map 0-10 to 0-5 (divide by 2), but the rounding must be consistent. `7.3 / 2 = 3.65` — do you show 3.5 stars or 4 stars? Half-star increments require a more complex star renderer. A simpler and more accurate approach: show as `7.3/10` text without stars.
+
+Additionally, `vote_average` can be `0` for unreleased or unlisted films — displaying "0.0/10" is misleading. Guard: show rating only when `vote_count > 10` to ensure statistical significance.
+
+**Prevention:**
+Use text display `7.3/10` not stars. Guard with `vote_count > 10`:
+
+```typescript
+{movie.vote_average > 0 && movie.vote_count > 10 && (
+  <span>{movie.vote_average.toFixed(1)}/10</span>
+)}
+```
+
+**Phase to address:** Discovery UX polish phase — apply consistently to movie cards, TV cards, and detail pages.
+
+---
+
+### Pitfall 13: `revalidatePath("/library")` Does Not Invalidate Watchlist State on Detail Pages
+
+**What goes wrong:**
+All watchlist server actions call `revalidatePath("/library")`. This instructs Next.js to invalidate the RSC cache for the `/library` route. But the watchlist bookmark state on `/movie/[id]` and `/tv/[id]` detail pages is managed by TanStack Query on the client, not by RSC cache. `revalidatePath` has no effect on TanStack Query state.
+
+If a user adds a TV show from the TV detail page, then navigates to `/library`, the library is fresh. But if they navigate back to the TV detail page without a window focus (which would trigger `refetchOnWindowFocus: true`), TanStack Query serves stale cache data — the bookmark may appear as "not in library" for up to 30 seconds.
+
+**Prevention:**
+This is already mitigated by `refetchOnWindowFocus: true` on `useWatchlistTmdbIds`. Ensure this setting is preserved when extending the hook for `mediaType`. The remaining gap: if the user adds from a detail page and immediately looks at the bookmark state on the same page without navigating away, the TanStack Query optimistic update must cover this case. Verify `useWatchlistCheck(tmdbId, mediaType)` is optimistically updated in `onMutate` of `useAddToWatchlist`.
+
+**Phase to address:** Watchlist UX fixes phase — verify in integration test.
+
+---
+
+## Phase-Specific Warnings
+
+| Phase Topic | Likely Pitfall | Mitigation |
+|-------------|---------------|------------|
+| Schema migration — add `media_type` | Constraint name mismatch breaks error handler (Pitfall 1) | Update catch block string in same commit as schema |
+| Schema migration — add `media_type` | NOT NULL default backfill may not be auto-generated (Pitfall 3) | Read generated SQL before running `db:migrate` |
+| Schema migration — unique constraint change | Optimistic update filters on `tmdbId` alone, breaks with collisions (Pitfall 2) | Make `mediaType` required in `WatchlistTmdbEntry`, update all filter sites |
+| TV watchlist UI | `watchlistKeys.check` returns wrong item when movie/TV share TMDB ID (Pitfall 7) | Add `mediaType` to query key and server action parameter |
+| Watchlist card persistence | Broad `invalidateQueries` causes grid re-render and scroll reset (Pitfall 9) | Narrow invalidation to specific query keys |
+| AI guardrails | Over-blocking legitimate mood queries with cultural references (Pitfall 4) | Use redirecting prompt, not blocking prompt; test with diverse inputs |
+| AI origin country filtering | Tool output lacks `originCountry`, silently skips TMDB filter (Pitfall 5) | Trace all 5 chain links before shipping; add `originCountry` to `GenreSuggestion` type |
+| AI conversation logging | Awaiting DB insert adds latency to streaming response (Pitfall 6) | Keep fire-and-forget; log conversation async after stream starts |
+| My Top 100 schema | Missing constraints allow duplicate or out-of-range positions (Pitfall 8) | Define unique constraints on `(userId, position)` and `(userId, tmdbId, mediaType)` |
+| TV search with origin country | TMDB `/search/tv` ignores `with_origin_country` silently (Pitfall 10) | Branch: discover for browse (country filter), search for text queries (no country filter) |
+| AI logging schema | Current `ai_recommendations` table cannot store multi-turn conversations (Pitfall 11) | Add `conversationMessages` JSONB column or create separate `ai_conversations` table |
+| Rating display | `vote_average = 0` for unlisted films shows misleading "0.0/10" (Pitfall 12) | Guard: only display when `vote_count > 10` |
 
 ---
 
@@ -372,56 +564,22 @@ The `placeholderData` function in `useMovieDetails` (line 116-127 in `hooks/use-
 
 | Integration | Common Mistake | Correct Approach |
 |-------------|----------------|------------------|
-| TMDB TV Discover | Using movie genre IDs (28, 18) in `with_genres` for TV discover — they partly overlap but TV has exclusive IDs | Use TMDB TV genre list endpoint (`/genre/tv/list`) to get the authoritative TV genre ID set |
-| TMDB TV Credits | Using `credits` append for a 10-season show returns only the most recent episode credits | For full cast, use `aggregate_credits` append instead — same structure but covers all seasons |
-| TMDB TV `episode_run_time` | Reading `episode_run_time[0]` assuming it's always set | Array can be empty `[]` — always guard: `episode_run_time?.[0] ?? null` |
-| TMDB K-Drama filter | `with_origin_country=KR` alone returns all Korean content (variety, news, reality, docs) | Always add `with_genres=18` (Drama) and `with_original_language=ko` |
-| Watchlist unique constraint | Current constraint `(userId, tmdbId)` will reject TV show if movie with same ID exists | Migration to `(userId, tmdbId, mediaType)` is required before first TV series can be saved |
-| TMDB multi-search | `/search/multi` returns mixed movie and TV results in the same array with a `media_type` discriminator field | Must handle the discriminator to normalize each result — do not use for type-pure endpoints |
+| Drizzle unique constraint rename | Rename only in schema, forget to update error catch string in server action | Update both in same commit; use shared constant for constraint name |
+| TanStack Query optimistic cache with mediaType | Filter by `tmdbId` alone after adding `mediaType` to schema | Filter by `(tmdbId, mediaType)` pair; update all `find()` and `filter()` in hooks |
+| AI SDK tool schema extension | Add `originCountry` to tool Zod schema but forget to update `GenreSuggestion` type downstream | Trace full data path: tool schema → type → extractor → page → hook → API param |
+| TMDB `/search/tv` + origin country | Pass `with_origin_country` to search endpoint expecting it to filter | Search endpoint ignores unknown params silently; use discover for browse, search for text queries |
+| Drizzle migration with pgEnum + NOT NULL column | Column added as NOT NULL but existing rows have NULL → migration may fail | Review generated SQL; add explicit UPDATE for backfill before NOT NULL enforcement |
+| AI guardrail system prompt | Use restrictive "refuse" framing instead of redirecting framing | "Redirect to movie topics" is better UX than "refuse non-movie requests" for an auth-gated endpoint |
 
 ---
 
-## Performance Traps
-
-| Trap | Symptoms | Prevention | When It Breaks |
-|------|----------|------------|----------------|
-| Union-querying three origin countries for C-Drama without deduplication | Same show appears 2-3 times in grid | Deduplicate by `id` using `Set` after merging pages (same pattern as existing infinite scroll dedup) | First page with C-Drama filter |
-| Fetching `aggregate_credits` for all TV shows in a grid | 3× larger response per show, slows grid load | Only fetch `aggregate_credits` in detail modal — list view doesn't need credits | >10 TV show detail opens per session |
-| Invalidating `["movies"]` and `["tv"]` separately after watchlist mutations | Two separate refetches, double network calls | Scope invalidation precisely to `watchlistKeys` only — never invalidate content caches on watchlist mutation | Every watchlist add/remove |
-
----
-
-## Security Mistakes
+## Security Mistakes to Avoid
 
 | Mistake | Risk | Prevention |
 |---------|------|------------|
-| Skipping RLS for `media_type` column in watchlist | Users could read other users' TV show entries if RLS policy doesn't include `media_type` in WHERE clause | After migration, update `rls-policies.sql` to ensure the new column doesn't create a policy gap — existing `eq(watchlist.userId, userId)` in Drizzle actions already covers this |
-| Exposing `/api/tv/[id]` without rate limiting | TMDB API key exhausted by unauthenticated enumeration | Apply the same `next: { revalidate: 300 }` ISR caching on the TV detail route as on movie routes |
-
----
-
-## UX Pitfalls
-
-| Pitfall | User Impact | Better Approach |
-|---------|-------------|-----------------|
-| Showing "Movie already in library" error when TV show ID collides with movie | User is confused — they've never added this movie | Fix schema first (Pitfall 2), then fix error message to "Already in library" (media-type-neutral) |
-| Using "Watched" status for TV series | Ambiguous — did they finish the whole series or one episode? | For v0.3, keep the same binary watched/want-to-watch model with a note that it tracks the series, not individual episodes |
-| Genre filter on `/series` page showing movie genre names (Action, not Action & Adventure) | Clicking "Action" on series page returns TV shows tagged as "Action & Adventure" (different ID) with no results | Use TV genre IDs on the `/series` page filter, not movie genre IDs |
-| Runtime showing blank for TV shows | Users expect some episode information | Replace blank runtime with "Season X · N episodes" from `number_of_seasons` / `number_of_episodes` |
-| "Director:" label in TV detail modal | TV shows have creators/showrunners, not directors | Show "Created by:" using `created_by` field from TV details response |
-
----
-
-## "Looks Done But Isn't" Checklist
-
-- [ ] **TV type normalization:** `MediaItem.title` is populated from `tv.name` — verify no TV card shows blank title
-- [ ] **Watchlist schema:** `media_type` column exists and migration is applied — verify in Drizzle Studio that a movie ID `550` and TV show ID `550` can coexist for the same user
-- [ ] **Genre badges on TV cards:** TV-specific genre IDs (10759 etc.) display labels — verify K-Drama show shows "Drama" or "Action & Adventure" badge, not blank
-- [ ] **TV detail modal runtime row:** Shows "X Seasons · N Episodes" not blank — verify by opening a multi-season show detail
-- [ ] **TV detail creator vs director:** Shows "Created by:" — verify by opening a show with known creator (Game of Thrones → "David Benioff")
-- [ ] **K-Drama filter:** Returns actual dramas, not variety shows — verify Running Man does NOT appear in K-Drama filter results
-- [ ] **Watchlist bookmark on TV card:** Reflects correct state for the TV show, not a movie with same ID — verify with ID collision test case
-- [ ] **`/api/tv/[id]` route isolation:** Opening a TV show detail does not call `/api/movies/[id]` — verify in Network tab
+| New `top_100` table without `WHERE userId = ?` checks | User A can read/modify User B's Top 100 list | Follow the same pattern as `watchlist` actions: always `eq(top100.userId, userId)` in WHERE |
+| New `top_100` table without RLS | Supabase RLS bypass same as watchlist | Add RLS policy in Supabase Dashboard after migration (Drizzle bypasses RLS) |
+| AI conversation logs store full messages array without sanitization | PII in message history (if user types personal info) stored in JSONB permanently | Log message metadata (turn count, role sequence) not full message text for analytics |
 
 ---
 
@@ -429,39 +587,39 @@ The `placeholderData` function in `useMovieDetails` (line 116-127 in `hooks/use-
 
 | Pitfall | Recovery Cost | Recovery Steps |
 |---------|---------------|----------------|
-| `title`/`name` field mismatch already in production | HIGH | Backfill `title` column in watchlist for all TV entries; requires knowing which rows are TV (need `media_type`) — this is why schema migration must come first |
-| Missing `mediaType` in watchlist schema after TV launch | HIGH | Migration to add column with default, backfill existing rows as "movie", update unique constraint (drops old, creates new) — requires downtime or careful zero-downtime migration |
-| Genre badges empty for TV shows | LOW | Add `TV_GENRES` to constants, no schema change needed |
-| K-Drama filter returning wrong content | LOW | Add `with_genres=18` to discover params, redeploy |
-| TV detail calling wrong TMDB endpoint | MEDIUM | Create `/api/tv/[id]` route, update hook call site, invalidate cached wrong data |
+| Constraint name mismatch in production | LOW | Deploy fix to catch block string; no schema change needed |
+| `media_type` NOT NULL with NULL rows after migration | MEDIUM | Run `UPDATE watchlist SET media_type = 'movie' WHERE media_type IS NULL` in Supabase SQL Editor |
+| TanStack optimistic update filters wrong items | LOW | Fix filter in hook, redeploy; stale state self-corrects on next refetch |
+| AI guardrail too strict in production | LOW | Update system prompt string, redeploy; no schema/migration needed |
+| Missing originCountry in AI-to-TMDB chain | LOW | Add field to type + tool schema, trace chain, redeploy |
+| Top 100 table missing position constraint, duplicate positions exist | MEDIUM | SQL UPDATE to reorder positions, then add constraint with UNIQUE NULLS NOT DISTINCT |
 
 ---
 
-## Pitfall-to-Phase Mapping
+## "Looks Done But Isn't" Checklist
 
-| Pitfall | Prevention Phase | Verification |
-|---------|------------------|--------------|
-| Field name mismatch (`title`/`name`) | Phase 1 — Define `TVShow` + `MediaItem` types | TypeScript strict build passes with no `any` casts for TV data paths |
-| TMDB ID collision in watchlist | Phase 1 — `mediaType` schema migration | Drizzle Studio: two entries with same `tmdbId` but different `mediaType` coexist for one user |
-| `runtime` structure difference | Phase 2 — TV detail modal | Opening a TV series detail shows season/episode count, not blank or wrong runtime |
-| TV genre ID namespace | Phase 1 — Constants update | K-Drama show card displays "Drama" genre badge |
-| K-Drama filter reliability | Phase 3 — Series browse + filter UI | K-Drama filter excludes variety shows; C-Drama returns HK/TW shows too |
-| Watch provider differences | Phase 2 — TV detail modal | TV show detail "Where to Watch" shows correct streaming services or "not available" message |
-| `useMovieDetails` called for TV | Phase 2 — Create `useTVDetails` hook + `/api/tv/[id]` | Network tab shows `/api/tv/[id]` calls for TV shows, not `/api/movies/[id]` |
-| TanStack Query key collision | Phase 1 — Define `tvKeys` factory | `queryClient.getQueriesData({ queryKey: ["movies"] })` does not return TV data |
+- [ ] **Constraint name string:** `actions/watchlist.ts` catch block says `"watchlist_user_tmdb_media_unique"` (not old name) — verify by reading the file
+- [ ] **Backfill in migration SQL:** Generated SQL for `media_type` column includes `UPDATE ... SET media_type = 'movie' WHERE media_type IS NULL` before the NOT NULL enforcement
+- [ ] **TanStack remove filter:** `useRemoveFromWatchlist` filters `(tmdbId, mediaType)` pair, not `tmdbId` alone — verify by adding movie ID X and TV show ID X, then removing movie; TV bookmark must remain
+- [ ] **TV watchlist `useWatchlistCheck`:** Server action takes `(tmdbId, mediaType)` parameter — verify movie and TV with same numeric ID return different rows
+- [ ] **AI guardrail test:** "I want something warm like Studio Ghibli" produces Animation genre suggestion, not a refusal — verify with live test
+- [ ] **Origin country chain:** "Recommend K-drama" → network tab shows `/discover/tv` request with `with_origin_country=KR` — verify in browser
+- [ ] **Conversation logging is async:** AI streaming TTFB is unchanged after adding logging — measure before/after
+- [ ] **Top 100 duplicate guard:** Adding the same movie twice returns "Already in your Top 100" — verify in Drizzle Studio that constraint fires
 
 ---
 
 ## Sources
 
-- Codebase analysis: `types/movie.ts`, `lib/tmdb.ts`, `lib/constants.ts`, `drizzle/schema.ts`, `components/movies/movie-card.tsx`, `components/movies/movie-detail-modal.tsx`, `hooks/use-movies.ts`, `app/api/movies/[id]/route.ts`, `actions/watchlist.ts` (read 2026-02-19)
-- TMDB API v3 TV series schema — `id`, `name`, `original_name`, `first_air_date`, `episode_run_time`, `number_of_seasons`, `number_of_episodes`, `created_by`, `origin_country` field names: verified HIGH confidence (stable API, documented since TMDB v3 launch)
-- TMDB genre ID namespaces — movie genres vs TV genres confirmed separate sets with partial overlap (IDs 16, 18, 35, 80, etc. shared; IDs 10759, 10762–10768 TV-exclusive): HIGH confidence
-- TMDB ID namespace isolation (movie IDs and TV IDs are independent integer sequences, same integer can refer to different entities): HIGH confidence
-- TMDB origin country filtering for K-Drama/C-Drama — `with_origin_country=KR`, `with_original_language=ko`, `CN`/`HK`/`TW` split: MEDIUM confidence (known behavior, but TMDB's data quality for origin country varies; validate with live API calls during Phase 3)
-- Drizzle ORM unique constraint modification — drop old constraint, add new with extra column: HIGH confidence (standard PostgreSQL DDL, Drizzle migration workflow documented in `DRIZZLE_GUIDE.md`)
+- Codebase (read directly 2026-02-28): `drizzle/schema.ts`, `drizzle/migrations/0000_lyrical_nightmare.sql`, `drizzle/migrations/0001_kind_rick_jones.sql`, `actions/watchlist.ts`, `hooks/use-watchlist.ts`, `types/watchlist.ts`, `app/api/ai/recommend/route.ts`, `hooks/use-ai.ts`, `types/ai.ts`
+- Drizzle ORM unique constraint rename behavior: HIGH confidence (standard PostgreSQL DDL, verified against prior migration in this codebase that renamed `watchlist_status` enum successfully)
+- TanStack Query optimistic update patterns: HIGH confidence (code read directly — filter logic confirmed line-by-line)
+- TMDB `/search/tv` vs `/discover/tv` parameter support: HIGH confidence (TMDB API v3 docs — search endpoints do not support discover-style filter params; this is documented TMDB behavior)
+- Vercel AI SDK tool schema extension pitfall: MEDIUM confidence (based on tracing the existing code path; AI SDK v6 tool output types are not automatically propagated — developer must update all downstream types manually)
+- LLM guardrail over-restriction pattern: MEDIUM confidence (known LLM behavior with restrictive system prompts; no official docs, but well-documented in prompt engineering literature)
+- Drizzle pgEnum + NOT NULL column backfill: MEDIUM confidence (observed pattern from prior migration in this codebase: `0001_kind_rick_jones.sql` manually added `UPDATE ... SET status = 'want_to_watch' WHERE status = 'watching'` before re-creating the enum — same pattern needed here)
 
 ---
 
-*Pitfalls research for: TV series discovery added to movie-only Next.js + TMDB app*
-*Researched: 2026-02-19*
+*Pitfalls research for: TV watchlisting, AI guardrails/logging, origin country filtering, My Top 100 — v0.4 Moodflix*
+*Researched: 2026-02-28*
