@@ -38,7 +38,7 @@ See: `.planning/milestones/v0.3-ROADMAP.md` for full details.
 **Milestone Goal:** Enable TV show watchlisting, fix watchlist UX bugs, improve discovery navigation, add AI guardrails and origin country filtering with conversation logging, and introduce My Top 100 personal lists.
 
 - [x] **Phase 9: Schema Migration** — Add media_type to watchlist, update unique constraint, add messages column to ai_recommendations, create top_hundred table (completed 2026-03-02)
-- [ ] **Phase 10: TV Watchlisting & Watchlist UX** — Full TV watchlist CRUD from the TV detail page, library card routing, type badges, instant sync, and media type filter
+- [x] **Phase 10: TV Watchlisting & Watchlist UX** — Full TV watchlist CRUD from the TV detail page, library card routing, type badges, instant sync, and media type filter (completed 2026-03-03)
 - [ ] **Phase 11: Discovery UX** — TV series search bar, rename Discover to Movies in sidebar, standardize rating display to X/10 format
 - [ ] **Phase 12: AI Polish** — Origin country filtering for country-specific recommendations, off-topic guardrails, and fire-and-forget conversation logging
 - [ ] **Phase 13: My Top 100** — Personal ranked list of up to 100 movies and TV shows with CRUD and move up/down reordering
@@ -87,7 +87,7 @@ Plans:
   3. After adding or changing the status of any item from any page, the bookmark/watched icons on all other cards (home, discover, series pages) update without a page refresh
   4. Changing a movie's status on the library page does not remove the card from the current view — the card stays and its flags update in place
   5. Library page shows "All / Movies / TV Shows" filter controls alongside the existing status tabs — selecting "TV Shows" shows only TV entries
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [ ] 10-01-PLAN.md — Media-type-aware hooks, actions, and card components (foundation)
@@ -143,7 +143,7 @@ Plans:
 | 07.1. Bug Fixes & Improvements | v0.3 | 3/3 | Complete | 2026-02-25 |
 | 8. Landing Page Revamp | v0.3 | 4/4 | Complete | 2026-02-27 |
 | 9. Schema Migration | v0.4 | Complete    | 2026-03-02 | 2026-03-01 |
-| 10. TV Watchlisting & Watchlist UX | 2/3 | In Progress|  | - |
+| 10. TV Watchlisting & Watchlist UX | 3/3 | Complete   | 2026-03-03 | - |
 | 11. Discovery UX | v0.4 | 0/TBD | Not started | - |
 | 12. AI Polish | v0.4 | 0/TBD | Not started | - |
 | 13. My Top 100 | v0.4 | 0/TBD | Not started | - |
