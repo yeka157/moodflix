@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 11 of 13 (Discovery UX)
-Plan: 01 of 2 complete
-Status: Phase 11 In Progress — 1/2 plans done
-Last activity: 2026-03-03 — Plan 01 complete (sidebar + bottom tab bar "Discover" → "Movies"; detail page ratings X.X/10 with vote_count guard)
+Plan: 02 of 2 complete
+Status: Phase 11 Complete — all 2 plans done
+Last activity: 2026-03-03 — Plan 02 complete (TV search bar on /series page replacing curated rows while active)
 
-Progress: [████░░░░░░] 38% (v0.4 Phase 11 in progress, 1/2 plans done)
+Progress: [█████░░░░░] 42% (v0.4 Phase 11 complete, 2/2 plans done)
 
 ## Accumulated Context
 
@@ -57,6 +57,8 @@ Key decisions for v0.4 (from research):
 - [Phase 10.1-01]: MarqueeFallback row split: firstHalf/secondHalf via Math.ceil; reversed fallback when < 4 posters ensures second row has visually distinct content
 - [Phase 11-discovery-ux]: Nav label-only change: /discover route path, Compass icon, and aria-label attributes unchanged
 - [Phase 11-discovery-ux]: Rating badge hidden when vote_count <= 10; text-only X.X/10 numeric format with no star symbol
+- [Phase 11-discovery-ux]: SeriesPageContent client wrapper lifts search state so SeriesPage stays a pure Server Component
+- [Phase 11-discovery-ux]: TV search uses hrefPrefix=/tv/ for direct navigation (not drawer/modal) consistent with existing TV card behavior
 
 ### Pending Todos
 
@@ -75,6 +77,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Phase 11 Discovery UX — Plan 01 complete (nav relabel + rating format)
+Stopped at: Phase 11 Discovery UX — Plan 02 complete (TV search on /series page), all Phase 11 plans complete
 Resume file: None
-Next step: Phase 11 Plan 02
+Next step: Phase 12
