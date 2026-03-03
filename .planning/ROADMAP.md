@@ -113,7 +113,11 @@ Plans:
   1. The `/series` page has a search bar — typing a query returns matching TV shows, replacing the browse rows while the query is active
   2. The sidebar navigation item that links to `/discover` reads "Movies" (not "Discover") — the route `/discover` itself is unchanged
   3. TMDB ratings on movie and TV detail pages display as "X.X/10" — the rating is hidden when `vote_count` is 10 or fewer
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 11-01-PLAN.md — Sidebar label rename + rating format change
+- [ ] 11-02-PLAN.md — TV search bar on /series page
 
 ### Phase 12: AI Polish
 **Goal**: AI recommendations filter by origin country when the user asks for country-specific content, off-topic queries are redirected gracefully, and full conversations are logged to the database for analytics without adding any latency to the streaming response.
