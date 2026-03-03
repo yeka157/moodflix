@@ -58,6 +58,7 @@ None.
 
 - Phase 09.1 inserted after Phase 9: PWA Setup (URGENT)
 - Phase 09.1.1 inserted after Phase 09.1: Homepage TV Series Integration (URGENT)
+- Phase 10.1 inserted after Phase 10: Fix UI for mobile view (URGENT)
 
 ### Blockers/Concerns
 
