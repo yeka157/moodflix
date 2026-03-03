@@ -13,31 +13,33 @@ Three targeted UX improvements to the discovery experience: (1) add TV show sear
 <decisions>
 ## Implementation Decisions
 
+### TV Search on /series
+- Mirror `/discover` search exactly — same bar position, same debounced live results, same interaction pattern
+- Standalone text search — ignores genre toggle filters; typing a query replaces all browse rows
+- Clearing the query restores the previous genre/browse view
+- Search results displayed as a poster grid (matching `/discover` search results layout)
+
+### Rating Display Format
+- Show rating on detail pages only (movie and TV) — cards stay clean with just poster/title
+- Replace existing star rating entirely with "X.X/10" numeric format — no stars alongside
+- Hide rating completely (no element rendered) when `vote_count <= 10`
+
+### Sidebar Label Rename
+- Rename "Discover" to "Movies" — label text only
+- Route `/discover` unchanged
+- No tooltip/aria changes, no other nav label tweaks
+
 ### Claude's Discretion
-User deferred all decisions to Claude. The following areas are open for Claude to determine during planning and implementation:
-
-**TV Search on /series:**
-- Search bar placement and visual style (match existing patterns on `/discover`)
-- Live debounced search vs submit-based (follow existing `/discover` search pattern for consistency)
-- How browse rows are replaced/restored when a query is active
-- Empty state and no-results messaging
-
-**Sidebar Label Rename:**
-- Straightforward text change from "Discover" to "Movies" in the sidebar navigation component
-- No route changes — `/discover` path stays as-is
-
-**Rating Display Format:**
-- Visual treatment of "X.X/10" (inline text, badge, or icon-paired)
-- Placement on detail pages (movie and TV)
-- Whether ratings also appear on cards or only on detail views
-- Threshold: hide rating when `vote_count <= 10`
+- No-results empty state messaging for TV search
+- Visual treatment of X.X/10 on detail pages (icon pairing, typography, placement)
+- Search bar visual styling details
 
 </decisions>
 
 <specifics>
 ## Specific Ideas
 
-No specific requirements — open to standard approaches. Follow existing codebase patterns for consistency (e.g., match `/discover` search UX for the `/series` search bar).
+Follow existing `/discover` search UX as the reference pattern for `/series` search — consistency across both pages is the priority.
 
 </specifics>
 
