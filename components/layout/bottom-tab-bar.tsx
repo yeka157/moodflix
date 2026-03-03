@@ -48,7 +48,7 @@ export function BottomTabBar() {
 
   return (
     <nav
-      className="flex md:hidden fixed bottom-0 left-0 right-0 z-50 h-16 bg-sidebar border-t border-sidebar-border"
+      className="flex md:hidden fixed bottom-0 left-0 right-0 z-50 h-16 w-full max-w-full overflow-hidden bg-sidebar border-t border-sidebar-border"
       aria-label="Mobile navigation"
     >
       {navLinks.map((link) => {
@@ -60,14 +60,18 @@ export function BottomTabBar() {
             key={link.href}
             href={link.href}
             className={cn(
-              "flex-1 flex flex-col items-center justify-center gap-1 transition-colors",
-              active ? "text-primary" : "text-muted-foreground hover:text-foreground",
+              "flex-1 min-w-0 flex flex-col items-center justify-center gap-1 transition-colors",
+              active
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground",
             )}
             aria-current={active ? "page" : undefined}
             aria-label={link.label}
           >
-            <Icon className="size-5" aria-hidden="true" />
-            <span className="text-[10px] font-medium leading-none">{link.label}</span>
+            <Icon className="size-5 shrink-0" aria-hidden="true" />
+            <span className="text-[10px] font-medium leading-none truncate max-w-full">
+              {link.label}
+            </span>
           </Link>
         );
       })}

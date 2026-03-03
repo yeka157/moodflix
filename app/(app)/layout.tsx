@@ -8,11 +8,7 @@ import { OfflineToast } from "@/components/pwa/offline-toast";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
 import NextTopLoader from "nextjs-toploader";
 
-export default async function AppLayout({
-  children,
-}: {
-  children: ReactNode;
-}) {
+export default async function AppLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -32,7 +28,7 @@ export default async function AppLayout({
       />
       <AppSidebar user={{ email: user.email ?? "" }} />
       <BottomTabBar />
-      <main className="md:pl-[60px] pb-16 md:pb-0">
+      <main className="md:pl-[60px] pb-16 md:pb-0 overflow-x-hidden">
         <Providers>{children}</Providers>
       </main>
       <OfflineToast />

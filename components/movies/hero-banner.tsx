@@ -23,7 +23,11 @@ const containerVariants = {
 
 const itemVariants = {
   hidden: { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" as const } },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.45, ease: "easeOut" as const },
+  },
 };
 
 export function HeroBanner({ movie }: HeroBannerProps) {
@@ -54,12 +58,12 @@ export function HeroBanner({ movie }: HeroBannerProps) {
       </motion.div>
 
       {/* Gradient overlays */}
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-linear-to-t from-background via-background/60 to-transparent" />
+      <div className="absolute inset-0 bg-linear-to-r from-background/80 via-transparent to-transparent" />
 
       {/* Content — staggered children */}
       <motion.div
-        className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 lg:px-8 pb-6 sm:pb-8 space-y-3 sm:space-y-4"
+        className="absolute bottom-0 left-4 sm:left-0 right-0 px-4 sm:px-6 lg:px-8 pb-6 sm:pb-8 space-y-3 sm:space-y-4"
         variants={shouldReduceMotion ? undefined : containerVariants}
         initial={shouldReduceMotion ? false : "hidden"}
         animate={shouldReduceMotion ? undefined : "visible"}
@@ -78,7 +82,10 @@ export function HeroBanner({ movie }: HeroBannerProps) {
               {genre}
             </Badge>
           ))}
-          <Badge variant="secondary" className="bg-white/10 text-white border-0 text-xs">
+          <Badge
+            variant="secondary"
+            className="bg-white/10 text-white border-0 text-xs"
+          >
             {year}
           </Badge>
         </motion.div>
