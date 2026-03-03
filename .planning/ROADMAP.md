@@ -87,7 +87,7 @@ Plans:
   3. After adding or changing the status of any item from any page, the bookmark/watched icons on all other cards (home, discover, series pages) update without a page refresh
   4. Changing a movie's status on the library page does not remove the card from the current view — the card stays and its flags update in place
   5. Library page shows "All / Movies / TV Shows" filter controls alongside the existing status tabs — selecting "TV Shows" shows only TV entries
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 - [ ] 10-01-PLAN.md — Media-type-aware hooks, actions, and card components (foundation)
@@ -143,7 +143,7 @@ Plans:
 | 07.1. Bug Fixes & Improvements | v0.3 | 3/3 | Complete | 2026-02-25 |
 | 8. Landing Page Revamp | v0.3 | 4/4 | Complete | 2026-02-27 |
 | 9. Schema Migration | v0.4 | Complete    | 2026-03-02 | 2026-03-01 |
-| 10. TV Watchlisting & Watchlist UX | 1/3 | In Progress|  | - |
+| 10. TV Watchlisting & Watchlist UX | 2/3 | In Progress|  | - |
 | 11. Discovery UX | v0.4 | 0/TBD | Not started | - |
 | 12. AI Polish | v0.4 | 0/TBD | Not started | - |
 | 13. My Top 100 | v0.4 | 0/TBD | Not started | - |

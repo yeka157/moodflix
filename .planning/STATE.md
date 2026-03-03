@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 10 of 13 (TV Watchlisting + Watchlist UX)
-Plan: 1 of 3 in current phase
-Status: Phase 10 Plan 01 Complete — 1 of 3 plans done
-Last activity: 2026-03-03 — Plan 01 complete (media-type-aware watchlist layer + mediaType prop on MovieCard/Row/Grid)
+Plan: 3 of 3 in current phase
+Status: Phase 10 Plan 03 Complete — 3 of 3 plans done
+Last activity: 2026-03-03 — Plan 03 complete (WatchlistCard type badge + /tv/[id] routing + media type filter row + client-side filtering)
 
-Progress: [████░░░░░░] 24% (v0.4 Phase 10 in progress, 1/3 plans done)
+Progress: [████░░░░░░] 30% (v0.4 Phase 10 complete, 3/3 plans done)
 
 ## Accumulated Context
 
@@ -45,6 +45,10 @@ Key decisions for v0.4 (from research):
 - [Phase 10-01]: watchlistKeys.check 4-segment key — independent cache entries per media type (tmdbId + mediaType)
 - [Phase 10-01]: useRemoveFromWatchlist filters tmdbIds cache by both tmdbId AND mediaType to avoid removing sibling-type entries
 - [Phase 10-01]: entryMediaType stored in onMutate context for rollback fidelity
+- [Phase 10-03]: Client-side filtering (no status arg to useWatchlist) ensures cards stay stable during status changes — WLUX-02
+- [Phase 10-03]: Both TV and Movie cards use unified dark badge style (bg-black/70) — no color distinction for library context
+- [Phase 10-03]: Undo toast re-add includes mediaType from item to correctly restore TV entries
+- [Phase 10-03]: motion key combines activeTab + mediaFilter for correct stagger animation reset on filter change
 
 ### Pending Todos
 
@@ -62,6 +66,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Phase 10 TV Watchlisting + Watchlist UX — Plan 01 complete (media-type-aware watchlist layer + mediaType prop threading)
+Stopped at: Phase 10 TV Watchlisting + Watchlist UX — Plan 03 complete (all 3 plans done)
 Resume file: None
-Next step: Continue Phase 10 — Plan 02 (TV show detail page) and Plan 03 (watchlist UX enhancements)
+Next step: Phase 11 or new milestone planning
