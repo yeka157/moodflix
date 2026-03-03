@@ -79,7 +79,7 @@ function MarqueeFallback({ posters }: { posters: ShowcasePoster[] }) {
     <div className="relative py-24 overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 mb-12">
         <div className="text-center">
-          <h2 className="text-4xl lg:text-5xl font-bold tracking-tight mb-4">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-4">
             Trending Now
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">

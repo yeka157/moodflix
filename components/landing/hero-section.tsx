@@ -72,11 +72,11 @@ function StaticHero({ backdropUrl, actionHref }: HeroSectionProps) {
             <Sparkles className="w-4 h-4" />
             AI-Powered Movie Discovery
           </div>
-          <h1 className="text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight mb-6 leading-[1.08]">
+          <h1 className="text-3xl sm:text-4xl lg:text-6xl xl:text-7xl font-bold tracking-tight mb-6 leading-[1.08]">
             Discover movies that match your{" "}
             <span style={{ color: "oklch(0.637 0.237 25.331)" }}>mood</span>
           </h1>
-          <p className="text-lg lg:text-xl text-muted-foreground mb-10 leading-relaxed max-w-lg">
+          <p className="text-base sm:text-lg lg:text-xl text-muted-foreground mb-10 leading-relaxed max-w-lg">
             Tell our AI how you&apos;re feeling and get personalized movie
             recommendations instantly. Build your library, track what
             you&apos;ve watched, and never miss a great film.
@@ -99,7 +99,9 @@ function StaticHero({ backdropUrl, actionHref }: HeroSectionProps) {
             </Button>
           </div>
         </div>
-        <MockupFrame />
+        <div className="hidden lg:block flex-1 w-full max-w-lg lg:max-w-none">
+          <MockupFrame />
+        </div>
       </div>
     </section>
   );
@@ -383,7 +385,7 @@ function ScrollPinnedHero({ backdropUrl, actionHref }: HeroSectionProps) {
 
               {/* Headline */}
               <motion.h1
-                className="text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight mb-6 leading-[1.08]"
+                className="text-3xl sm:text-4xl lg:text-6xl xl:text-7xl font-bold tracking-tight mb-6 leading-[1.08]"
                 style={{ opacity: headlineOpacity, y: headlineY }}
               >
                 Discover movies that match your{" "}
@@ -394,7 +396,7 @@ function ScrollPinnedHero({ backdropUrl, actionHref }: HeroSectionProps) {
 
               {/* Subline */}
               <motion.p
-                className="text-lg lg:text-xl text-muted-foreground mb-10 leading-relaxed max-w-lg"
+                className="text-base sm:text-lg lg:text-xl text-muted-foreground mb-10 leading-relaxed max-w-lg"
                 style={{ opacity: sublineOpacity, y: sublineY }}
               >
                 Tell our AI how you&apos;re feeling and get personalized movie
@@ -425,9 +427,9 @@ function ScrollPinnedHero({ backdropUrl, actionHref }: HeroSectionProps) {
               </motion.div>
             </div>
 
-            {/* Right: Mockup */}
+            {/* Right: Mockup — hidden on mobile to ensure hero text fits viewport */}
             <motion.div
-              className="flex-1 w-full max-w-lg lg:max-w-none"
+              className="hidden lg:flex flex-1 w-full max-w-lg lg:max-w-none"
               style={{ opacity: mockupOpacity, x: mockupX }}
             >
               <MockupFrame />
