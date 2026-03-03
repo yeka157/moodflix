@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { getTrendingTV, discoverKoreanDramas, discoverChineseDramas, getTopRatedTV } from "@/lib/tmdb";
 import { normalizeTVShow } from "@/types/tv";
-import { SeriesContent } from "@/components/series/series-content";
-import { SeriesGridContent } from "@/components/series/series-grid-content";
+import { SeriesPageContent } from "@/components/series/series-page-content";
 
 export const metadata: Metadata = {
   title: "Series",
@@ -32,21 +31,12 @@ export default async function SeriesPage() {
         </p>
       </div>
 
-      <SeriesContent
+      <SeriesPageContent
         trending={trending}
         korean={korean}
         chinese={chinese}
         topRated={topRated}
       />
-
-      <div className="mt-12 mb-8">
-        <h2 className="text-2xl font-bold tracking-tight">Browse All</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Filter and sort all TV shows
-        </p>
-      </div>
-
-      <SeriesGridContent />
     </div>
   );
 }
