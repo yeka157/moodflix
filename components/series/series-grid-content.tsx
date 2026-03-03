@@ -217,6 +217,7 @@ export function SeriesGridContent() {
           <MovieGrid
             movies={paddedShows}
             hrefPrefix="/tv/"
+            mediaType="tv"
             sentinelRef={sentinelRef}
             isFetchingMore={discoverQuery.isFetchingNextPage}
             readOnly

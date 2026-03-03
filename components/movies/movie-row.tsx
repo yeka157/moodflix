@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import type { Movie } from "@/types/movie";
+import type { MediaType } from "@/types/media";
 import { MovieCard } from "./movie-card";
 import { MovieCardSkeleton } from "./movie-card-skeleton";
 
@@ -13,7 +14,7 @@ interface MovieRowProps {
   isUpdating?: boolean;
   onMovieClick?: (movie: Movie) => void;
   hrefPrefix?: string;
-  mediaType?: "movie" | "tv";
+  mediaType?: MediaType;
   readOnly?: boolean;
 }
 
@@ -130,6 +131,7 @@ export function MovieRow({
                     href={resolvedHrefPrefix ? `/${movie.media_type ?? mediaType}/${movie.id}` : undefined}
                     onClick={resolvedHrefPrefix ? undefined : onMovieClick}
                     readOnly={readOnly}
+                    mediaType={mediaType}
                   />
                 </div>
               ))}

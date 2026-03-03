@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import type { Movie } from "@/types/movie";
+import type { MediaType } from "@/types/media";
 import { MovieCard } from "./movie-card";
 import { MovieCardSkeleton } from "./movie-card-skeleton";
 
@@ -10,12 +11,13 @@ interface MovieGridProps {
   isLoading?: boolean;
   onMovieClick?: (movie: Movie) => void;
   hrefPrefix?: string;
+  mediaType?: MediaType;
   sentinelRef?: ((node: HTMLDivElement | null) => void) | React.RefObject<HTMLDivElement | null>;
   isFetchingMore?: boolean;
   readOnly?: boolean;
 }
 
-export function MovieGrid({ movies, isLoading = false, onMovieClick, hrefPrefix, sentinelRef, isFetchingMore, readOnly = false }: MovieGridProps) {
+export function MovieGrid({ movies, isLoading = false, onMovieClick, hrefPrefix, mediaType = "movie", sentinelRef, isFetchingMore, readOnly = false }: MovieGridProps) {
   if (isLoading) {
     return (
       // Columns: 2 (375px) | 3 (640px) | 4 (768px) | 5 (1024px) | 6 (1280px+) — WCAG verified
@@ -47,6 +49,7 @@ export function MovieGrid({ movies, isLoading = false, onMovieClick, hrefPrefix,
                 href={hrefPrefix ? `${hrefPrefix}${movie.id}` : undefined}
                 onClick={hrefPrefix ? undefined : onMovieClick}
                 readOnly={readOnly}
+                mediaType={mediaType}
               />
             </motion.div>
           ),

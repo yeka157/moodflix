@@ -7,6 +7,7 @@ import { Star, Bookmark, CircleCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Movie } from "@/types/movie";
 import type { WatchlistStatus } from "@/types/watchlist";
+import type { MediaType } from "@/types/media";
 import { cn, getPosterUrl } from "@/lib/utils";
 import { GENRES } from "@/lib/constants";
 import {
@@ -29,6 +30,7 @@ interface MovieCardProps {
   onClick?: (movie: Movie) => void;
   href?: string;
   readOnly?: boolean;
+  mediaType?: MediaType;
 }
 
 export function MovieCard({
@@ -38,6 +40,7 @@ export function MovieCard({
   onClick,
   href,
   readOnly = false,
+  mediaType = "movie",
 }: MovieCardProps) {
   const year = movie.release_date?.slice(0, 4) || "N/A";
   const rating = movie.vote_average.toFixed(1);
@@ -51,7 +54,9 @@ export function MovieCard({
   const removeMutation = useRemoveFromWatchlist();
   const statusMutation = useUpdateWatchlistStatus();
 
-  const entry = tmdbEntries?.find((e) => e.tmdbId === movie.id);
+  const entry = tmdbEntries?.find(
+    (e) => e.tmdbId === movie.id && e.mediaType === mediaType,
+  );
   const status: WatchlistStatus | null = entry?.status ?? null;
   const isWantToWatch = status === "want_to_watch";
   const isWatched = status === "watched";
@@ -74,7 +79,7 @@ export function MovieCard({
     if (isWantToWatch && entry) {
       // Remove from library
       removeMutation.mutate(
-        { id: entry.id, tmdbId: movie.id },
+        { id: entry.id, tmdbId: movie.id, mediaType },
         {
           onSuccess: (result) => {
             if (result.error) {
@@ -89,6 +94,7 @@ export function MovieCard({
                       title: movie.title,
                       posterPath: movie.poster_path,
                       status: "want_to_watch",
+                      mediaType,
                     }),
                 },
                 duration: 5000,
@@ -108,6 +114,7 @@ export function MovieCard({
           title: movie.title,
           posterPath: movie.poster_path,
           status: "want_to_watch",
+          mediaType,
         },
         {
           onSuccess: (result) => {
@@ -127,7 +134,7 @@ export function MovieCard({
     if (isWatched && entry) {
       // Remove from library
       removeMutation.mutate(
-        { id: entry.id, tmdbId: movie.id },
+        { id: entry.id, tmdbId: movie.id, mediaType },
         {
           onSuccess: (result) => {
             if (result.error) {
@@ -142,6 +149,7 @@ export function MovieCard({
                       title: movie.title,
                       posterPath: movie.poster_path,
                       status: "watched",
+                      mediaType,
                     }),
                 },
                 duration: 5000,
@@ -161,6 +169,7 @@ export function MovieCard({
           title: movie.title,
           posterPath: movie.poster_path,
           status: "watched",
+          mediaType,
         },
         {
           onSuccess: (result) => {
