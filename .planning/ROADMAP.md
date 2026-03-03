@@ -155,7 +155,7 @@ Plans:
 | 8. Landing Page Revamp | v0.3 | 4/4 | Complete | 2026-02-27 |
 | 9. Schema Migration | v0.4 | Complete    | 2026-03-02 | 2026-03-01 |
 | 10. TV Watchlisting & Watchlist UX | 3/3 | Complete    | 2026-03-03 | - |
-| 10.1. Fix UI for Mobile View | 2/2 | Complete   | 2026-03-03 | - |
+| 10.1. Fix UI for Mobile View | 2/2 | Complete    | 2026-03-03 | - |
 | 11. Discovery UX | v0.4 | 0/TBD | Not started | - |
 | 12. AI Polish | v0.4 | 0/TBD | Not started | - |
 | 13. My Top 100 | v0.4 | 0/TBD | Not started | - |
