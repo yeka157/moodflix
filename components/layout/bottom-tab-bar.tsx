@@ -14,7 +14,7 @@ const navLinks = [
   },
   {
     href: "/discover",
-    label: "Discover",
+    label: "Movies",
     icon: Compass,
     exact: false,
   },
