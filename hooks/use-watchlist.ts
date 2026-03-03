@@ -23,7 +23,8 @@ export const watchlistKeys = {
   list: (status?: WatchlistStatus) =>
     [...watchlistKeys.all, "list", status ?? "all"] as const,
   tmdbIds: () => [...watchlistKeys.all, "tmdbIds"] as const,
-  check: (tmdbId: number) => [...watchlistKeys.all, "check", tmdbId] as const,
+  check: (tmdbId: number, mediaType: MediaType = "movie") =>
+    [...watchlistKeys.all, "check", tmdbId, mediaType] as const,
 };
 
 export function useWatchlist(status?: WatchlistStatus) {
@@ -46,10 +47,10 @@ export function useWatchlistTmdbIds() {
   });
 }
 
-export function useWatchlistCheck(tmdbId: number) {
+export function useWatchlistCheck(tmdbId: number, mediaType: MediaType = "movie") {
   return useQuery({
-    queryKey: watchlistKeys.check(tmdbId),
-    queryFn: () => getWatchlistItemByTmdbId(tmdbId),
+    queryKey: watchlistKeys.check(tmdbId, mediaType),
+    queryFn: () => getWatchlistItemByTmdbId(tmdbId, mediaType),
     enabled: tmdbId > 0,
     staleTime: 30_000,
     gcTime: 5 * 60 * 1000,
@@ -83,11 +84,12 @@ export function useAddToWatchlist() {
       );
 
       // Optimistically set check cache for instant detail modal updates
+      const itemMediaType = (newItem.mediaType ?? "movie") as MediaType;
       const previousCheck = queryClient.getQueryData<WatchlistItem | null>(
-        watchlistKeys.check(newItem.tmdbId),
+        watchlistKeys.check(newItem.tmdbId, itemMediaType),
       );
       queryClient.setQueryData<WatchlistItem>(
-        watchlistKeys.check(newItem.tmdbId),
+        watchlistKeys.check(newItem.tmdbId, itemMediaType),
         {
           id: "",
           userId: "",
@@ -96,13 +98,13 @@ export function useAddToWatchlist() {
           posterPath: newItem.posterPath,
           status: newItem.status ?? "want_to_watch",
           rating: null,
-          mediaType: (newItem.mediaType ?? "movie") as MediaType,
+          mediaType: itemMediaType,
           addedAt: new Date().toISOString(),
           watchedAt: null,
         },
       );
 
-      return { previousTmdbIds, previousCheck };
+      return { previousTmdbIds, previousCheck, itemMediaType };
     },
     onError: (_err, newItem, context) => {
       if (context?.previousTmdbIds) {
@@ -112,8 +114,9 @@ export function useAddToWatchlist() {
         );
       }
       if (context?.previousCheck !== undefined) {
+        const itemMediaType = context.itemMediaType ?? ((newItem.mediaType ?? "movie") as MediaType);
         queryClient.setQueryData(
-          watchlistKeys.check(newItem.tmdbId),
+          watchlistKeys.check(newItem.tmdbId, itemMediaType),
           context.previousCheck,
         );
       }
@@ -128,25 +131,31 @@ export function useRemoveFromWatchlist() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (params: { id: string; tmdbId: number }) =>
+    mutationFn: (params: { id: string; tmdbId: number; mediaType?: MediaType }) =>
       removeFromWatchlist(params.id),
     onMutate: async (params) => {
       await queryClient.cancelQueries({ queryKey: watchlistKeys.all });
 
-      // Update tmdbIds cache
+      const itemMediaType = params.mediaType ?? "movie";
+
+      // Update tmdbIds cache — filter by both tmdbId AND mediaType
       const previousTmdbIds = queryClient.getQueryData<WatchlistTmdbEntry[]>(
         watchlistKeys.tmdbIds(),
       );
       queryClient.setQueryData<WatchlistTmdbEntry[]>(
         watchlistKeys.tmdbIds(),
-        (old) => old?.filter((entry) => entry.tmdbId !== params.tmdbId) ?? [],
+        (old) =>
+          old?.filter(
+            (entry) =>
+              !(entry.tmdbId === params.tmdbId && entry.mediaType === itemMediaType),
+          ) ?? [],
       );
 
-      // Clear check cache
+      // Clear check cache — media-type-aware key
       const previousCheck = queryClient.getQueryData<WatchlistItem | null>(
-        watchlistKeys.check(params.tmdbId),
+        watchlistKeys.check(params.tmdbId, itemMediaType),
       );
-      queryClient.setQueryData(watchlistKeys.check(params.tmdbId), null);
+      queryClient.setQueryData(watchlistKeys.check(params.tmdbId, itemMediaType), null);
 
       // Remove from list caches
       const listKeys = [
@@ -164,7 +173,7 @@ export function useRemoveFromWatchlist() {
         );
       }
 
-      return { previousTmdbIds, previousCheck, previousLists };
+      return { previousTmdbIds, previousCheck, previousLists, itemMediaType };
     },
     onError: (_err, params, context) => {
       if (context?.previousTmdbIds) {
@@ -174,8 +183,9 @@ export function useRemoveFromWatchlist() {
         );
       }
       if (context?.previousCheck !== undefined) {
+        const itemMediaType = context.itemMediaType ?? (params.mediaType ?? "movie");
         queryClient.setQueryData(
-          watchlistKeys.check(params.tmdbId),
+          watchlistKeys.check(params.tmdbId, itemMediaType),
           context.previousCheck,
         );
       }
@@ -216,20 +226,25 @@ export function useUpdateWatchlistStatus() {
           ) ?? [],
       );
 
-      // Update check cache if it exists for this item's tmdbId
-      const tmdbId = previousTmdbIds?.find((e) => e.id === params.id)?.tmdbId;
+      // Update check cache if it exists for this item's tmdbId + mediaType
+      const matchedEntry = previousTmdbIds?.find((e) => e.id === params.id);
+      const tmdbId = matchedEntry?.tmdbId;
+      const entryMediaType = (matchedEntry?.mediaType ?? "movie") as MediaType;
       let previousCheck: WatchlistItem | null | undefined;
       if (tmdbId) {
         previousCheck = queryClient.getQueryData<WatchlistItem | null>(
-          watchlistKeys.check(tmdbId),
+          watchlistKeys.check(tmdbId, entryMediaType),
         );
         if (previousCheck) {
-          queryClient.setQueryData<WatchlistItem>(watchlistKeys.check(tmdbId), {
-            ...previousCheck,
-            status: params.status,
-            watchedAt:
-              params.status === "watched" ? new Date().toISOString() : null,
-          });
+          queryClient.setQueryData<WatchlistItem>(
+            watchlistKeys.check(tmdbId, entryMediaType),
+            {
+              ...previousCheck,
+              status: params.status,
+              watchedAt:
+                params.status === "watched" ? new Date().toISOString() : null,
+            },
+          );
         }
       }
 
@@ -301,7 +316,7 @@ export function useUpdateWatchlistStatus() {
         },
       );
 
-      return { previousTmdbIds, previousCheck, previousLists, tmdbId };
+      return { previousTmdbIds, previousCheck, previousLists, tmdbId, entryMediaType };
     },
     onError: (_err, params, context) => {
       if (context?.previousTmdbIds) {
@@ -311,8 +326,9 @@ export function useUpdateWatchlistStatus() {
         );
       }
       if (context?.tmdbId && context?.previousCheck !== undefined) {
+        const entryMediaType = context.entryMediaType ?? "movie";
         queryClient.setQueryData(
-          watchlistKeys.check(context.tmdbId),
+          watchlistKeys.check(context.tmdbId, entryMediaType),
           context.previousCheck,
         );
       }
@@ -339,21 +355,23 @@ export function useRateWatchlistItem() {
     onMutate: async (params) => {
       await queryClient.cancelQueries({ queryKey: watchlistKeys.all });
 
-      // Find tmdbId from tmdbIds cache for check cache update
+      // Find tmdbId and mediaType from tmdbIds cache for check cache update
       const previousTmdbIds = queryClient.getQueryData<WatchlistTmdbEntry[]>(
         watchlistKeys.tmdbIds(),
       );
-      const tmdbId = previousTmdbIds?.find((e) => e.id === params.id)?.tmdbId;
+      const matchedEntry = previousTmdbIds?.find((e) => e.id === params.id);
+      const tmdbId = matchedEntry?.tmdbId;
+      const entryMediaType = (matchedEntry?.mediaType ?? "movie") as MediaType;
 
       // Update check cache if exists
       let previousCheck: WatchlistItem | null | undefined;
       if (tmdbId) {
         previousCheck = queryClient.getQueryData<WatchlistItem | null>(
-          watchlistKeys.check(tmdbId),
+          watchlistKeys.check(tmdbId, entryMediaType),
         );
         if (previousCheck) {
           queryClient.setQueryData<WatchlistItem>(
-            watchlistKeys.check(tmdbId),
+            watchlistKeys.check(tmdbId, entryMediaType),
             { ...previousCheck, rating: params.rating },
           );
         }
@@ -380,12 +398,13 @@ export function useRateWatchlistItem() {
         );
       }
 
-      return { previousCheck, previousLists, tmdbId };
+      return { previousCheck, previousLists, tmdbId, entryMediaType };
     },
     onError: (_err, _params, context) => {
       if (context?.tmdbId && context?.previousCheck !== undefined) {
+        const entryMediaType = context.entryMediaType ?? "movie";
         queryClient.setQueryData(
-          watchlistKeys.check(context.tmdbId),
+          watchlistKeys.check(context.tmdbId, entryMediaType),
           context.previousCheck,
         );
       }

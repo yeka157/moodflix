@@ -6,6 +6,8 @@ export type WatchlistStatus = "want_to_watch" | "watched";
 
 export type WatchlistFilterStatus = WatchlistStatus | "all";
 
+export type WatchlistMediaFilter = "all" | "movie" | "tv";
+
 export type WatchlistItem = {
   id: string;
   userId: string;

@@ -83,6 +83,7 @@ export async function getWatchlistTmdbIds(): Promise<WatchlistTmdbEntry[]> {
 
 export async function getWatchlistItemByTmdbId(
   tmdbId: number,
+  mediaType: MediaType = "movie",
 ): Promise<WatchlistItem | null> {
   const userId = await getAuthUserId();
   if (!userId) return null;
@@ -90,7 +91,13 @@ export async function getWatchlistItemByTmdbId(
   const rows = await db
     .select()
     .from(watchlist)
-    .where(and(eq(watchlist.userId, userId), eq(watchlist.tmdbId, tmdbId)))
+    .where(
+      and(
+        eq(watchlist.userId, userId),
+        eq(watchlist.tmdbId, tmdbId),
+        eq(watchlist.mediaType, mediaType),
+      ),
+    )
     .limit(1);
 
   return rows.length > 0 ? serializeItem(rows[0]) : null;
