@@ -27,8 +27,8 @@ Requirements for v0.4 Watchlist & Polish milestone. Each maps to roadmap phases.
 ### Discovery UX
 
 - [ ] **DISC-01**: TV series page has a search bar for searching TV shows (BACKLOG-31)
-- [ ] **DISC-02**: Sidebar nav label "Discover" renamed to "Movies" (route /discover unchanged) (BACKLOG-31)
-- [ ] **DISC-03**: TMDB rating displayed as "X.X/10" format instead of ambiguous star rating — only shown when vote_count > 10 (BACKLOG-25)
+- [x] **DISC-02**: Sidebar nav label "Discover" renamed to "Movies" (route /discover unchanged) (BACKLOG-31)
+- [x] **DISC-03**: TMDB rating displayed as "X.X/10" format instead of ambiguous star rating — only shown when vote_count > 10 (BACKLOG-25)
 
 ### AI Polish
 
@@ -103,8 +103,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | WLUX-02 | Phase 10 | Complete |
 | WLUX-03 | Phase 10 | Complete |
 | DISC-01 | Phase 11 | Pending |
-| DISC-02 | Phase 11 | Pending |
-| DISC-03 | Phase 11 | Pending |
+| DISC-02 | Phase 11 | Complete |
+| DISC-03 | Phase 11 | Complete |
 | AIPOL-01 | Phase 12 | Pending |
 | AIPOL-02 | Phase 12 | Pending |
 | AIPOL-03 | Phase 12 | Pending |

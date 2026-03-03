@@ -113,7 +113,7 @@ Plans:
   1. The `/series` page has a search bar — typing a query returns matching TV shows, replacing the browse rows while the query is active
   2. The sidebar navigation item that links to `/discover` reads "Movies" (not "Discover") — the route `/discover` itself is unchanged
   3. TMDB ratings on movie and TV detail pages display as "X.X/10" — the rating is hidden when `vote_count` is 10 or fewer
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
 - [ ] 11-01-PLAN.md — Sidebar label rename + rating format change
@@ -160,6 +160,6 @@ Plans:
 | 9. Schema Migration | v0.4 | Complete    | 2026-03-02 | 2026-03-01 |
 | 10. TV Watchlisting & Watchlist UX | 3/3 | Complete    | 2026-03-03 | - |
 | 10.1. Fix UI for Mobile View | 2/2 | Complete    | 2026-03-03 | - |
-| 11. Discovery UX | v0.4 | 0/TBD | Not started | - |
+| 11. Discovery UX | 1/2 | In Progress|  | - |
 | 12. AI Polish | v0.4 | 0/TBD | Not started | - |
 | 13. My Top 100 | v0.4 | 0/TBD | Not started | - |

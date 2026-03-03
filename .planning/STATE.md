@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Users can discover movies and TV shows that match their mood and manage what they've watched — the library and discovery experience must feel instant and intuitive.
-**Current focus:** v0.4 Phase 10.1 — Fix UI for Mobile View
+**Current focus:** v0.4 Phase 11 — Discovery UX
 
 ## Current Position
 
-Phase: 10.1 of 13 (Fix UI for Mobile View)
-Plan: All plans complete
-Status: Phase 10.1 Complete — all 2 plans done
-Last activity: 2026-03-03 — Plan 01 complete (hero responsive typography + MockupFrame hidden on mobile + marquee poster rows split into distinct halves)
+Phase: 11 of 13 (Discovery UX)
+Plan: 01 of 2 complete
+Status: Phase 11 In Progress — 1/2 plans done
+Last activity: 2026-03-03 — Plan 01 complete (sidebar + bottom tab bar "Discover" → "Movies"; detail page ratings X.X/10 with vote_count guard)
 
-Progress: [████░░░░░░] 35% (v0.4 Phase 10.1 complete, 2/2 plans done)
+Progress: [████░░░░░░] 38% (v0.4 Phase 11 in progress, 1/2 plans done)
 
 ## Accumulated Context
 
@@ -55,6 +55,8 @@ Key decisions for v0.4 (from research):
 - [Phase 10.1-01]: Hide MockupFrame on mobile (hidden lg:flex/block) rather than scale — decorative only, flex-col stacking pushes CTAs off-screen on h-screen
 - [Phase 10.1-01]: Hero responsive scale: text-3xl sm:text-4xl lg:text-6xl xl:text-7xl — applies to both StaticHero and ScrollPinnedHero code paths
 - [Phase 10.1-01]: MarqueeFallback row split: firstHalf/secondHalf via Math.ceil; reversed fallback when < 4 posters ensures second row has visually distinct content
+- [Phase 11-discovery-ux]: Nav label-only change: /discover route path, Compass icon, and aria-label attributes unchanged
+- [Phase 11-discovery-ux]: Rating badge hidden when vote_count <= 10; text-only X.X/10 numeric format with no star symbol
 
 ### Pending Todos
 
@@ -73,6 +75,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Phase 10.1 Fix UI for Mobile View — Plan 01 complete (hero responsive typography + marquee poster row split), all Phase 10.1 plans complete
+Stopped at: Phase 11 Discovery UX — Plan 01 complete (nav relabel + rating format)
 Resume file: None
-Next step: Phase 11 Discovery UX
+Next step: Phase 11 Plan 02
