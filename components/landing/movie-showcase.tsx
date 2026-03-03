@@ -72,8 +72,13 @@ function PosterCard({ title, posterUrl }: ShowcasePoster) {
 }
 
 function MarqueeFallback({ posters }: { posters: ShowcasePoster[] }) {
-  const row1 = [...posters, ...posters];
-  const row2 = [...posters, ...posters];
+  const half = Math.ceil(posters.length / 2);
+  const firstHalf = posters.slice(0, half);
+  const secondHalf =
+    posters.length >= 4 ? posters.slice(half) : [...posters].reverse();
+  // Each row doubles for seamless CSS marquee loop
+  const row1 = [...firstHalf, ...firstHalf];
+  const row2 = [...secondHalf, ...secondHalf];
 
   return (
     <div className="relative py-24 overflow-hidden">
