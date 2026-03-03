@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { geminiModel } from "@/lib/ai";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { db } from "@/drizzle";
-import { watchlist, aiRecommendations } from "@/drizzle/schema";
+import { watchlist, aiRecommendations, aiConversations } from "@/drizzle/schema";
 import { eq, and, or, ne, isNull, desc, sql } from "drizzle-orm";
 import { GENRES, TV_GENRES } from "@/lib/constants";
 
@@ -185,6 +185,17 @@ Keep responses concise: 2-4 sentences. Be warm and conversational.`;
                 userId,
                 prompt: moodPrompt,
                 recommendations: validatedParams,
+              })
+              .catch(() => {
+                // Non-critical: silently fail
+              });
+
+            // Log full conversation (fire-and-forget)
+            db.insert(aiConversations)
+              .values({
+                userId,
+                prompt: moodPrompt,
+                messages: [...uiMessages, { role: "assistant", parts: [{ type: "text", text: `Suggested: ${validatedParams.genres.map((g) => g.name).join(", ")}` }] }],
               })
               .catch(() => {
                 // Non-critical: silently fail
