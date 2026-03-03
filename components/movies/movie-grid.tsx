@@ -39,10 +39,10 @@ export function MovieGrid({ movies, isLoading = false, onMovieClick, hrefPrefix,
           ) : (
             <motion.div
               key={movie.id}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.45, ease: [0.25, 0.1, 0.25, 1] }}
             >
               <MovieCard
                 movie={movie}

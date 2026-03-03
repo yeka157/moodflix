@@ -119,7 +119,7 @@ export function WatchlistCard({ item }: { item: WatchlistItem }) {
   const tapAnimation = prefersReducedMotion ? {} : { scale: 0.85 };
   const ratingSpring = prefersReducedMotion
     ? {}
-    : { initial: { scale: 1.3 }, animate: { scale: 1 }, transition: { type: "spring" as const, stiffness: 400, damping: 10 } };
+    : { initial: { scale: 1.3 }, animate: { scale: 1 }, transition: { type: "spring" as const, stiffness: 300, damping: 20 } };
 
   return (
     <div className="flex gap-3 rounded-lg border border-border/50 bg-card p-3 transition-colors hover:border-border">

@@ -599,7 +599,7 @@ export function MovieDetailModal({ movie, onClose, readOnly = false, mediaType =
                                 key={`like-${watchlistItem.rating === 1}`}
                                 initial={!prefersReducedMotion && watchlistItem.rating === 1 ? { scale: 1.3 } : false}
                                 animate={{ scale: 1 }}
-                                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                                transition={{ type: "spring", stiffness: 300, damping: 20 }}
                                 className="flex items-center justify-center"
                               >
                                 <ThumbsUp
@@ -631,7 +631,7 @@ export function MovieDetailModal({ movie, onClose, readOnly = false, mediaType =
                                 key={`dislike-${watchlistItem.rating === -1}`}
                                 initial={!prefersReducedMotion && watchlistItem.rating === -1 ? { scale: 1.3 } : false}
                                 animate={{ scale: 1 }}
-                                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                                transition={{ type: "spring", stiffness: 300, damping: 20 }}
                                 className="flex items-center justify-center"
                               >
                                 <ThumbsDown

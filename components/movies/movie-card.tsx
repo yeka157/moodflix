@@ -69,7 +69,7 @@ export function MovieCard({
     removeMutation.isPending ||
     statusMutation.isPending;
 
-  const tapAnimation = prefersReducedMotion ? {} : { scale: 0.85 };
+  const tapAnimation = prefersReducedMotion ? {} : { scale: 0.92 };
 
   const handleBookmarkClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -225,7 +225,7 @@ export function MovieCard({
                   key={`bookmark-${isWantToWatch}`}
                   initial={!prefersReducedMotion && isWantToWatch ? { scale: 0.5, opacity: 0 } : false}
                   animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 22 }}
                   className="flex items-center justify-center"
                 >
                   <Bookmark
@@ -270,7 +270,7 @@ export function MovieCard({
                 key={`check-${isWatched}`}
                 initial={!prefersReducedMotion && isWatched ? { scale: 0.5, opacity: 0 } : false}
                 animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                transition={{ type: "spring", stiffness: 300, damping: 22 }}
                 className="flex items-center justify-center"
               >
                 <CircleCheck
@@ -329,8 +329,8 @@ export function MovieCard({
     return (
       <Link href={href} className={cn("group relative cursor-pointer block", className)}>
         <motion.div
-          whileHover={{ scale: 1.05 }}
-          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          whileHover={{ scale: 1.04 }}
+          transition={{ type: "spring", stiffness: 200, damping: 25 }}
         >
           {cardContent}
         </motion.div>
@@ -341,8 +341,8 @@ export function MovieCard({
   return (
     <motion.div
       className={cn("group relative cursor-pointer", className)}
-      whileHover={{ scale: 1.05 }}
-      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      whileHover={{ scale: 1.04 }}
+      transition={{ type: "spring", stiffness: 200, damping: 25 }}
       onClick={() => onClick?.(movie)}
     >
       {cardContent}
