@@ -6,6 +6,7 @@ import {
   discoverKoreanDramas,
   discoverChineseDramas,
   discoverTV,
+  searchTV,
 } from "@/lib/tmdb";
 
 export async function GET(request: NextRequest) {
@@ -13,6 +14,13 @@ export async function GET(request: NextRequest) {
     const { searchParams } = request.nextUrl;
     const category = searchParams.get("category");
     const page = Number(searchParams.get("page") ?? "1");
+
+    const query = searchParams.get("query");
+
+    if (query) {
+      const data = await searchTV(query, page);
+      return Response.json(data);
+    }
 
     const action = searchParams.get("action");
     const genre = searchParams.get("genre");

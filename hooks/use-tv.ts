@@ -19,6 +19,7 @@ export const tvKeys = {
   details: (id: number) => [...tvKeys.all, "details", id] as const,
   discover: (params: DiscoverTVParams) => [...tvKeys.all, "discover", params] as const,
   genre: (genreIds: string) => [...tvKeys.all, "genre", genreIds] as const,
+  search: (query: string) => [...tvKeys.all, "search", query] as const,
 };
 
 async function fetchTVCategory(category: TVCategory): Promise<Movie[]> {
@@ -127,6 +128,29 @@ export function useDiscoverTV(params: DiscoverTVParams) {
       lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,
     staleTime: 10 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
+    placeholderData: keepPreviousData,
+  });
+}
+
+async function fetchTVSearch(query: string, page: number): Promise<TVListResponse> {
+  const res = await fetch(`/api/tv?query=${encodeURIComponent(query)}&page=${page}`);
+  if (!res.ok) throw new Error("Failed to search TV shows");
+  return res.json();
+}
+
+export function useTVSearchInfinite(query: string) {
+  return useInfiniteQuery({
+    queryKey: [...tvKeys.search(query), "infinite"],
+    queryFn: async ({ pageParam }) => {
+      const data = await fetchTVSearch(query, pageParam);
+      return { ...data, results: data.results.map(normalizeTVShow) };
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,
+    enabled: query.length >= 2,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
     placeholderData: keepPreviousData,
   });
 }

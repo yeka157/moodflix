@@ -57,6 +57,14 @@ export async function searchMovies(query: string, page = 1) {
   });
 }
 
+export async function searchTV(query: string, page = 1) {
+  return tmdbFetch<TVListResponse>("/search/tv", {
+    query,
+    page: String(page),
+    include_adult: "false",
+  });
+}
+
 export async function getMovieDetails(id: number) {
   return tmdbFetch<MovieDetailsWithExtras>(`/movie/${id}`, {
     append_to_response: "credits,watch/providers",
