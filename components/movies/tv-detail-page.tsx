@@ -3,9 +3,25 @@
 import { useState } from "react";
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
+import { toast } from "sonner";
+import {
+  Bookmark,
+  CircleCheck,
+  ThumbsUp,
+  ThumbsDown,
+  Loader2,
+  ExternalLink,
+} from "lucide-react";
 import type { TVDetailsWithExtras, TVSeason } from "@/types/tv";
 import type { WatchProviderResult } from "@/types/movie";
-import { getBackdropUrl } from "@/lib/utils";
+import {
+  useWatchlistCheck,
+  useAddToWatchlist,
+  useRemoveFromWatchlist,
+  useUpdateWatchlistStatus,
+  useRateWatchlistItem,
+} from "@/hooks/use-watchlist";
+import { cn, getBackdropUrl } from "@/lib/utils";
 import { TMDB_IMAGE_BASE, PROVIDER_URLS, TV_GENRES, GENRES } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -163,6 +179,96 @@ export function TVDetailPageContent({
   const creatorNames = creators.map((c) => c.name).join(", ");
   const cast = details.credits?.cast?.slice(0, 15) ?? [];
 
+  const { data: watchlistItem, isLoading: isCheckingWatchlist } = useWatchlistCheck(
+    details.id,
+    "tv",
+  );
+  const addMutation = useAddToWatchlist();
+  const removeMutation = useRemoveFromWatchlist();
+  const statusMutation = useUpdateWatchlistStatus();
+  const rateMutation = useRateWatchlistItem();
+
+  const isInLibrary = !!watchlistItem;
+  const isWantToWatch = watchlistItem?.status === "want_to_watch";
+  const isWatched = watchlistItem?.status === "watched";
+
+  const tapAnimation = prefersReducedMotion ? {} : { scale: 0.85 };
+
+  const handleAddToLibrary = () => {
+    addMutation.mutate(
+      {
+        tmdbId: details.id,
+        title: details.name,
+        posterPath: details.poster_path,
+        status: "want_to_watch",
+        mediaType: "tv",
+      },
+      {
+        onSuccess: (result) => {
+          if (result.error) toast.error(result.error);
+        },
+        onError: () => toast.error("Failed to add to library"),
+      },
+    );
+  };
+
+  const handleMarkWatched = () => {
+    if (isWantToWatch && watchlistItem) {
+      statusMutation.mutate({ id: watchlistItem.id, status: "watched" });
+    } else {
+      addMutation.mutate(
+        {
+          tmdbId: details.id,
+          title: details.name,
+          posterPath: details.poster_path,
+          status: "watched",
+          mediaType: "tv",
+        },
+        {
+          onSuccess: (result) => {
+            if (result.error) toast.error(result.error);
+          },
+          onError: () => toast.error("Failed to mark as watched"),
+        },
+      );
+    }
+  };
+
+  const handleRemove = () => {
+    if (!watchlistItem) return;
+    const previousStatus = watchlistItem.status;
+    removeMutation.mutate(
+      { id: watchlistItem.id, tmdbId: watchlistItem.tmdbId, mediaType: "tv" },
+      {
+        onSuccess: (result) => {
+          if (result.error) {
+            toast.error(result.error);
+          } else {
+            toast("Removed from library", {
+              action: {
+                label: "Undo",
+                onClick: () =>
+                  addMutation.mutate({
+                    tmdbId: details.id,
+                    title: details.name,
+                    posterPath: details.poster_path,
+                    status: previousStatus,
+                    mediaType: "tv",
+                  }),
+              },
+              duration: 5000,
+            });
+          }
+        },
+      },
+    );
+  };
+
+  const handleMoveToWantToWatch = () => {
+    if (!watchlistItem) return;
+    statusMutation.mutate({ id: watchlistItem.id, status: "want_to_watch" });
+  };
+
   // Genre IDs can include both TV-specific and shared genres
   const genres = details.genres ?? [];
 
@@ -196,7 +302,7 @@ export function TVDetailPageContent({
   }
 
   return (
-    <div className="min-h-screen pb-16 md:pb-8">
+    <div className="min-h-screen pb-32 md:pb-24">
       {/* Full-bleed backdrop */}
       <motion.div
         className="relative w-full h-[50vh] min-h-[300px] overflow-hidden"
@@ -376,11 +482,154 @@ export function TVDetailPageContent({
           <SeasonsSection seasons={details.seasons} />
         )}
 
-        {/* TV watchlist notice */}
-        <p className="text-xs text-muted-foreground/60 italic pb-4">
-          TV show tracking coming soon
-        </p>
       </motion.div>
+
+      {/* Fixed bottom action bar */}
+      <div className="fixed bottom-16 md:bottom-0 left-0 right-0 md:left-[60px] z-40 bg-background/90 backdrop-blur-md border-t border-border/50 px-4 py-3">
+        <div className="max-w-5xl mx-auto flex items-center gap-2 flex-wrap">
+          {isCheckingWatchlist ? (
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Loading...</span>
+            </div>
+          ) : (
+            <>
+              {/* Add to Library / In Library */}
+              {isWantToWatch ? (
+                <Button
+                  size="sm"
+                  className="gap-2"
+                  onClick={handleRemove}
+                  disabled={removeMutation.isPending}
+                >
+                  {removeMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Bookmark className="h-4 w-4 fill-current" />
+                  )}
+                  In Library
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={isWatched ? handleMoveToWantToWatch : handleAddToLibrary}
+                  disabled={addMutation.isPending || statusMutation.isPending}
+                >
+                  {addMutation.isPending || statusMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Bookmark className="h-4 w-4" />
+                  )}
+                  {isWatched ? "Want to Watch" : "Add to Library"}
+                </Button>
+              )}
+
+              {/* Mark as Watched */}
+              {isWatched ? (
+                <Button
+                  size="sm"
+                  className="gap-2 bg-green-600 hover:bg-green-700 text-white"
+                  onClick={handleRemove}
+                  disabled={removeMutation.isPending}
+                >
+                  {removeMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <CircleCheck className="h-4 w-4 fill-current" />
+                  )}
+                  Watched
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={handleMarkWatched}
+                  disabled={addMutation.isPending || statusMutation.isPending}
+                >
+                  {statusMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <CircleCheck className="h-4 w-4" />
+                  )}
+                  Mark Watched
+                </Button>
+              )}
+
+              {/* Like / Dislike — only when in library */}
+              {isInLibrary && watchlistItem && (
+                <>
+                  <motion.div whileTap={tapAnimation}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        const newRating = watchlistItem.rating === 1 ? null : 1;
+                        rateMutation.mutate({ id: watchlistItem.id, rating: newRating });
+                      }}
+                      disabled={rateMutation.isPending}
+                      aria-label="Like"
+                      className={cn(
+                        "transition-colors duration-200",
+                        watchlistItem.rating === 1 && "text-green-500",
+                      )}
+                    >
+                      <ThumbsUp
+                        className={cn(
+                          "h-4 w-4",
+                          watchlistItem.rating === 1 && "fill-green-500",
+                        )}
+                      />
+                    </Button>
+                  </motion.div>
+                  <motion.div whileTap={tapAnimation}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        const newRating = watchlistItem.rating === -1 ? null : -1;
+                        rateMutation.mutate({ id: watchlistItem.id, rating: newRating });
+                      }}
+                      disabled={rateMutation.isPending}
+                      aria-label="Dislike"
+                      className={cn(
+                        "transition-colors duration-200",
+                        watchlistItem.rating === -1 && "text-red-500",
+                      )}
+                    >
+                      <ThumbsDown
+                        className={cn(
+                          "h-4 w-4",
+                          watchlistItem.rating === -1 && "fill-red-500",
+                        )}
+                      />
+                    </Button>
+                  </motion.div>
+                </>
+              )}
+
+              {/* Trailer button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-2 ml-auto"
+                asChild
+              >
+                <a
+                  href={`https://www.youtube.com/results?search_query=${encodeURIComponent(details.name + " official trailer")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Trailer
+                </a>
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
