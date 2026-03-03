@@ -279,7 +279,7 @@ export function MovieDetailModal({ movie, onClose, readOnly = false, mediaType =
   const defaultTab = hasStream ? "stream" : hasRent ? "rent" : "buy";
 
   const { data: watchlistItem, isLoading: isCheckingWatchlist } =
-    useWatchlistCheck(movie?.id ?? 0);
+    useWatchlistCheck(movie?.id ?? 0, mediaType);
   const addMutation = useAddToWatchlist();
   const removeMutation = useRemoveFromWatchlist();
   const statusMutation = useUpdateWatchlistStatus();
@@ -300,6 +300,7 @@ export function MovieDetailModal({ movie, onClose, readOnly = false, mediaType =
         title: movie.title,
         posterPath: movie.poster_path,
         status: "want_to_watch",
+        mediaType,
       },
       {
         onSuccess: (result) => {
@@ -323,6 +324,7 @@ export function MovieDetailModal({ movie, onClose, readOnly = false, mediaType =
           title: movie.title,
           posterPath: movie.poster_path,
           status: "watched",
+          mediaType,
         },
         {
           onSuccess: (result) => {
@@ -338,7 +340,7 @@ export function MovieDetailModal({ movie, onClose, readOnly = false, mediaType =
     if (!watchlistItem || !movie) return;
     const previousStatus = watchlistItem.status;
     removeMutation.mutate(
-      { id: watchlistItem.id, tmdbId: watchlistItem.tmdbId },
+      { id: watchlistItem.id, tmdbId: watchlistItem.tmdbId, mediaType },
       {
         onSuccess: (result) => {
           if (result.error) {
@@ -353,6 +355,7 @@ export function MovieDetailModal({ movie, onClose, readOnly = false, mediaType =
                     title: movie.title,
                     posterPath: movie.poster_path,
                     status: previousStatus,
+                    mediaType,
                   }),
               },
               duration: 5000,

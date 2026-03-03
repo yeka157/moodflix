@@ -108,7 +108,7 @@ export function MovieDetailPageContent({
   const defaultTab = hasStream ? "stream" : hasRent ? "rent" : "buy";
 
   const { data: watchlistItem, isLoading: isCheckingWatchlist } =
-    useWatchlistCheck(details.id);
+    useWatchlistCheck(details.id, "movie");
   const addMutation = useAddToWatchlist();
   const removeMutation = useRemoveFromWatchlist();
   const statusMutation = useUpdateWatchlistStatus();
@@ -127,6 +127,7 @@ export function MovieDetailPageContent({
         title: details.title,
         posterPath: details.poster_path,
         status: "want_to_watch",
+        mediaType: "movie",
       },
       {
         onSuccess: (result) => {
@@ -147,6 +148,7 @@ export function MovieDetailPageContent({
           title: details.title,
           posterPath: details.poster_path,
           status: "watched",
+          mediaType: "movie",
         },
         {
           onSuccess: (result) => {
@@ -162,7 +164,7 @@ export function MovieDetailPageContent({
     if (!watchlistItem) return;
     const previousStatus = watchlistItem.status;
     removeMutation.mutate(
-      { id: watchlistItem.id, tmdbId: watchlistItem.tmdbId },
+      { id: watchlistItem.id, tmdbId: watchlistItem.tmdbId, mediaType: "movie" },
       {
         onSuccess: (result) => {
           if (result.error) {
@@ -177,6 +179,7 @@ export function MovieDetailPageContent({
                     title: details.title,
                     posterPath: details.poster_path,
                     status: previousStatus,
+                    mediaType: "movie",
                   }),
               },
               duration: 5000,
