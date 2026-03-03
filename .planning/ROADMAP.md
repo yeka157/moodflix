@@ -87,7 +87,12 @@ Plans:
   3. After adding or changing the status of any item from any page, the bookmark/watched icons on all other cards (home, discover, series pages) update without a page refresh
   4. Changing a movie's status on the library page does not remove the card from the current view — the card stays and its flags update in place
   5. Library page shows "All / Movies / TV Shows" filter controls alongside the existing status tabs — selecting "TV Shows" shows only TV entries
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 10-01-PLAN.md — Media-type-aware hooks, actions, and card components (foundation)
+- [ ] 10-02-PLAN.md — TV detail page watchlist action bar + movie page mediaType fixes
+- [ ] 10-03-PLAN.md — Library card routing, type badges, media type filter, client-side filtering
 
 ### Phase 11: Discovery UX
 **Goal**: Users can search for TV shows from the series page, the sidebar label correctly reads "Movies" instead of "Discover", and ratings display as a clear X/10 format throughout the app.
@@ -138,7 +143,7 @@ Plans:
 | 07.1. Bug Fixes & Improvements | v0.3 | 3/3 | Complete | 2026-02-25 |
 | 8. Landing Page Revamp | v0.3 | 4/4 | Complete | 2026-02-27 |
 | 9. Schema Migration | v0.4 | Complete    | 2026-03-02 | 2026-03-01 |
-| 10. TV Watchlisting & Watchlist UX | v0.4 | 0/TBD | Not started | - |
+| 10. TV Watchlisting & Watchlist UX | v0.4 | 0/3 | Not started | - |
 | 11. Discovery UX | v0.4 | 0/TBD | Not started | - |
 | 12. AI Polish | v0.4 | 0/TBD | Not started | - |
 | 13. My Top 100 | v0.4 | 0/TBD | Not started | - |
