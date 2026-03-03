@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 10.1 of 13 (Fix UI for Mobile View)
-Plan: 2 of 3 in current phase
-Status: Phase 10.1 Plan 02 Complete — 2 of 3 plans done
-Last activity: 2026-03-03 — Plan 02 complete (Framer Motion spring configs softened app-wide + sm:px-6 lg:px-8 added to detail page containers)
+Plan: All plans complete
+Status: Phase 10.1 Complete — all 2 plans done
+Last activity: 2026-03-03 — Plan 01 complete (hero responsive typography + MockupFrame hidden on mobile + marquee poster rows split into distinct halves)
 
-Progress: [████░░░░░░] 33% (v0.4 Phase 10.1 in progress, 2/3 plans done)
+Progress: [████░░░░░░] 35% (v0.4 Phase 10.1 complete, 2/2 plans done)
 
 ## Accumulated Context
 
@@ -52,6 +52,9 @@ Key decisions for v0.4 (from research):
 - [Phase 10.1-02]: Spring hover standard: stiffness 200/25 for card hover scales, 300/20-22 for icon pops — one clean settle with no oscillation
 - [Phase 10.1-02]: whileTap on small icon buttons (h-8/w-8) softened to 0.92; larger CTA buttons keep 0.85
 - [Phase 10.1-02]: Detail page padding convention: px-4 sm:px-6 lg:px-8 — md:px-6 was missing the 640-767px breakpoint range
+- [Phase 10.1-01]: Hide MockupFrame on mobile (hidden lg:flex/block) rather than scale — decorative only, flex-col stacking pushes CTAs off-screen on h-screen
+- [Phase 10.1-01]: Hero responsive scale: text-3xl sm:text-4xl lg:text-6xl xl:text-7xl — applies to both StaticHero and ScrollPinnedHero code paths
+- [Phase 10.1-01]: MarqueeFallback row split: firstHalf/secondHalf via Math.ceil; reversed fallback when < 4 posters ensures second row has visually distinct content
 
 ### Pending Todos
 
@@ -70,6 +73,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Phase 10.1 Fix UI for Mobile View — Plan 02 complete (animation spring configs + detail page padding)
+Stopped at: Phase 10.1 Fix UI for Mobile View — Plan 01 complete (hero responsive typography + marquee poster row split), all Phase 10.1 plans complete
 Resume file: None
-Next step: Phase 10.1 Plan 03
+Next step: Phase 11 Discovery UX

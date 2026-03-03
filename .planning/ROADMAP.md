@@ -39,7 +39,7 @@ See: `.planning/milestones/v0.3-ROADMAP.md` for full details.
 
 - [x] **Phase 9: Schema Migration** — Add media_type to watchlist, update unique constraint, add messages column to ai_recommendations, create top_hundred table (completed 2026-03-02)
 - [x] **Phase 10: TV Watchlisting & Watchlist UX** — Full TV watchlist CRUD from the TV detail page, library card routing, type badges, instant sync, and media type filter (completed 2026-03-03)
-- [ ] **Phase 10.1: Fix UI for Mobile View** — Fix hero text crop, duplicate poster rows, rigid animations, and missing padding on mobile
+- [x] **Phase 10.1: Fix UI for Mobile View** — Fix hero text crop, duplicate poster rows, rigid animations, and missing padding on mobile (completed 2026-03-03)
 - [ ] **Phase 11: Discovery UX** — TV series search bar, rename Discover to Movies in sidebar, standardize rating display to X/10 format
 - [ ] **Phase 12: AI Polish** — Origin country filtering for country-specific recommendations, off-topic guardrails, and fire-and-forget conversation logging
 - [ ] **Phase 13: My Top 100** — Personal ranked list of up to 100 movies and TV shows with CRUD and move up/down reordering
@@ -99,11 +99,11 @@ Plans:
 
 **Goal:** The landing page hero text and poster showcase render correctly on mobile, all Framer Motion animations feel smooth and natural, and all content pages have consistent horizontal padding — no cropping, no duplicates, no rigid motion, no edge-to-edge content.
 **Depends on:** Phase 10
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 10.1-01-PLAN.md — Landing page hero text responsive fix + marquee duplicate poster fix
-- [ ] 10.1-02-PLAN.md — App-wide Framer Motion spring tuning + detail page padding consistency
+- [x] 10.1-01-PLAN.md — Landing page hero text responsive fix + marquee duplicate poster fix
+- [x] 10.1-02-PLAN.md — App-wide Framer Motion spring tuning + detail page padding consistency
 
 ### Phase 11: Discovery UX
 **Goal**: Users can search for TV shows from the series page, the sidebar label correctly reads "Movies" instead of "Discover", and ratings display as a clear X/10 format throughout the app.
@@ -155,7 +155,7 @@ Plans:
 | 8. Landing Page Revamp | v0.3 | 4/4 | Complete | 2026-02-27 |
 | 9. Schema Migration | v0.4 | Complete    | 2026-03-02 | 2026-03-01 |
 | 10. TV Watchlisting & Watchlist UX | 3/3 | Complete    | 2026-03-03 | - |
-| 10.1. Fix UI for Mobile View | 1/2 | In Progress|  | - |
+| 10.1. Fix UI for Mobile View | 2/2 | Complete   | 2026-03-03 | - |
 | 11. Discovery UX | v0.4 | 0/TBD | Not started | - |
 | 12. AI Polish | v0.4 | 0/TBD | Not started | - |
 | 13. My Top 100 | v0.4 | 0/TBD | Not started | - |
