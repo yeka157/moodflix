@@ -99,7 +99,7 @@ Plans:
 
 **Goal:** The landing page hero text and poster showcase render correctly on mobile, all Framer Motion animations feel smooth and natural, and all content pages have consistent horizontal padding — no cropping, no duplicates, no rigid motion, no edge-to-edge content.
 **Depends on:** Phase 10
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
 - [ ] 10.1-01-PLAN.md — Landing page hero text responsive fix + marquee duplicate poster fix
@@ -155,7 +155,7 @@ Plans:
 | 8. Landing Page Revamp | v0.3 | 4/4 | Complete | 2026-02-27 |
 | 9. Schema Migration | v0.4 | Complete    | 2026-03-02 | 2026-03-01 |
 | 10. TV Watchlisting & Watchlist UX | 3/3 | Complete    | 2026-03-03 | - |
-| 10.1. Fix UI for Mobile View | v0.4 | 0/2 | Not started | - |
+| 10.1. Fix UI for Mobile View | 1/2 | In Progress|  | - |
 | 11. Discovery UX | v0.4 | 0/TBD | Not started | - |
 | 12. AI Polish | v0.4 | 0/TBD | Not started | - |
 | 13. My Top 100 | v0.4 | 0/TBD | Not started | - |

@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Users can discover movies and TV shows that match their mood and manage what they've watched — the library and discovery experience must feel instant and intuitive.
-**Current focus:** v0.4 Phase 10 — TV Watchlisting + Watchlist UX
+**Current focus:** v0.4 Phase 10.1 — Fix UI for Mobile View
 
 ## Current Position
 
-Phase: 10 of 13 (TV Watchlisting + Watchlist UX)
-Plan: 3 of 3 in current phase
-Status: Phase 10 Plan 03 Complete — 3 of 3 plans done
-Last activity: 2026-03-03 — Plan 03 complete (WatchlistCard type badge + /tv/[id] routing + media type filter row + client-side filtering)
+Phase: 10.1 of 13 (Fix UI for Mobile View)
+Plan: 2 of 3 in current phase
+Status: Phase 10.1 Plan 02 Complete — 2 of 3 plans done
+Last activity: 2026-03-03 — Plan 02 complete (Framer Motion spring configs softened app-wide + sm:px-6 lg:px-8 added to detail page containers)
 
-Progress: [████░░░░░░] 30% (v0.4 Phase 10 complete, 3/3 plans done)
+Progress: [████░░░░░░] 33% (v0.4 Phase 10.1 in progress, 2/3 plans done)
 
 ## Accumulated Context
 
@@ -49,6 +49,9 @@ Key decisions for v0.4 (from research):
 - [Phase 10-03]: Both TV and Movie cards use unified dark badge style (bg-black/70) — no color distinction for library context
 - [Phase 10-03]: Undo toast re-add includes mediaType from item to correctly restore TV entries
 - [Phase 10-03]: motion key combines activeTab + mediaFilter for correct stagger animation reset on filter change
+- [Phase 10.1-02]: Spring hover standard: stiffness 200/25 for card hover scales, 300/20-22 for icon pops — one clean settle with no oscillation
+- [Phase 10.1-02]: whileTap on small icon buttons (h-8/w-8) softened to 0.92; larger CTA buttons keep 0.85
+- [Phase 10.1-02]: Detail page padding convention: px-4 sm:px-6 lg:px-8 — md:px-6 was missing the 640-767px breakpoint range
 
 ### Pending Todos
 
@@ -67,6 +70,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Phase 10 TV Watchlisting + Watchlist UX — Plan 03 complete (all 3 plans done)
+Stopped at: Phase 10.1 Fix UI for Mobile View — Plan 02 complete (animation spring configs + detail page padding)
 Resume file: None
-Next step: Phase 11 or new milestone planning
+Next step: Phase 10.1 Plan 03
