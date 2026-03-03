@@ -56,6 +56,7 @@ export function WatchlistCard({ item }: { item: WatchlistItem }) {
   const rateMutation = useRateWatchlistItem();
   const prefersReducedMotion = useReducedMotion();
 
+  const href = item.mediaType === "tv" ? `/tv/${item.tmdbId}` : `/movie/${item.tmdbId}`;
   const config = STATUS_CONFIG[item.status];
 
   const handleStatusChange = (value: string) => {
@@ -77,7 +78,7 @@ export function WatchlistCard({ item }: { item: WatchlistItem }) {
   const handleRemove = () => {
     const previousStatus = item.status;
     removeMutation.mutate(
-      { id: item.id, tmdbId: item.tmdbId },
+      { id: item.id, tmdbId: item.tmdbId, mediaType: item.mediaType },
       {
         onSuccess: (result) => {
           if (result.error) {
@@ -92,6 +93,7 @@ export function WatchlistCard({ item }: { item: WatchlistItem }) {
                     title: item.title,
                     posterPath: item.posterPath,
                     status: previousStatus,
+                    mediaType: item.mediaType,
                   }),
               },
               duration: 5000,
@@ -122,7 +124,7 @@ export function WatchlistCard({ item }: { item: WatchlistItem }) {
   return (
     <div className="flex gap-3 rounded-lg border border-border/50 bg-card p-3 transition-colors hover:border-border">
       {/* Poster — links to detail page */}
-      <Link href={`/movie/${item.tmdbId}`} className="relative h-28 w-[75px] shrink-0 overflow-hidden rounded-md bg-muted block">
+      <Link href={href} className="relative h-28 w-[75px] shrink-0 overflow-hidden rounded-md bg-muted block">
         <Image
           src={getPosterUrl(item.posterPath)}
           alt={`${item.title} poster`}
@@ -130,13 +132,16 @@ export function WatchlistCard({ item }: { item: WatchlistItem }) {
           className="object-cover transition-opacity hover:opacity-80"
           sizes="75px"
         />
+        <span className="absolute top-1 left-1 z-10 rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none tracking-wide uppercase bg-black/70 text-white/90 backdrop-blur-sm">
+          {item.mediaType === "tv" ? "TV" : "Movie"}
+        </span>
       </Link>
 
       {/* Info */}
       <div className="flex min-w-0 flex-1 flex-col justify-between">
         <div className="space-y-1">
           <h3 className="text-sm font-semibold line-clamp-1">
-            <Link href={`/movie/${item.tmdbId}`} className="hover:text-primary transition-colors">
+            <Link href={href} className="hover:text-primary transition-colors">
               {item.title}
             </Link>
           </h3>
