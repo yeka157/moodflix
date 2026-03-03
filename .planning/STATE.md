@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Users can discover movies and TV shows that match their mood and manage what they've watched — the library and discovery experience must feel instant and intuitive.
-**Current focus:** v0.4 Phase 09.1.1 — Homepage TV Series Integration
+**Current focus:** v0.4 Phase 10 — TV Watchlisting + Watchlist UX
 
 ## Current Position
 
-Phase: 09.1.1 of 13 (Homepage TV Series Integration)
-Plan: 1 of 1 in current phase
-Status: Phase 09.1.1 Complete — all 1 plans done
-Last activity: 2026-03-02 — Plan 01 complete (Homepage TV trending row + Browse Series feature card)
+Phase: 10 of 13 (TV Watchlisting + Watchlist UX)
+Plan: 1 of 3 in current phase
+Status: Phase 10 Plan 01 Complete — 1 of 3 plans done
+Last activity: 2026-03-03 — Plan 01 complete (media-type-aware watchlist layer + mediaType prop on MovieCard/Row/Grid)
 
-Progress: [████░░░░░░] 21% (v0.4 Phase 09.1.1 complete, all 1/1 plans done)
+Progress: [████░░░░░░] 24% (v0.4 Phase 10 in progress, 1/3 plans done)
 
 ## Accumulated Context
 
@@ -42,6 +42,9 @@ Key decisions for v0.4 (from research):
 - [Phase 09.1.1-01]: TV trending fetch in existing Promise.all with .catch() guard — parallel execution, resilient to TMDB TV API failures
 - [Phase 09.1.1-01]: trendingTV prop optional with default [] on HomeMovies — graceful degradation; TV row hidden when array is empty
 - [Phase 09.1.1-01]: mediaType="tv" (not hrefPrefix) on TV MovieRow — normalizeTVShow doesn't set media_type, so mediaType prop is routing fallback
+- [Phase 10-01]: watchlistKeys.check 4-segment key — independent cache entries per media type (tmdbId + mediaType)
+- [Phase 10-01]: useRemoveFromWatchlist filters tmdbIds cache by both tmdbId AND mediaType to avoid removing sibling-type entries
+- [Phase 10-01]: entryMediaType stored in onMutate context for rollback fidelity
 
 ### Pending Todos
 
@@ -58,7 +61,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-02
-Stopped at: Phase 09.1.1 Homepage TV Series Integration — Plan 01 complete (Trending TV Shows row + Browse Series feature card on homepage)
+Last session: 2026-03-03
+Stopped at: Phase 10 TV Watchlisting + Watchlist UX — Plan 01 complete (media-type-aware watchlist layer + mediaType prop threading)
 Resume file: None
-Next step: Phase 09.1.1 complete. User wants to run /gsd:new-milestone — decide whether to close v0.4 (phases 10-13 still pending) or start a post-v0.4 milestone. Run in fresh context window.
+Next step: Continue Phase 10 — Plan 02 (TV show detail page) and Plan 03 (watchlist UX enhancements)

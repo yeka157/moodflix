@@ -13,14 +13,14 @@ Requirements for v0.4 Watchlist & Polish milestone. Each maps to roadmap phases.
 - [ ] **TVWL-02**: User can mark a TV show as "watched" from the TV detail page
 - [ ] **TVWL-03**: User can like/dislike a TV show from the TV detail page
 - [ ] **TVWL-04**: User can remove a TV show from their library
-- [ ] **TVWL-05**: Library cards for TV shows link to /tv/[id] (not /movie/[id])
+- [x] **TVWL-05**: Library cards for TV shows link to /tv/[id] (not /movie/[id])
 - [ ] **TVWL-06**: Library cards display a "TV" or "Movie" type badge for content identification
 - [x] **TVWL-07**: Schema migration adds media_type column to watchlist table with DEFAULT 'movie' backfill
 - [x] **TVWL-08**: Unique constraint updated to (userId, tmdbId, mediaType) — movie and TV with same TMDB ID can coexist
 
 ### Watchlist UX
 
-- [ ] **WLUX-01**: Watchlist state (bookmark/watched icons) updates instantly on all movie/TV cards across pages after a mutation — no refresh needed (BACKLOG-16)
+- [x] **WLUX-01**: Watchlist state (bookmark/watched icons) updates instantly on all movie/TV cards across pages after a mutation — no refresh needed (BACKLOG-16)
 - [ ] **WLUX-02**: Adding to watchlist or changing status does not remove the card from the current grid view — flags sync in place (BACKLOG-23)
 - [ ] **WLUX-03**: Library page has a media type filter (All / Movies / TV Shows) alongside existing status tabs (BACKLOG-32)
 
@@ -95,11 +95,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TVWL-02 | Phase 10 | Pending |
 | TVWL-03 | Phase 10 | Pending |
 | TVWL-04 | Phase 10 | Pending |
-| TVWL-05 | Phase 10 | Pending |
+| TVWL-05 | Phase 10 | Complete |
 | TVWL-06 | Phase 10 | Pending |
 | TVWL-07 | Phase 9 | Complete |
 | TVWL-08 | Phase 9 | Complete |
-| WLUX-01 | Phase 10 | Pending |
+| WLUX-01 | Phase 10 | Complete |
 | WLUX-02 | Phase 10 | Pending |
 | WLUX-03 | Phase 10 | Pending |
 | DISC-01 | Phase 11 | Pending |
