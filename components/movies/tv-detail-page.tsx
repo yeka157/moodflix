@@ -337,7 +337,7 @@ export function TVDetailPageContent({
 
       {/* Main content */}
       <motion.div
-        className="max-w-5xl mx-auto px-4 md:px-6 space-y-6 mt-6"
+        className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 mt-6"
         initial="hidden"
         animate="visible"
         variants={contentVariants}

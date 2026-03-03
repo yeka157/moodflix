@@ -237,7 +237,7 @@ export function MovieDetailPageContent({
 
       {/* Main content — poster + info layout */}
       <motion.div
-        className="max-w-5xl mx-auto px-4 md:px-6 -mt-32 relative z-10"
+        className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-32 relative z-10"
         initial="hidden"
         animate="visible"
         variants={contentVariants}
