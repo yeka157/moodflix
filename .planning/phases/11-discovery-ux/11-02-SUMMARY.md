@@ -75,7 +75,7 @@ Each task was committed atomically:
 1. **Task 1: Add searchTV function, API route handler, and TanStack Query hook** - `294aa8d` (feat)
 2. **Task 2: Create SeriesPageContent wrapper and integrate search into the series page** - `f39d175` (feat)
 
-**Plan metadata:** (to be recorded after final commit)
+**Plan metadata:** `260c5e6` (docs: complete plan)
 
 ## Files Created/Modified
 - `lib/tmdb.ts` - Added `searchTV(query, page)` function using `/search/tv` TMDB endpoint
