@@ -360,9 +360,11 @@ export function TVDetailPageContent({
               {details.number_of_episodes} Episodes
             </Badge>
           )}
-          <Badge variant="secondary" className="text-sm px-3 py-1">
-            {rating} ★
-          </Badge>
+          {(details.vote_count ?? 0) > 10 && (
+            <Badge variant="secondary" className="text-sm px-3 py-1">
+              {rating}/10
+            </Badge>
+          )}
           {country && (
             <Badge variant="outline" className="text-sm px-3 py-1">
               {country}
