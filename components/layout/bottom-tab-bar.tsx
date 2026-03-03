@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Compass, Tv, Bookmark } from "lucide-react";
+import { Home, Compass, Tv, Bookmark, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
@@ -29,6 +29,12 @@ const navLinks = [
     label: "Library",
     icon: Bookmark,
     exact: false,
+  },
+  {
+    href: "/settings",
+    label: "Settings",
+    icon: Settings,
+    exact: true,
   },
 ];
 

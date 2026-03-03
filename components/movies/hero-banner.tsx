@@ -59,7 +59,7 @@ export function HeroBanner({ movie }: HeroBannerProps) {
 
       {/* Content — staggered children */}
       <motion.div
-        className="absolute bottom-0 left-0 right-0 p-4 sm:p-8 space-y-3 sm:space-y-4"
+        className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 lg:px-8 pb-6 sm:pb-8 space-y-3 sm:space-y-4"
         variants={shouldReduceMotion ? undefined : containerVariants}
         initial={shouldReduceMotion ? false : "hidden"}
         animate={shouldReduceMotion ? undefined : "visible"}

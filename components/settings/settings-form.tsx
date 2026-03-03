@@ -6,7 +6,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { LogOut } from "lucide-react";
 import { updateDisplayName } from "@/actions/profile";
+import { logout } from "@/actions/auth";
 import type { SettingsFormValues } from "@/types/settings";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -33,6 +35,13 @@ export function SettingsForm({
   avatarUrl,
 }: SettingsFormProps) {
   const [isPending, startTransition] = useTransition();
+  const [isLoggingOut, startLogoutTransition] = useTransition();
+
+  function handleLogout() {
+    startLogoutTransition(async () => {
+      await logout();
+    });
+  }
 
   const {
     register,
@@ -59,6 +68,7 @@ export function SettingsForm({
   const initial = displayName.charAt(0).toUpperCase();
 
   return (
+    <>
     <Card>
       <CardHeader>
         <CardTitle className="text-lg">Profile</CardTitle>
@@ -109,5 +119,23 @@ export function SettingsForm({
         </form>
       </CardContent>
     </Card>
+
+      <Card className="border-destructive/20">
+        <CardHeader>
+          <CardTitle className="text-lg">Account</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Button
+            variant="destructive"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            className="gap-2"
+          >
+            <LogOut className="size-4" />
+            {isLoggingOut ? "Logging out..." : "Log out"}
+          </Button>
+        </CardContent>
+      </Card>
+    </>
   );
 }

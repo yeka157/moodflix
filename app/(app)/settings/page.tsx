@@ -37,7 +37,7 @@ export default async function SettingsPage() {
     (user.user_metadata?.avatar_url as string | undefined) ?? null;
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-8 max-w-2xl mx-auto">
+    <div className="px-4 sm:px-6 lg:px-8 py-8 max-w-2xl mx-auto space-y-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
         <p className="mt-1 text-sm text-muted-foreground">
