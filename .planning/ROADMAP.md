@@ -129,7 +129,11 @@ Plans:
   3. Typing "I want something warm like Studio Ghibli" (cultural reference, not off-topic) produces Animation genre suggestions — it is not refused or hedged
   4. After a genre suggestion is made, a row appears in the `ai_recommendations` table with the full conversation array in the `messages` column — inspectable in Drizzle Studio
   5. Streaming TTFB (time to first byte) is not measurably slower after adding conversation logging — the DB insert is fire-and-forget
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 12-01-PLAN.md — Off-topic guardrails + origin country detection in AI route
+- [ ] 12-02-PLAN.md — Origin country propagation through UI, hooks, API routes, and TMDB calls
 
 ### Phase 13: My Top 100
 **Goal**: Users can build and maintain a personal ranked list of up to 100 favorite movies and TV shows, accessible from within the library.
@@ -161,5 +165,5 @@ Plans:
 | 10. TV Watchlisting & Watchlist UX | 3/3 | Complete    | 2026-03-03 | - |
 | 10.1. Fix UI for Mobile View | 2/2 | Complete    | 2026-03-03 | - |
 | 11. Discovery UX | 2/2 | Complete    | 2026-03-03 | - |
-| 12. AI Polish | v0.4 | 0/TBD | Not started | - |
+| 12. AI Polish | v0.4 | 0/2 | Not started | - |
 | 13. My Top 100 | v0.4 | 0/TBD | Not started | - |
