@@ -84,6 +84,47 @@ export const aiConversations = pgTable(
   ]
 );
 
+// TMDB cache: category list responses (trending, popular, etc.) with 24h TTL
+export const tmdbCache = pgTable("tmdb_cache", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  key: text("key").notNull().unique(),
+  category: text("category").notNull(),
+  mediaType: mediaTypeEnum("media_type").notNull(),
+  data: jsonb("data").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+// TMDB media: individual movie/TV details (permanent cache)
+export const tmdbMedia = pgTable(
+  "tmdb_media",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tmdbId: integer("tmdb_id").notNull(),
+    mediaType: mediaTypeEnum("media_type").notNull(),
+    title: text("title").notNull(),
+    overview: text("overview"),
+    posterPath: text("poster_path"),
+    backdropPath: text("backdrop_path"),
+    releaseDate: text("release_date"),
+    voteAverage: text("vote_average"),
+    voteCount: integer("vote_count"),
+    genreIds: jsonb("genre_ids"),
+    popularity: text("popularity"),
+    runtime: integer("runtime"),
+    numberOfSeasons: integer("number_of_seasons"),
+    detailsData: jsonb("details_data"),
+    ratingsUpdatedAt: timestamp("ratings_updated_at", { withTimezone: true }),
+    detailsFetchedAt: timestamp("details_fetched_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+  },
+  (table) => [
+    unique("tmdb_media_tmdb_media_unique").on(table.tmdbId, table.mediaType),
+  ]
+);
+
 // NEW: top_hundred for My Top 100 feature (dense integer rank 1-100)
 export const topHundred = pgTable(
   "top_hundred",
