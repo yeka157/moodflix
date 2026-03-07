@@ -7,7 +7,9 @@ import {
   timestamp,
   jsonb,
   unique,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 export const watchlistStatusEnum = pgEnum("watchlist_status", [
   "want_to_watch",
@@ -62,15 +64,25 @@ export const aiRecommendations = pgTable("ai_recommendations", {
 });
 
 // NEW: ai_conversations for analytics logging (fire-and-forget, backend only)
-export const aiConversations = pgTable("ai_conversations", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => profiles.id, { onDelete: "cascade" }),
-  messages: jsonb("messages").notNull(),
-  prompt: text("prompt"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-});
+export const aiConversations = pgTable(
+  "ai_conversations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    conversationId: text("conversation_id"),
+    messages: jsonb("messages").notNull(),
+    prompt: text("prompt"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("ai_conversations_conversation_id_unique")
+      .on(table.conversationId)
+      .where(sql`${table.conversationId} IS NOT NULL`),
+  ]
+);
 
 // NEW: top_hundred for My Top 100 feature (dense integer rank 1-100)
 export const topHundred = pgTable(

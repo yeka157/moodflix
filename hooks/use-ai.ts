@@ -1,15 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import type { UIMessage } from "@ai-sdk/react";
 import type { GenreSuggestion } from "@/types/ai";
 
-const transport = new DefaultChatTransport({
-  api: "/api/ai/recommend",
-});
-
 export function useMoodChat() {
+  const [conversationId] = useState(() => crypto.randomUUID());
+
+  const transport = new DefaultChatTransport({
+    api: "/api/ai/recommend",
+    body: { conversationId },
+  });
+
   const chat = useChat({ transport });
 
   const genreSuggestion = extractLatestGenreSuggestion(chat.messages);

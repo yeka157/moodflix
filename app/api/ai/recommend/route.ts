@@ -94,12 +94,17 @@ export async function POST(request: Request) {
     // 2. Parse body
     const body: unknown = await request.json();
     const parsed = z
-      .object({ messages: z.array(z.unknown()).min(1) })
+      .object({
+        messages: z.array(z.unknown()).min(1),
+        conversationId: z.string().optional(),
+      })
       .safeParse(body);
 
     if (!parsed.success) {
       return Response.json({ error: "Invalid request" }, { status: 400 });
     }
+
+    const conversationId = parsed.data.conversationId;
 
     // 3. Validate last message length (UIMessages have `parts`, not `content`)
     const uiMessages = parsed.data.messages as Array<{
@@ -260,15 +265,35 @@ Keep responses concise: 2-4 sentences. Be warm and conversational.`;
               });
 
             // Log full conversation (fire-and-forget)
-            db.insert(aiConversations)
-              .values({
-                userId,
-                prompt: moodPrompt,
-                messages: [...uiMessages, { role: "assistant", parts: [{ type: "text", text: `Suggested: ${validatedParams.genres.map((g) => g.name).join(", ")}` }] }],
-              })
-              .catch(() => {
-                // Non-critical: silently fail
-              });
+            const fullMessages = [...uiMessages, { role: "assistant", parts: [{ type: "text", text: `Suggested: ${validatedParams.genres.map((g) => g.name).join(", ")}` }] }];
+
+            if (conversationId) {
+              db.insert(aiConversations)
+                .values({
+                  userId,
+                  prompt: moodPrompt,
+                  messages: fullMessages,
+                  conversationId,
+                })
+                .onConflictDoUpdate({
+                  target: [aiConversations.conversationId],
+                  set: { messages: fullMessages, prompt: moodPrompt, updatedAt: new Date() },
+                })
+                .catch(() => {
+                  // Non-critical: silently fail
+                });
+            } else {
+              // Fallback for old clients without conversationId
+              db.insert(aiConversations)
+                .values({
+                  userId,
+                  prompt: moodPrompt,
+                  messages: fullMessages,
+                })
+                .catch(() => {
+                  // Non-critical: silently fail
+                });
+            }
 
             return {
               ...validatedParams,
