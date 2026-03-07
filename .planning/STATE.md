@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 12.1 of 13 (Quality of Life Improvement)
-Plan: 01 of 1 complete
-Status: Phase 12.1 In Progress
-Last activity: 2026-03-07 — Plan 01 complete (UI quick fixes — ArrowUp icon + mobile back button)
+Plan: 02 of 2 complete
+Status: Phase 12.1 Complete
+Last activity: 2026-03-07 — Plan 02 complete (conversationId-based AI conversation upsert logging)
 
-Progress: [█████████░] 94%
+Progress: [██████████] 100%
 
 ## Accumulated Context
 
@@ -83,6 +83,9 @@ Key decisions for v0.4 (from research):
 - [Phase 12.1-01]: ArrowUp icon for AI send button — matches ChatGPT/Claude industry convention
 - [Phase 12.1-01]: size-11 (44px) touch target for mobile back button — meets WCAG minimum
 - [Phase 12.1-01]: Bottom tab bar no-highlight on detail pages confirmed as correct UX (Netflix/Disney+ pattern)
+- [Phase 12.1-02]: useState lazy initializer for conversationId -- avoids React 19 refs-during-render lint error
+- [Phase 12.1-02]: Partial unique index (WHERE conversation_id IS NOT NULL) -- allows nullable column while enforcing uniqueness for upsert target
+- [Phase 12.1-02]: updatedAt column added to aiConversations -- tracks when multi-turn conversations were last updated
 
 ### Pending Todos
 
@@ -103,7 +106,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-07T07:13:30Z
-Stopped at: Completed 12.1-01-PLAN.md
-Resume file: .planning/phases/12.1-quality-of-life-improvement/12.1-01-SUMMARY.md
-Next step: Next plan in Phase 12.1 or Phase 13
+Last session: 2026-03-07T07:11:21Z
+Stopped at: Completed 12.1-02-PLAN.md
+Resume file: .planning/phases/12.1-quality-of-life-improvement/12.1-02-SUMMARY.md
+Next step: Phase 12.2 or Phase 13
