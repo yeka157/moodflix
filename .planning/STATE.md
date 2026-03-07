@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Watchlist & Polish
-status: executing
-stopped_at: Completed 12-01-PLAN.md
-last_updated: "2026-03-07T02:26:26.846Z"
-last_activity: 2026-03-07 — Plan 01 complete (off-topic guardrails and origin country detection in AI route)
+status: completed
+stopped_at: Completed 12-02-PLAN.md
+last_updated: "2026-03-07T02:32:08.660Z"
+last_activity: 2026-03-07 — Plan 02 complete (origin_country threading through full recommendation flow)
 progress:
   total_phases: 8
-  completed_phases: 6
+  completed_phases: 7
   total_plans: 15
-  completed_plans: 14
-  percent: 93
+  completed_plans: 15
+  percent: 100
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 12 of 13 (AI Polish)
-Plan: 01 of 2 complete
-Status: In Progress
-Last activity: 2026-03-07 — Plan 01 complete (off-topic guardrails and origin country detection in AI route)
+Plan: 02 of 2 complete
+Status: Phase 12 Complete
+Last activity: 2026-03-07 — Plan 02 complete (origin_country threading through full recommendation flow)
 
-Progress: [█████████░] 93%
+Progress: [██████████] 100%
 
 ## Accumulated Context
 
@@ -77,6 +77,9 @@ Key decisions for v0.4 (from research):
 - [Phase 11-discovery-ux]: TV search uses hrefPrefix=/tv/ for direct navigation (not drawer/modal) consistent with existing TV card behavior
 - [Phase 12-01]: createUIMessageStream + createUIMessageStreamResponse for off-topic redirects -- zero Gemini cost for obvious non-entertainment queries
 - [Phase 12-01]: Narrow regex pre-check patterns -- only clearly non-entertainment queries (homework, medical, legal, coding, recipes) caught; entertainment-adjacent terms never blocked
+- [Phase 12-02]: COUNTRY_LABELS in lib/constants.ts -- shared map of ISO alpha-2 codes to English adjectives for genre display
+- [Phase 12-02]: originCountry included in TanStack Query keys for cache separation across different country filters
+- [Phase 12]: [Phase 12-02]: COUNTRY_LABELS in lib/constants.ts -- shared map of ISO alpha-2 codes to English adjectives for genre display
 
 ### Pending Todos
 
@@ -94,7 +97,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-07T02:26:26.844Z
-Stopped at: Completed 12-01-PLAN.md
+Last session: 2026-03-07T02:32:04.769Z
+Stopped at: Completed 12-02-PLAN.md
 Resume file: None
-Next step: Phase 12 Plan 02
+Next step: Phase 13

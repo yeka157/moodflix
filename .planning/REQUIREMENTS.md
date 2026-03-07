@@ -34,7 +34,7 @@ Requirements for v0.4 Watchlist & Polish milestone. Each maps to roadmap phases.
 
 - [x] **AIPOL-01**: AI recommendations support origin country filtering — "K-drama comedy" returns Korean TV comedies, not generic TV comedies
 - [x] **AIPOL-02**: AI suggest_genres tool outputs optional origin_country (ISO 3166-1 alpha-2 code) when user requests country-specific content
-- [ ] **AIPOL-03**: Origin country parameter propagates through recommendations page URL to TMDB discover API call
+- [x] **AIPOL-03**: Origin country parameter propagates through recommendations page URL to TMDB discover API call
 - [x] **AIPOL-04**: AI chatbot restricts off-topic queries — redirects non-movie/TV questions back to mood discovery without being hostile
 - [x] **AIPOL-05**: Full AI conversation (all user + assistant messages) logged to database for analytics when genre suggestion is made
 - [x] **AIPOL-06**: AI conversation logging is fire-and-forget — does not add latency to streaming response
@@ -107,7 +107,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DISC-03 | Phase 11 | Complete |
 | AIPOL-01 | Phase 12 | Complete |
 | AIPOL-02 | Phase 12 | Complete |
-| AIPOL-03 | Phase 12 | Pending |
+| AIPOL-03 | Phase 12 | Complete |
 | AIPOL-04 | Phase 12 | Complete |
 | AIPOL-05 | Phase 9 | Complete |
 | AIPOL-06 | Phase 9 | Complete |
