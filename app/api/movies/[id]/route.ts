@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { getMovieDetails } from "@/lib/tmdb";
+import { getCachedMovieDetails } from "@/lib/tmdb-cache";
 import { getCountryFromHeaders } from "@/lib/country";
 
 export async function GET(
@@ -15,7 +15,7 @@ export async function GET(
     }
 
     const country = getCountryFromHeaders(request.headers);
-    const details = await getMovieDetails(movieId);
+    const details = await getCachedMovieDetails(movieId);
 
     const providers =
       details["watch/providers"]?.results?.[country] || null;

@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import type { Metadata } from "next";
 import type { WatchProviderResult } from "@/types/movie";
-import { getMovieDetails, getMovieRecommendations } from "@/lib/tmdb";
+import { getCachedMovieDetails } from "@/lib/tmdb-cache";
+import { getMovieRecommendations } from "@/lib/tmdb";
 import { getCountryFromHeaders } from "@/lib/country";
 import { MovieDetailPageContent } from "@/components/movies/movie-detail-page";
 import { MobileBackButton } from "@/components/layout/mobile-back-button";
@@ -20,7 +21,7 @@ export async function generateMetadata({
   if (isNaN(movieId)) return {};
 
   try {
-    const details = await getMovieDetails(movieId);
+    const details = await getCachedMovieDetails(movieId);
     return {
       title: details.title,
       description: details.overview?.slice(0, 160) ?? undefined,
@@ -46,7 +47,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
   const fetchWithRetry = async () => {
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
-        return await getMovieDetails(movieId);
+        return await getCachedMovieDetails(movieId);
       } catch {
         if (attempt === 1) return null;
         await new Promise((r) => setTimeout(r, 500));

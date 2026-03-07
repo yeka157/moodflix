@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import type { Metadata } from "next";
 import type { WatchProviderResult } from "@/types/movie";
-import { getTVDetails } from "@/lib/tmdb";
+import { getCachedTVDetails } from "@/lib/tmdb-cache";
 import { getCountryFromHeaders } from "@/lib/country";
 import { TVDetailPageContent } from "@/components/movies/tv-detail-page";
 import { MobileBackButton } from "@/components/layout/mobile-back-button";
@@ -20,7 +20,7 @@ export async function generateMetadata({
   if (isNaN(tvId)) return {};
 
   try {
-    const details = await getTVDetails(tvId);
+    const details = await getCachedTVDetails(tvId);
     return {
       title: details.name,
       description: details.overview?.slice(0, 160) ?? undefined,
@@ -43,7 +43,7 @@ export default async function TVPage({ params }: TVPageProps) {
   const requestHeaders = await headers();
   const country = getCountryFromHeaders(requestHeaders);
 
-  const details = await getTVDetails(tvId).catch(() => null);
+  const details = await getCachedTVDetails(tvId).catch(() => null);
   if (!details) notFound();
 
   const watchProviders: WatchProviderResult | null =
