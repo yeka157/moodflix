@@ -5,6 +5,7 @@ import type { WatchProviderResult } from "@/types/movie";
 import { getMovieDetails, getMovieRecommendations } from "@/lib/tmdb";
 import { getCountryFromHeaders } from "@/lib/country";
 import { MovieDetailPageContent } from "@/components/movies/movie-detail-page";
+import { MobileBackButton } from "@/components/layout/mobile-back-button";
 import { TMDB_IMAGE_BASE } from "@/lib/constants";
 
 interface MoviePageProps {
@@ -65,11 +66,14 @@ export default async function MoviePage({ params }: MoviePageProps) {
     details["watch/providers"]?.results?.[country] ?? null;
 
   return (
+    <>
+    <MobileBackButton />
     <MovieDetailPageContent
       details={details}
       watchProviders={watchProviders}
       recommendations={recommendations?.results ?? []}
       country={country}
     />
+    </>
   );
 }

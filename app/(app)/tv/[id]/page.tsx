@@ -5,6 +5,7 @@ import type { WatchProviderResult } from "@/types/movie";
 import { getTVDetails } from "@/lib/tmdb";
 import { getCountryFromHeaders } from "@/lib/country";
 import { TVDetailPageContent } from "@/components/movies/tv-detail-page";
+import { MobileBackButton } from "@/components/layout/mobile-back-button";
 import { TMDB_IMAGE_BASE } from "@/lib/constants";
 
 interface TVPageProps {
@@ -49,10 +50,13 @@ export default async function TVPage({ params }: TVPageProps) {
     details["watch/providers"]?.results?.[country] ?? null;
 
   return (
+    <>
+    <MobileBackButton />
     <TVDetailPageContent
       details={details}
       watchProviders={watchProviders}
       country={country}
     />
+    </>
   );
 }
