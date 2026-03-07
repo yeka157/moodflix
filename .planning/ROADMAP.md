@@ -162,9 +162,14 @@ Plans:
 
 ### Phase 12.3: Push Notifications (INSERTED)
 
-**Goal:** Push notifications to alert users when upcoming movies or TV shows from their watchlist are released. Daily cron job checks TMDB release dates against user watchlist items with "want to watch" status.
+**Goal:** Per-movie release notification opt-in via Web Push API. Bell icon on unreleased movie detail pages lets users subscribe. Daily Vercel Cron checks TMDB release dates and sends browser push notifications to subscribed users. Movies only.
 **Depends on:** Phase 12.2
-**Plans:** TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 12.3-01-PLAN.md — Schema, types, web-push lib, service worker handlers, vercel.json cron
+- [ ] 12.3-02-PLAN.md — Push/notification API routes, client hook, bell icon on movie detail page
+- [ ] 12.3-03-PLAN.md — Cron release-notifications route + end-to-end verification
 
 ### Phase 13: My Top 100
 **Goal**: Users can build and maintain a personal ranked list of up to 100 favorite movies and TV shows, accessible from within the library.
@@ -199,5 +204,5 @@ Plans:
 | 12. AI Polish | 2/2 | Complete    | 2026-03-07 | - |
 | 12.1. Quality of Life Improvement | 2/2 | Complete    | 2026-03-07 | - |
 | 12.2. Content Discovery & AI Shazam | 4/4 | Complete    | 2026-03-07 | - |
-| 12.3. Push Notifications | v0.4 | 0/TBD | Not started | - |
+| 12.3. Push Notifications | v0.4 | 0/3 | Not started | - |
 | 13. My Top 100 | v0.4 | 0/TBD | Not started | - |
