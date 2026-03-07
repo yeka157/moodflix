@@ -7,6 +7,7 @@ export type GenreSuggestion = {
   moodSummary: string;
   confirmed: boolean;
   media_type?: MediaType;
+  origin_country?: string;
 };
 
 export type AiConversation = {

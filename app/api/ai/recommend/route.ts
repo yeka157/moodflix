@@ -1,4 +1,11 @@
-import { streamText, tool, stepCountIs, convertToModelMessages } from "ai";
+import {
+  streamText,
+  tool,
+  stepCountIs,
+  convertToModelMessages,
+  createUIMessageStream,
+  createUIMessageStreamResponse,
+} from "ai";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { geminiModel } from "@/lib/ai";
@@ -31,6 +38,28 @@ function isQuotaOrRateLimitError(err: unknown): boolean {
     return isQuotaOrRateLimitError(err.cause);
   }
   return false;
+}
+
+const OFF_TOPIC_PATTERNS = [
+  /\b(write|draft|compose)\b.*(essay|letter|email|resume|cover letter)/i,
+  /\b(solve|calculate|compute)\b.*(math|equation|problem)/i,
+  /\b(code|program|debug)\b.*(javascript|python|css|html|bug)/i,
+  /\b(recipe|cook|bake|ingredient)/i,
+  /\b(homework|assignment|exam|test\s+prep)/i,
+  /\b(medical|diagnosis|symptom|prescription)/i,
+  /\b(legal|lawsuit|contract|attorney)/i,
+  /\b(translate|translation)\b/i,
+];
+
+const REDIRECT_MESSAGES = [
+  "That's a plot twist I wasn't expecting! I'm your movie mood matchmaker -- what kind of vibe are you feeling tonight?",
+  "Whoa, wrong set! I'm the movie expert around here. Tell me what mood you're in and I'll find the perfect watch.",
+  "Cut! That's not in my script. But I do know a thing or two about finding the perfect movie for your mood. What are you feeling?",
+  "Looks like you wandered onto the wrong soundstage! I'm all about movies and TV -- tell me your mood and I'll roll the perfect pick.",
+];
+
+function isOffTopic(text: string): boolean {
+  return OFF_TOPIC_PATTERNS.some((pattern) => pattern.test(text));
 }
 
 async function getWatchlistContext(userId: string): Promise<string> {
@@ -105,14 +134,32 @@ export async function POST(request: Request) {
       );
     }
 
-    // 5. Get watchlist context for personalization
+    // 5. Off-topic pre-check filter
+    if (isOffTopic(lastMessageText)) {
+      const message =
+        REDIRECT_MESSAGES[Date.now() % REDIRECT_MESSAGES.length];
+
+      const stream = createUIMessageStream({
+        execute: ({ writer }) => {
+          writer.write({
+            type: "text-delta",
+            delta: message,
+            id: crypto.randomUUID(),
+          });
+        },
+      });
+
+      return createUIMessageStreamResponse({ stream, status: 200 });
+    }
+
+    // 6. Get watchlist context for personalization
     const watchlistContext = await getWatchlistContext(user.id);
 
     const watchlistInstruction = watchlistContext
       ? `\nThe user has previously enjoyed these movies: ${watchlistContext}. Consider this for personalization, but don't recommend these exact movies.`
       : "";
 
-    // 6. Build system prompt
+    // 7. Build system prompt
     const systemPrompt = `You are Moodflix AI, a friendly movie and TV show mood expert. Help users find the perfect movies or TV shows by understanding their emotional state.
 
 When you understand the user's mood well enough, call the suggest_genres tool with 1-3 TMDB genres that best match, and set the media_type to "movie" or "tv" based on what fits best. If the user mentions Korean drama, K-drama, C-drama, TV series, shows, or similar terms, set media_type to "tv". Default to "movie" if unclear.
@@ -126,10 +173,25 @@ CRITICAL: You MUST only use genre IDs and names from the lists below. NEVER inve
 Available TMDB movie genres (use these when media_type is "movie"): ${movieGenreList}
 Available TMDB TV genres (use these when media_type is "tv"): ${tvGenreList}
 Shared genres (valid for both movie and TV): Comedy (35), Drama (18), Animation (16), Crime (80), Documentary (99), Family (10751), Mystery (9648), Romance (10749), Western (37)
+
+ORIGIN COUNTRY DETECTION:
+When the user references content from a specific country or culture, include the origin_country field (ISO 3166-1 alpha-2 code) in your suggest_genres call. Examples:
+- "K-drama", "Korean drama" -> origin_country: "KR", media_type: "tv"
+- "anime", "Japanese animation" -> origin_country: "JP"
+- "Bollywood" -> origin_country: "IN"
+- "telenovela" -> origin_country: "MX", media_type: "tv"
+- "Nollywood" -> origin_country: "NG"
+- "British comedy" -> origin_country: "GB"
+- "French cinema" -> origin_country: "FR"
+If you cannot confidently determine an origin country, do NOT include origin_country -- just suggest genres without it.
+
+OFF-TOPIC HANDLING:
+You are ONLY a movie and TV show recommendation assistant. If the user asks about non-entertainment topics, gently redirect them to movie/TV topics with a witty, cinematic response. Do NOT call suggest_genres for off-topic queries.
+However, be BROAD about what counts as entertainment-related. Cultural references (Ghibli, Tarantino), vibes (cozy, intense), real-world events (Oscar winners), actors, directors -- all of these are on-topic.
 ${watchlistInstruction}
 Keep responses concise: 2-4 sentences. Be warm and conversational.`;
 
-    // 7. Convert UIMessages to ModelMessages and stream response
+    // 8. Convert UIMessages to ModelMessages and stream response
     const userId = user.id;
     const modelMessages = await convertToModelMessages(uiMessages as Parameters<typeof convertToModelMessages>[0]);
 
@@ -158,6 +220,13 @@ Keep responses concise: 2-4 sentences. Be warm and conversational.`;
               .enum(["movie", "tv"])
               .describe("Whether to recommend movies or TV shows")
               .default("movie"),
+            origin_country: z
+              .string()
+              .length(2)
+              .optional()
+              .describe(
+                "ISO 3166-1 alpha-2 country code when user requests content from a specific country/culture (e.g., KR for Korean, JP for Japanese)",
+              ),
           }),
           execute: async (params) => {
             // Validate genre IDs against known TMDB genres
@@ -201,7 +270,11 @@ Keep responses concise: 2-4 sentences. Be warm and conversational.`;
                 // Non-critical: silently fail
               });
 
-            return { ...validatedParams, confirmed: true };
+            return {
+              ...validatedParams,
+              origin_country: params.origin_country,
+              confirmed: true,
+            };
           },
         }),
       },
