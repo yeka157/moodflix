@@ -168,3 +168,20 @@ export const GENRE_MOOD_MESSAGES: Record<number, string[]> = {
 };
 
 export const DEFAULT_MOOD_MESSAGE = "For the cinephile with exquisite taste";
+
+export const COUNTRY_LABELS: Record<string, string> = {
+  KR: "Korean",
+  JP: "Japanese",
+  IN: "Indian",
+  MX: "Mexican",
+  NG: "Nigerian",
+  GB: "British",
+  FR: "French",
+  CN: "Chinese",
+  TW: "Taiwanese",
+  TH: "Thai",
+  ES: "Spanish",
+  IT: "Italian",
+  DE: "German",
+  BR: "Brazilian",
+};

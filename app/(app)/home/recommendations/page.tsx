@@ -5,7 +5,7 @@ import { ArrowLeft, Sparkles } from "lucide-react";
 import type { Movie } from "@/types/movie";
 import { discoverMoviesByGenre, discoverTVByGenre } from "@/lib/tmdb";
 import { normalizeTVShow } from "@/types/tv";
-import { GENRES, TV_GENRES } from "@/lib/constants";
+import { GENRES, TV_GENRES, COUNTRY_LABELS } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 import { RecommendationsGrid } from "@/components/ai/recommendations-grid";
 
@@ -18,9 +18,9 @@ export const metadata: Metadata = {
 export default async function RecommendationsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ genres?: string; mood?: string; type?: string }>;
+  searchParams: Promise<{ genres?: string; mood?: string; type?: string; origin_country?: string }>;
 }) {
-  const { genres, mood, type } = await searchParams;
+  const { genres, mood, type, origin_country } = await searchParams;
 
   if (!genres) redirect("/home");
 
@@ -31,12 +31,17 @@ export default async function RecommendationsPage({
     .map((id) => allGenres[id])
     .filter((name): name is string => Boolean(name));
 
+  const countryLabel = origin_country ? COUNTRY_LABELS[origin_country] : undefined;
+  const displayGenreNames = countryLabel
+    ? genreNames.map((name) => `${countryLabel} ${name}`)
+    : genreNames;
+
   let initialMovies: Movie[];
   if (mediaType === "tv") {
-    const tvPage = await discoverTVByGenre(genres);
+    const tvPage = await discoverTVByGenre(genres, 1, origin_country);
     initialMovies = tvPage.results.map(normalizeTVShow);
   } else {
-    const moviePage = await discoverMoviesByGenre(genres);
+    const moviePage = await discoverMoviesByGenre(genres, 1, origin_country);
     initialMovies = moviePage.results;
   }
 
@@ -67,7 +72,7 @@ export default async function RecommendationsPage({
           )}
 
           <div className="flex flex-wrap gap-1.5">
-            {genreNames.map((name) => (
+            {displayGenreNames.map((name) => (
               <Badge
                 key={name}
                 variant="secondary"
@@ -85,6 +90,7 @@ export default async function RecommendationsPage({
         genres={genres}
         initialMovies={initialMovies}
         mediaType={mediaType}
+        originCountry={origin_country}
       />
     </div>
   );

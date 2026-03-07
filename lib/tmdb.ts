@@ -71,13 +71,15 @@ export async function getMovieDetails(id: number) {
   });
 }
 
-export async function discoverMoviesByGenre(genreIds: string, page = 1) {
-  return tmdbFetch<MovieListResponse>("/discover/movie", {
+export async function discoverMoviesByGenre(genreIds: string, page = 1, originCountry?: string) {
+  const params: Record<string, string> = {
     with_genres: genreIds,
     sort_by: "popularity.desc",
     page: String(page),
     include_adult: "false",
-  });
+  };
+  if (originCountry) params.with_origin_country = originCountry;
+  return tmdbFetch<MovieListResponse>("/discover/movie", params);
 }
 
 export async function discoverMovies(
@@ -110,6 +112,7 @@ export async function discoverTV(
     year?: string;
     yearStart?: string;
     yearEnd?: string;
+    originCountry?: string;
     page?: number;
   } = {},
 ) {
@@ -122,6 +125,7 @@ export async function discoverTV(
   if (opts.year) params.first_air_date_year = opts.year;
   if (opts.yearStart) params["first_air_date.gte"] = `${opts.yearStart}-01-01`;
   if (opts.yearEnd) params["first_air_date.lte"] = `${opts.yearEnd}-12-31`;
+  if (opts.originCountry) params.with_origin_country = opts.originCountry;
   return tmdbFetch<TVListResponse>("/discover/tv", params);
 }
 
@@ -189,13 +193,15 @@ export async function discoverChineseDramas(page = 1) {
   });
 }
 
-export async function discoverTVByGenre(genreIds: string, page = 1) {
-  return tmdbFetch<TVListResponse>("/discover/tv", {
+export async function discoverTVByGenre(genreIds: string, page = 1, originCountry?: string) {
+  const params: Record<string, string> = {
     with_genres: genreIds,
     sort_by: "popularity.desc",
     page: String(page),
     include_adult: "false",
-  });
+  };
+  if (originCountry) params.with_origin_country = originCountry;
+  return tmdbFetch<TVListResponse>("/discover/tv", params);
 }
 
 export async function getTVDetails(id: number) {

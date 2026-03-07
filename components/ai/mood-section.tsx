@@ -17,6 +17,7 @@ import {
 import { PromptSuggestion } from "@/components/ui/prompt-suggestion";
 import { Loader } from "@/components/ui/loader";
 import { useMoodChat } from "@/hooks/use-ai";
+import { COUNTRY_LABELS } from "@/lib/constants";
 
 const MOOD_SUGGESTIONS = [
   "I want to feel inspired and motivated",
@@ -66,7 +67,11 @@ export function MoodSection() {
     const genreIds = genreSuggestion.genres.map((g) => g.id).join(",");
     const mood = encodeURIComponent(genreSuggestion.moodSummary);
     const mediaType = genreSuggestion.media_type ?? "movie";
-    router.push(`/home/recommendations?genres=${genreIds}&mood=${mood}&type=${mediaType}`);
+    let url = `/home/recommendations?genres=${genreIds}&mood=${mood}&type=${mediaType}`;
+    if (genreSuggestion.origin_country) {
+      url += `&origin_country=${genreSuggestion.origin_country}`;
+    }
+    router.push(url);
   };
 
   return (
@@ -154,22 +159,29 @@ export function MoodSection() {
                   <Card className="border-primary/30 bg-primary/5 p-4 w-full max-w-sm">
                     <div className="space-y-3 text-center">
                       <div className="flex flex-wrap justify-center gap-1.5">
-                        {genreSuggestion.genres.map((g) => (
-                          <Badge
-                            key={g.id}
-                            variant="secondary"
-                            className="bg-primary/15 text-primary border-primary/20"
-                          >
-                            {g.name}
-                          </Badge>
-                        ))}
+                        {genreSuggestion.genres.map((g) => {
+                          const countryLabel = genreSuggestion.origin_country
+                            ? COUNTRY_LABELS[genreSuggestion.origin_country]
+                            : undefined;
+                          return (
+                            <Badge
+                              key={g.id}
+                              variant="secondary"
+                              className="bg-primary/15 text-primary border-primary/20"
+                            >
+                              {countryLabel ? `${countryLabel} ${g.name}` : g.name}
+                            </Badge>
+                          );
+                        })}
                       </div>
                       <Button
                         onClick={handleShowMovies}
                         className="gap-2 w-full"
                         size="sm"
                       >
-                        Show me movies
+                        {genreSuggestion.media_type === "tv"
+                          ? "Show me TV shows"
+                          : "Show me movies"}
                         <ArrowRight className="size-4" />
                       </Button>
                     </div>
