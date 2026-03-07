@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, ArrowRight, AlertCircle, RotateCcw } from "lucide-react";
+import { Sparkles, ArrowUp, ArrowRight, AlertCircle, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -282,7 +282,7 @@ function ChatInput({
             disabled={isStreaming}
             onClick={handleSubmit}
           >
-            <Sparkles className="size-4" />
+            <ArrowUp className="size-4" />
           </Button>
         </PromptInputAction>
       </PromptInputActions>
