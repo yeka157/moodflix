@@ -11,6 +11,7 @@ interface RecommendationsGridProps {
   genres: string;
   initialMovies: Movie[];
   mediaType?: "movie" | "tv";
+  originCountry?: string;
 }
 
 function dedupeMovies(pages: MovieListResponse[] | undefined): Movie[] {
@@ -32,9 +33,10 @@ export function RecommendationsGrid({
   genres,
   initialMovies,
   mediaType = "movie",
+  originCountry,
 }: RecommendationsGridProps) {
-  const movieQuery = useDiscoverByGenre(mediaType === "movie" ? genres : "");
-  const tvQuery = useDiscoverTVByGenre(mediaType === "tv" ? genres : "");
+  const movieQuery = useDiscoverByGenre(mediaType === "movie" ? genres : "", originCountry);
+  const tvQuery = useDiscoverTVByGenre(mediaType === "tv" ? genres : "", originCountry);
   const query = mediaType === "tv" ? tvQuery : movieQuery;
 
   const movies = useMemo(() => {

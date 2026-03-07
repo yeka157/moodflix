@@ -40,7 +40,8 @@ export async function GET(request: NextRequest) {
     }
 
     if (genre) {
-      const data = await discoverMoviesByGenre(genre, page);
+      const originCountry = searchParams.get("origin_country") ?? undefined;
+      const data = await discoverMoviesByGenre(genre, page, originCountry);
       return Response.json(data);
     }
 

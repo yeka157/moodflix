@@ -31,12 +31,14 @@ export async function GET(request: NextRequest) {
 
     // New discover endpoint with genre + sort + year filters
     if (action === "discover") {
+      const originCountry = searchParams.get("origin_country") ?? undefined;
       const data = await discoverTV({
         genreIds: genre ?? undefined,
         sortBy: sortBy ?? undefined,
         year: year ?? undefined,
         yearStart: yearStart ?? undefined,
         yearEnd: yearEnd ?? undefined,
+        originCountry,
         page,
       });
       return Response.json(data);

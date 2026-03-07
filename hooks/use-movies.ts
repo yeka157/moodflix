@@ -66,10 +66,11 @@ async function fetchMovieDetails(id: number): Promise<MovieDetailsResponse> {
 async function fetchGenreDiscover(
   genreIds: string,
   page: number,
+  originCountry?: string,
 ): Promise<MovieListResponse> {
-  const res = await fetch(
-    `/api/movies?genre=${encodeURIComponent(genreIds)}&page=${page}`,
-  );
+  let url = `/api/movies?genre=${encodeURIComponent(genreIds)}&page=${page}`;
+  if (originCountry) url += `&origin_country=${encodeURIComponent(originCountry)}`;
+  const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to discover movies by genre");
   return res.json();
 }
@@ -165,10 +166,10 @@ export function useMovieDetails(id: number | null) {
   });
 }
 
-export function useDiscoverByGenre(genreIds: string) {
+export function useDiscoverByGenre(genreIds: string, originCountry?: string) {
   return useInfiniteQuery({
-    queryKey: movieKeys.genre(genreIds),
-    queryFn: ({ pageParam }) => fetchGenreDiscover(genreIds, pageParam),
+    queryKey: [...movieKeys.genre(genreIds), originCountry ?? ""],
+    queryFn: ({ pageParam }) => fetchGenreDiscover(genreIds, pageParam, originCountry),
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>
       lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,

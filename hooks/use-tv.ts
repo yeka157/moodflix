@@ -158,17 +158,20 @@ export function useTVSearchInfinite(query: string) {
 async function fetchTVGenreDiscover(
   genreIds: string,
   page: number,
+  originCountry?: string,
 ): Promise<{ page: number; results: Movie[]; total_pages: number; total_results: number }> {
-  const res = await fetch(`/api/tv?action=discover&genre=${encodeURIComponent(genreIds)}&page=${page}`);
+  let url = `/api/tv?action=discover&genre=${encodeURIComponent(genreIds)}&page=${page}`;
+  if (originCountry) url += `&origin_country=${encodeURIComponent(originCountry)}`;
+  const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to discover TV by genre");
   const data: TVListResponse = await res.json();
   return { ...data, results: data.results.map(normalizeTVShow) };
 }
 
-export function useDiscoverTVByGenre(genreIds: string) {
+export function useDiscoverTVByGenre(genreIds: string, originCountry?: string) {
   return useInfiniteQuery({
-    queryKey: tvKeys.genre(genreIds),
-    queryFn: ({ pageParam }) => fetchTVGenreDiscover(genreIds, pageParam),
+    queryKey: [...tvKeys.genre(genreIds), originCountry ?? ""],
+    queryFn: ({ pageParam }) => fetchTVGenreDiscover(genreIds, pageParam, originCountry),
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>
       lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,
