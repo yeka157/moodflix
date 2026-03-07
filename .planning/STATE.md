@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Watchlist & Polish
 status: completed
-stopped_at: Completed 12.2-04-PLAN.md
-last_updated: "2026-03-07T10:52:52.174Z"
-last_activity: 2026-03-07 — Plan 04 complete (SSR cache migration)
+stopped_at: Completed 12.2-03-PLAN.md
+last_updated: "2026-03-07T10:54:50.937Z"
+last_activity: 2026-03-07 — Plan 03 complete (Coming Soon rows with date badges)
 progress:
   total_phases: 11
-  completed_phases: 8
+  completed_phases: 9
   total_plans: 21
-  completed_plans: 20
+  completed_plans: 21
   percent: 100
 ---
 
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 12.2 of 13 (Content Discovery & AI Shazam)
-Plan: 04 of 4 (03 pending summary, 04 complete)
-Status: In Progress
-Last activity: 2026-03-07 — Plan 04 complete (SSR cache migration)
+Plan: 04 of 4 complete
+Status: Complete
+Last activity: 2026-03-07 — Plan 03 complete (Coming Soon rows with date badges)
 
 Progress: [██████████] 100%
 
@@ -94,6 +94,9 @@ Key decisions for v0.4 (from research):
 - [Phase 12.2-02]: Intent detection via system prompt -- mood descriptions trigger suggest_genres, plot descriptions trigger identify_media
 - [Phase 12.2-02]: ShazamCard inline in chat flow -- not a separate section, appears where AI response would be
 - [Phase 12.2]: getPopularMoviesInRegion stays as direct TMDB call -- too many region variants to cache effectively
+- [Phase 12.2]: showReleaseBadge prop on MovieRow rather than formatBadge callback -- keeps badge computation inside MovieRow
+- [Phase 12.2]: Coming Soon row on Discover only shown when no filters active -- avoids visual clutter during filtered browsing
+- [Phase 12.2]: On-the-air TV endpoint for Series Coming Soon -- TMDB separates upcoming movies from currently-airing TV
 
 ### Pending Todos
 
@@ -114,7 +117,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-07T10:52:52.171Z
-Stopped at: Completed 12.2-04-PLAN.md
+Last session: 2026-03-07T10:54:50.935Z
+Stopped at: Completed 12.2-03-PLAN.md
 Resume file: None
 Next step: Phase 12.2 Plan 03 or 04

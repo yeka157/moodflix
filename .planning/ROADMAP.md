@@ -43,7 +43,7 @@ See: `.planning/milestones/v0.3-ROADMAP.md` for full details.
 - [x] **Phase 11: Discovery UX** — TV series search bar, rename Discover to Movies in sidebar, standardize rating display to X/10 format (completed 2026-03-03)
 - [x] **Phase 12: AI Polish** — Origin country filtering for country-specific recommendations, off-topic guardrails, and fire-and-forget conversation logging (completed 2026-03-07)
 - [x] **Phase 12.1: Quality of Life Improvement** — Fix AI send icon, mobile detail page back button, bottom bar active state, full conversation logging (INSERTED) (completed 2026-03-07)
-- [ ] **Phase 12.2: Content Discovery & AI Shazam** — Coming Soon rows, TMDB lazy caching, movie/TV identification from descriptions (INSERTED)
+- [x] **Phase 12.2: Content Discovery & AI Shazam** — Coming Soon rows, TMDB lazy caching, movie/TV identification from descriptions (INSERTED) (completed 2026-03-07)
 - [ ] **Phase 12.3: Push Notifications** — Daily cron to notify users when watchlisted upcoming movies/TV shows are released (INSERTED)
 - [ ] **Phase 13: My Top 100** — Personal ranked list of up to 100 movies and TV shows with CRUD and move up/down reordering
 
@@ -152,7 +152,7 @@ Plans:
 
 **Goal:** Add Coming Soon rows to /home, /discover, and /series pages. Implement TMDB lazy caching layer for popular data. Add AI "Shazam for movies" feature that identifies movies/TV shows from user descriptions.
 **Depends on:** Phase 12.1
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 - [ ] 12.2-01-PLAN.md — TMDB cache schema + cache library + new endpoint functions
@@ -198,6 +198,6 @@ Plans:
 | 11. Discovery UX | 2/2 | Complete    | 2026-03-03 | - |
 | 12. AI Polish | 2/2 | Complete    | 2026-03-07 | - |
 | 12.1. Quality of Life Improvement | 2/2 | Complete    | 2026-03-07 | - |
-| 12.2. Content Discovery & AI Shazam | 3/4 | In Progress|  | - |
+| 12.2. Content Discovery & AI Shazam | 4/4 | Complete   | 2026-03-07 | - |
 | 12.3. Push Notifications | v0.4 | 0/TBD | Not started | - |
 | 13. My Top 100 | v0.4 | 0/TBD | Not started | - |
