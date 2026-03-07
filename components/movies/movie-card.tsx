@@ -31,6 +31,7 @@ interface MovieCardProps {
   href?: string;
   readOnly?: boolean;
   mediaType?: MediaType;
+  releaseDateBadge?: string | null;
 }
 
 export function MovieCard({
@@ -41,6 +42,7 @@ export function MovieCard({
   href,
   readOnly = false,
   mediaType = "movie",
+  releaseDateBadge,
 }: MovieCardProps) {
   const year = movie.release_date?.slice(0, 4) || "N/A";
   const rating = movie.vote_average.toFixed(1);
@@ -191,6 +193,13 @@ export function MovieCard({
         className="object-cover"
         sizes="(max-width: 640px) 150px, (max-width: 768px) 170px, 185px"
       />
+
+      {/* Release date badge */}
+      {releaseDateBadge && (
+        <Badge className="absolute top-2 left-2 z-10 bg-primary/90 text-primary-foreground text-[10px] font-semibold px-1.5 py-0.5">
+          {releaseDateBadge}
+        </Badge>
+      )}
 
       {/* Action icons */}
       {!readOnly && <div
