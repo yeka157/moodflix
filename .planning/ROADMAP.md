@@ -142,7 +142,11 @@ Plans:
 
 **Goal:** Fix AI chat send button icon, add back navigation on mobile detail pages, fix bottom tab bar active state on detail pages, and log full multi-turn AI conversations to database.
 **Depends on:** Phase 12
-**Plans:** TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 12.1-01-PLAN.md — UI fixes: send button icon, mobile back button on detail pages
+- [ ] 12.1-02-PLAN.md — Multi-turn AI conversation logging with conversationId upsert
 
 ### Phase 12.2: Content Discovery & AI Shazam (INSERTED)
 
