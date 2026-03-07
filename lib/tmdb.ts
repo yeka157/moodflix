@@ -193,6 +193,38 @@ export async function discoverChineseDramas(page = 1) {
   });
 }
 
+export async function getUpcomingMovies(page = 1) {
+  return tmdbFetch<MovieListResponse>("/movie/upcoming", {
+    page: String(page),
+  });
+}
+
+export async function getOnTheAirTV(page = 1) {
+  return tmdbFetch<TVListResponse>("/tv/on_the_air", {
+    page: String(page),
+  });
+}
+
+export async function searchMulti(query: string, page = 1) {
+  return tmdbFetch<{
+    results: Array<{
+      id: number;
+      media_type: string;
+      title?: string;
+      name?: string;
+      poster_path: string | null;
+      overview: string | null;
+      release_date?: string;
+      first_air_date?: string;
+      vote_average?: number;
+    }>;
+  }>("/search/multi", {
+    query,
+    page: String(page),
+    include_adult: "false",
+  });
+}
+
 export async function discoverTVByGenre(genreIds: string, page = 1, originCountry?: string) {
   const params: Record<string, string> = {
     with_genres: genreIds,

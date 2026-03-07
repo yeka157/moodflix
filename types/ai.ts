@@ -10,6 +10,17 @@ export type GenreSuggestion = {
   origin_country?: string;
 };
 
+export type IdentifiedMedia = {
+  title: string;
+  tmdbId: number;
+  mediaType: MediaType;
+  year?: string;
+  confidence: "high" | "medium" | "low";
+  verified: boolean;
+  posterPath: string | null;
+  overview: string | null;
+};
+
 export type AiConversation = {
   id: string;
   userId: string;

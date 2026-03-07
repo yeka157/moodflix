@@ -10,6 +10,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { geminiModel } from "@/lib/ai";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { searchMulti } from "@/lib/tmdb";
 import { db } from "@/drizzle";
 import { watchlist, aiRecommendations, aiConversations } from "@/drizzle/schema";
 import { eq, and, or, ne, isNull, desc, sql } from "drizzle-orm";
@@ -190,6 +191,21 @@ When the user references content from a specific country or culture, include the
 - "French cinema" -> origin_country: "FR"
 If you cannot confidently determine an origin country, do NOT include origin_country -- just suggest genres without it.
 
+MEDIA IDENTIFICATION:
+When a user describes a specific movie or TV show (mentions specific scenes, plot points, characters, quotes, or distinctive elements), identify the title and call the identify_media tool.
+Examples of identification requests:
+- "the movie where the guy grows potatoes on Mars" -> The Martian
+- "that show about a chemistry teacher who makes meth" -> Breaking Bad
+- "the animated movie with the old man and balloons" -> Up
+
+If you're not confident about the exact title, call identify_media with your best guess. The tool will verify it.
+If you truly cannot identify it, use suggest_genres to recommend similar content based on the description instead.
+
+Do NOT use identify_media for:
+- Mood descriptions ("I feel sad")
+- Genre requests ("action movies")
+- "Something like X" requests (use suggest_genres with matching genres)
+
 OFF-TOPIC HANDLING:
 You are ONLY a movie and TV show recommendation assistant. If the user asks about non-entertainment topics, gently redirect them to movie/TV topics with a witty, cinematic response. Do NOT call suggest_genres for off-topic queries.
 However, be BROAD about what counts as entertainment-related. Cultural references (Ghibli, Tarantino), vibes (cozy, intense), real-world events (Oscar winners), actors, directors -- all of these are on-topic.
@@ -300,6 +316,115 @@ Keep responses concise: 2-4 sentences. Be warm and conversational.`;
               origin_country: params.origin_country,
               confirmed: true,
             };
+          },
+        }),
+        identify_media: tool({
+          description:
+            "Identify a specific movie or TV show from the user's description of its plot, scenes, characters, or quotes.",
+          inputSchema: z.object({
+            title: z
+              .string()
+              .describe("The identified movie or TV show title"),
+            mediaType: z
+              .enum(["movie", "tv"])
+              .describe("Whether it's a movie or TV show"),
+            year: z
+              .string()
+              .optional()
+              .describe("Release year if known"),
+            confidence: z
+              .enum(["high", "medium", "low"])
+              .describe("How confident the identification is"),
+          }),
+          execute: async (params) => {
+            // Search TMDB by title to verify (do NOT trust Gemini's TMDB ID guesses)
+            const results = await searchMulti(params.title);
+            const targetType = params.mediaType === "tv" ? "tv" : "movie";
+
+            // Find best match: prefer exact media type match
+            const match =
+              results.results.find(
+                (r) =>
+                  r.media_type === targetType &&
+                  (r.title ?? r.name ?? "")
+                    .toLowerCase()
+                    .includes(params.title.toLowerCase().split(" ")[0]),
+              ) ??
+              results.results.find((r) => r.media_type === targetType) ??
+              results.results[0];
+
+            if (!match) {
+              return {
+                ...params,
+                tmdbId: 0,
+                verified: false,
+                posterPath: null,
+                overview: null,
+              };
+            }
+
+            const identified = {
+              title: match.title ?? match.name ?? params.title,
+              tmdbId: match.id,
+              mediaType:
+                match.media_type === "tv"
+                  ? ("tv" as const)
+                  : ("movie" as const),
+              year:
+                (match.release_date ?? match.first_air_date ?? "").slice(0, 4) ||
+                params.year,
+              confidence: params.confidence,
+              verified: true,
+              posterPath: match.poster_path,
+              overview: match.overview,
+            };
+
+            // Log full conversation (fire-and-forget)
+            const fullMessages = [
+              ...uiMessages,
+              {
+                role: "assistant",
+                parts: [
+                  {
+                    type: "text",
+                    text: `Identified: ${identified.title}`,
+                  },
+                ],
+              },
+            ];
+
+            if (conversationId) {
+              db.insert(aiConversations)
+                .values({
+                  userId,
+                  prompt: lastMessageText || "identify",
+                  messages: fullMessages,
+                  conversationId,
+                })
+                .onConflictDoUpdate({
+                  target: [aiConversations.conversationId],
+                  set: {
+                    messages: fullMessages,
+                    prompt: lastMessageText || "identify",
+                    updatedAt: new Date(),
+                  },
+                })
+                .catch(() => {
+                  // Non-critical: silently fail
+                });
+            } else {
+              db.insert(aiConversations)
+                .values({
+                  userId,
+                  prompt: lastMessageText || "identify",
+                  messages: fullMessages,
+                })
+                .catch(() => {
+                  // Non-critical: silently fail
+                });
+            }
+
+            return identified;
           },
         }),
       },
