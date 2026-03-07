@@ -10,7 +10,8 @@ export const metadata: Metadata = {
       "Discover movies that match your mood with AI-powered recommendations.",
   },
 };
-import { getTrendingMovies, getPopularMoviesInRegion, getTrendingTV } from "@/lib/tmdb";
+import { getCachedTrending, getCachedTrendingTV } from "@/lib/tmdb-cache";
+import { getPopularMoviesInRegion } from "@/lib/tmdb";
 import { normalizeTVShow } from "@/types/tv";
 import { getCountryFromHeaders } from "@/lib/country";
 import { getPersonalizedData } from "@/lib/recommendations";
@@ -29,8 +30,8 @@ export default async function HomePage() {
 
   // Fetch trending and personalized data in parallel
   const [trending, trendingTV, personalizedData] = await Promise.all([
-    getTrendingMovies(),
-    getTrendingTV().catch(() => ({ results: [], page: 1, total_pages: 0, total_results: 0 })),
+    getCachedTrending(),
+    getCachedTrendingTV().catch(() => ({ results: [], page: 1, total_pages: 0, total_results: 0 })),
     user ? getPersonalizedData(user.id) : Promise.resolve(null),
   ]);
 
