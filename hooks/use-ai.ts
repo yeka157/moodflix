@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import type { UIMessage } from "@ai-sdk/react";
-import type { GenreSuggestion } from "@/types/ai";
+import type { GenreSuggestion, IdentifiedMedia } from "@/types/ai";
 
 export function useMoodChat() {
   const [conversationId] = useState(() => crypto.randomUUID());
@@ -17,8 +17,31 @@ export function useMoodChat() {
   const chat = useChat({ transport });
 
   const genreSuggestion = extractLatestGenreSuggestion(chat.messages);
+  const identifiedMedia = extractLatestIdentifiedMedia(chat.messages);
 
-  return { ...chat, genreSuggestion };
+  return { ...chat, genreSuggestion, identifiedMedia };
+}
+
+function extractLatestIdentifiedMedia(
+  messages: UIMessage[],
+): IdentifiedMedia | null {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const msg = messages[i];
+    for (const part of msg.parts) {
+      if (
+        part.type.startsWith("tool-") &&
+        "output" in part &&
+        part.state === "output-available"
+      ) {
+        const output = part.output as Record<string, unknown>;
+        // Distinguish from genre suggestions by checking for tmdbId property
+        if ("tmdbId" in output) {
+          return output as unknown as IdentifiedMedia;
+        }
+      }
+    }
+  }
+  return null;
 }
 
 function extractLatestGenreSuggestion(

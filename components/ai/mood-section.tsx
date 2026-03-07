@@ -17,6 +17,7 @@ import {
 import { PromptSuggestion } from "@/components/ui/prompt-suggestion";
 import { Loader } from "@/components/ui/loader";
 import { useMoodChat } from "@/hooks/use-ai";
+import { ShazamCard } from "@/components/ai/shazam-card";
 import { COUNTRY_LABELS } from "@/lib/constants";
 
 const MOOD_SUGGESTIONS = [
@@ -39,6 +40,7 @@ export function MoodSection() {
     setMessages,
     clearError,
     genreSuggestion,
+    identifiedMedia,
   } = useMoodChat();
 
   const isStreaming = status === "streaming" || status === "submitted";
@@ -186,6 +188,27 @@ export function MoodSection() {
                       </Button>
                     </div>
                   </Card>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Identified media card */}
+            <AnimatePresence>
+              {identifiedMedia && identifiedMedia.verified && !isStreaming && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="flex justify-start pl-9"
+                >
+                  <ShazamCard
+                    title={identifiedMedia.title}
+                    tmdbId={identifiedMedia.tmdbId}
+                    mediaType={identifiedMedia.mediaType}
+                    year={identifiedMedia.year}
+                    posterPath={identifiedMedia.posterPath}
+                    overview={identifiedMedia.overview}
+                  />
                 </motion.div>
               )}
             </AnimatePresence>
