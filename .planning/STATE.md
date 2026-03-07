@@ -1,3 +1,19 @@
+---
+gsd_state_version: 1.0
+milestone: v0.4
+milestone_name: Watchlist & Polish
+status: executing
+stopped_at: Completed 12-01-PLAN.md
+last_updated: "2026-03-07T02:26:26.846Z"
+last_activity: 2026-03-07 — Plan 01 complete (off-topic guardrails and origin country detection in AI route)
+progress:
+  total_phases: 8
+  completed_phases: 6
+  total_plans: 15
+  completed_plans: 14
+  percent: 93
+---
+
 # Project State
 
 ## Project Reference
@@ -5,16 +21,16 @@
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Users can discover movies and TV shows that match their mood and manage what they've watched — the library and discovery experience must feel instant and intuitive.
-**Current focus:** v0.4 Phase 11 — Discovery UX
+**Current focus:** v0.4 Phase 12 — AI Polish
 
 ## Current Position
 
-Phase: 11 of 13 (Discovery UX)
-Plan: 02 of 2 complete
-Status: Phase 11 Complete — all 2 plans done
-Last activity: 2026-03-03 — Plan 02 complete (TV search bar on /series page replacing curated rows while active)
+Phase: 12 of 13 (AI Polish)
+Plan: 01 of 2 complete
+Status: In Progress
+Last activity: 2026-03-07 — Plan 01 complete (off-topic guardrails and origin country detection in AI route)
 
-Progress: [█████░░░░░] 42% (v0.4 Phase 11 complete, 2/2 plans done)
+Progress: [█████████░] 93%
 
 ## Accumulated Context
 
@@ -59,6 +75,8 @@ Key decisions for v0.4 (from research):
 - [Phase 11-discovery-ux]: Rating badge hidden when vote_count <= 10; text-only X.X/10 numeric format with no star symbol
 - [Phase 11-discovery-ux]: SeriesPageContent client wrapper lifts search state so SeriesPage stays a pure Server Component
 - [Phase 11-discovery-ux]: TV search uses hrefPrefix=/tv/ for direct navigation (not drawer/modal) consistent with existing TV card behavior
+- [Phase 12-01]: createUIMessageStream + createUIMessageStreamResponse for off-topic redirects -- zero Gemini cost for obvious non-entertainment queries
+- [Phase 12-01]: Narrow regex pre-check patterns -- only clearly non-entertainment queries (homework, medical, legal, coding, recipes) caught; entertainment-adjacent terms never blocked
 
 ### Pending Todos
 
@@ -76,7 +94,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-03
-Stopped at: Phase 11 Discovery UX — Plan 02 complete (TV search on /series page), all Phase 11 plans complete
+Last session: 2026-03-07T02:26:26.844Z
+Stopped at: Completed 12-01-PLAN.md
 Resume file: None
-Next step: Phase 12
+Next step: Phase 12 Plan 02
