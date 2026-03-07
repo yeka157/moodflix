@@ -90,6 +90,9 @@ None.
 - Phase 09.1 inserted after Phase 9: PWA Setup (URGENT)
 - Phase 09.1.1 inserted after Phase 09.1: Homepage TV Series Integration (URGENT)
 - Phase 10.1 inserted after Phase 10: Fix UI for mobile view (URGENT)
+- Phase 12.1 inserted after Phase 12: Quality of Life Improvement (URGENT)
+- Phase 12.2 inserted after Phase 12.1: Content Discovery & AI Shazam (URGENT)
+- Phase 12.3 inserted after Phase 12.2: Push Notifications (URGENT)
 
 ### Blockers/Concerns
 
