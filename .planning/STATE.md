@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Watchlist & Polish
-status: completed
-stopped_at: Phase 12.1 context gathered
-last_updated: "2026-03-07T04:27:01.022Z"
-last_activity: 2026-03-07 — Plan 02 complete (origin_country threading through full recommendation flow)
+status: in-progress
+stopped_at: Completed 12.1-02-PLAN.md
+last_updated: "2026-03-07T07:11:21Z"
+last_activity: 2026-03-07 — Plan 02 complete (conversationId-based AI conversation upsert logging)
 progress:
   total_phases: 11
   completed_phases: 7
-  total_plans: 15
-  completed_plans: 15
+  total_plans: 17
+  completed_plans: 17
   percent: 100
 ---
 
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Users can discover movies and TV shows that match their mood and manage what they've watched — the library and discovery experience must feel instant and intuitive.
-**Current focus:** v0.4 Phase 12 — AI Polish
+**Current focus:** v0.4 Phase 12.1 — Quality of Life Improvement
 
 ## Current Position
 
-Phase: 12 of 13 (AI Polish)
-Plan: 02 of 2 complete
-Status: Phase 12 Complete
-Last activity: 2026-03-07 — Plan 02 complete (origin_country threading through full recommendation flow)
+Phase: 12.1 of 13 (Quality of Life Improvement)
+Plan: 01 of 1 complete
+Status: Phase 12.1 In Progress
+Last activity: 2026-03-07 — Plan 01 complete (UI quick fixes — ArrowUp icon + mobile back button)
 
-Progress: [██████████] 100%
+Progress: [█████████░] 94%
 
 ## Accumulated Context
 
@@ -80,6 +80,9 @@ Key decisions for v0.4 (from research):
 - [Phase 12-02]: COUNTRY_LABELS in lib/constants.ts -- shared map of ISO alpha-2 codes to English adjectives for genre display
 - [Phase 12-02]: originCountry included in TanStack Query keys for cache separation across different country filters
 - [Phase 12]: [Phase 12-02]: COUNTRY_LABELS in lib/constants.ts -- shared map of ISO alpha-2 codes to English adjectives for genre display
+- [Phase 12.1-01]: ArrowUp icon for AI send button — matches ChatGPT/Claude industry convention
+- [Phase 12.1-01]: size-11 (44px) touch target for mobile back button — meets WCAG minimum
+- [Phase 12.1-01]: Bottom tab bar no-highlight on detail pages confirmed as correct UX (Netflix/Disney+ pattern)
 
 ### Pending Todos
 
@@ -100,7 +103,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-07T04:27:01.004Z
-Stopped at: Phase 12.1 context gathered
-Resume file: .planning/phases/12.1-quality-of-life-improvement/12.1-CONTEXT.md
-Next step: Phase 13
+Last session: 2026-03-07T07:13:30Z
+Stopped at: Completed 12.1-01-PLAN.md
+Resume file: .planning/phases/12.1-quality-of-life-improvement/12.1-01-SUMMARY.md
+Next step: Next plan in Phase 12.1 or Phase 13
