@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import type { Movie } from "@/types/movie";
 import type { MediaType } from "@/types/media";
+import { formatReleaseDateBadge } from "@/lib/utils";
 import { MovieCard } from "./movie-card";
 import { MovieCardSkeleton } from "./movie-card-skeleton";
 
@@ -16,6 +17,7 @@ interface MovieRowProps {
   hrefPrefix?: string;
   mediaType?: MediaType;
   readOnly?: boolean;
+  showReleaseBadge?: boolean;
 }
 
 export function MovieRow({
@@ -27,6 +29,7 @@ export function MovieRow({
   hrefPrefix,
   mediaType = "movie",
   readOnly = false,
+  showReleaseBadge = false,
 }: MovieRowProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
@@ -132,6 +135,7 @@ export function MovieRow({
                     onClick={resolvedHrefPrefix ? undefined : onMovieClick}
                     readOnly={readOnly}
                     mediaType={mediaType}
+                    releaseDateBadge={showReleaseBadge ? formatReleaseDateBadge(movie.release_date) : undefined}
                   />
                 </div>
               ))}

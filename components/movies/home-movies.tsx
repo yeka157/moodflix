@@ -7,6 +7,7 @@ import { PersonalizedSection } from "./personalized-section";
 interface HomeMoviesProps {
   trending: Movie[];
   trendingTV?: Movie[];
+  upcoming?: Movie[];
   personalizedData?: PersonalizedData | null;
   regionalPopular?: Movie[];
 }
@@ -14,6 +15,7 @@ interface HomeMoviesProps {
 export function HomeMovies({
   trending,
   trendingTV = [],
+  upcoming = [],
   personalizedData,
   regionalPopular,
 }: HomeMoviesProps) {
@@ -30,6 +32,15 @@ export function HomeMovies({
           title="Trending TV Shows"
           movies={trendingTV}
           mediaType="tv"
+        />
+      )}
+
+      {upcoming.length > 0 && (
+        <MovieRow
+          title="Coming Soon"
+          movies={upcoming}
+          mediaType="movie"
+          showReleaseBadge
         />
       )}
 

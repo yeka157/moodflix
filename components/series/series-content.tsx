@@ -3,6 +3,7 @@ import { MovieRow } from "@/components/movies/movie-row";
 
 interface SeriesContentProps {
   trending: Movie[];
+  onTheAir?: Movie[];
   korean: Movie[];
   chinese: Movie[];
   topRated: Movie[];
@@ -10,6 +11,7 @@ interface SeriesContentProps {
 
 export function SeriesContent({
   trending,
+  onTheAir = [],
   korean,
   chinese,
   topRated,
@@ -22,6 +24,16 @@ export function SeriesContent({
         hrefPrefix="/tv/"
         mediaType="tv"
       />
+
+      {onTheAir.length > 0 && (
+        <MovieRow
+          title="Coming Soon"
+          movies={onTheAir}
+          hrefPrefix="/tv/"
+          mediaType="tv"
+          showReleaseBadge
+        />
+      )}
 
       <MovieRow
         title="Korean Drama"

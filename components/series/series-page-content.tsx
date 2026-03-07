@@ -15,6 +15,7 @@ import { SeriesGridContent } from "@/components/series/series-grid-content";
 
 interface SeriesPageContentProps {
   trending: Movie[];
+  onTheAir?: Movie[];
   korean: Movie[];
   chinese: Movie[];
   topRated: Movie[];
@@ -46,6 +47,7 @@ function dedupeShows(
 
 export function SeriesPageContent({
   trending,
+  onTheAir = [],
   korean,
   chinese,
   topRated,
@@ -172,6 +174,7 @@ export function SeriesPageContent({
         <>
           <SeriesContent
             trending={trending}
+            onTheAir={onTheAir}
             korean={korean}
             chinese={chinese}
             topRated={topRated}

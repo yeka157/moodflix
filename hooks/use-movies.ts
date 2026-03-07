@@ -20,6 +20,7 @@ export type DiscoverMoviesParams = {
 
 export const movieKeys = {
   all: ["movies"] as const,
+  upcoming: () => [...movieKeys.all, "upcoming"] as const,
   category: (cat: MovieCategory, page: number) =>
     [...movieKeys.all, "category", cat, page] as const,
   search: (query: string, page?: number) =>
@@ -103,6 +104,18 @@ async function fetchDiscover(
   );
   if (!res.ok) throw new Error("Failed to discover movies");
   return res.json();
+}
+
+export function useUpcomingMovies() {
+  return useQuery({
+    queryKey: movieKeys.upcoming(),
+    queryFn: async () => {
+      const res = await fetch("/api/movies?category=upcoming");
+      if (!res.ok) throw new Error("Failed to fetch upcoming movies");
+      return res.json() as Promise<MovieListResponse>;
+    },
+    staleTime: 60 * 60 * 1000, // 1 hour
+  });
 }
 
 export function useTrendingMovies(page = 1) {

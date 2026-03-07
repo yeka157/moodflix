@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
-import { getCachedTrendingTV, getCachedKoreanDramas, getCachedChineseDramas, getCachedTopRatedTV } from "@/lib/tmdb-cache";
+import {
+  getCachedTrendingTV,
+  getCachedOnTheAirTV,
+  getCachedKoreanDramas,
+  getCachedChineseDramas,
+  getCachedTopRatedTV,
+} from "@/lib/tmdb-cache";
 import { normalizeTVShow } from "@/types/tv";
 import { SeriesPageContent } from "@/components/series/series-page-content";
 
@@ -10,14 +16,16 @@ export const metadata: Metadata = {
 };
 
 export default async function SeriesPage() {
-  const [trendingRes, koreanRes, chineseRes, topRatedRes] = await Promise.all([
+  const [trendingRes, onTheAirRes, koreanRes, chineseRes, topRatedRes] = await Promise.all([
     getCachedTrendingTV().catch(() => ({ results: [], page: 1, total_pages: 0, total_results: 0 })),
+    getCachedOnTheAirTV().catch(() => ({ results: [], page: 1, total_pages: 0, total_results: 0 })),
     getCachedKoreanDramas().catch(() => ({ results: [], page: 1, total_pages: 0, total_results: 0 })),
     getCachedChineseDramas().catch(() => ({ results: [], page: 1, total_pages: 0, total_results: 0 })),
     getCachedTopRatedTV().catch(() => ({ results: [], page: 1, total_pages: 0, total_results: 0 })),
   ]);
 
   const trending = trendingRes.results.map(normalizeTVShow);
+  const onTheAir = onTheAirRes.results.map(normalizeTVShow);
   const korean = koreanRes.results.map(normalizeTVShow);
   const chinese = chineseRes.results.map(normalizeTVShow);
   const topRated = topRatedRes.results.map(normalizeTVShow);
@@ -33,6 +41,7 @@ export default async function SeriesPage() {
 
       <SeriesPageContent
         trending={trending}
+        onTheAir={onTheAir}
         korean={korean}
         chinese={chinese}
         topRated={topRated}

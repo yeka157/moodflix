@@ -8,10 +8,12 @@ import type { Movie, MovieListResponse } from "@/types/movie";
 import {
   useMovieSearchInfinite,
   useDiscoverMovies,
+  useUpcomingMovies,
 } from "@/hooks/use-movies";
 import useInfiniteScroll from "react-infinite-scroll-hook";
 import { GENRES } from "@/lib/constants";
 import { MovieGrid } from "./movie-grid";
+import { MovieRow } from "./movie-row";
 import { MovieSearchDrawer } from "./movie-search-drawer";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -91,6 +93,7 @@ export function DiscoverGridContent() {
 
   const searchQuery = useMovieSearchInfinite(debouncedQuery);
   const discoverQuery = useDiscoverMovies(discoverParams);
+  const upcomingQuery = useUpcomingMovies();
 
   const searchMovies = useMemo(
     () => dedupeMovies(searchQuery.data?.pages),
@@ -282,7 +285,17 @@ export function DiscoverGridContent() {
           )}
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-6">
+          {/* Coming Soon row — shown when no filters are active */}
+          {!hasActiveFilters && upcomingQuery.data && upcomingQuery.data.results.length > 0 && (
+            <MovieRow
+              title="Coming Soon"
+              movies={upcomingQuery.data.results}
+              mediaType="movie"
+              showReleaseBadge
+            />
+          )}
+
           {discoverQuery.isLoading ? (
             <MovieGrid movies={[]} isLoading />
           ) : discoverQuery.isError ? (

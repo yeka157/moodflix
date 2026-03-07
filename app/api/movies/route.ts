@@ -3,6 +3,7 @@ import {
   getTrendingMovies,
   getPopularMovies,
   getTopRatedMovies,
+  getUpcomingMovies,
   searchMovies,
   discoverMoviesByGenre,
   discoverMovies,
@@ -52,6 +53,8 @@ export async function GET(request: NextRequest) {
         return Response.json(await getPopularMovies(page));
       case "top_rated":
         return Response.json(await getTopRatedMovies(page));
+      case "upcoming":
+        return Response.json(await getUpcomingMovies(page));
       default:
         return Response.json(
           { error: "Provide 'query', 'genre', or 'category' parameter" },
