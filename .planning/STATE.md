@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Watchlist & Polish
-status: completed
-stopped_at: Phase 12.2 context gathered
-last_updated: "2026-03-07T09:01:19.246Z"
-last_activity: 2026-03-07 — Plan 02 complete (conversationId-based AI conversation upsert logging)
+status: in-progress
+stopped_at: Completed 12.2-02-PLAN.md
+last_updated: "2026-03-07T10:28:38Z"
+last_activity: 2026-03-07 — Plan 02 complete (AI Shazam identify_media tool + ShazamCard)
 progress:
   total_phases: 11
   completed_phases: 8
-  total_plans: 17
-  completed_plans: 17
-  percent: 100
+  total_plans: 21
+  completed_plans: 19
+  percent: 90
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Users can discover movies and TV shows that match their mood and manage what they've watched — the library and discovery experience must feel instant and intuitive.
-**Current focus:** v0.4 Phase 12.1 — Quality of Life Improvement
+**Current focus:** v0.4 Phase 12.2 — Content Discovery & AI Shazam
 
 ## Current Position
 
-Phase: 12.1 of 13 (Quality of Life Improvement)
-Plan: 02 of 2 complete
-Status: Phase 12.1 Complete
-Last activity: 2026-03-07 — Plan 02 complete (conversationId-based AI conversation upsert logging)
+Phase: 12.2 of 13 (Content Discovery & AI Shazam)
+Plan: 01 of 4 complete
+Status: In Progress
+Last activity: 2026-03-07 — Plan 01 complete (TMDB caching infrastructure)
 
-Progress: [██████████] 100%
+Progress: [█████████░] 90%
 
 ## Accumulated Context
 
@@ -86,6 +86,10 @@ Key decisions for v0.4 (from research):
 - [Phase 12.1-02]: useState lazy initializer for conversationId -- avoids React 19 refs-during-render lint error
 - [Phase 12.1-02]: Partial unique index (WHERE conversation_id IS NOT NULL) -- allows nullable column while enforcing uniqueness for upsert target
 - [Phase 12.1-02]: updatedAt column added to aiConversations -- tracks when multi-turn conversations were last updated
+- [Phase 12.2-01]: Fire-and-forget cache writes with .catch(() => {}) -- no added latency to page loads
+- [Phase 12.2-01]: Category cache key format {category}_{mediaType}_{page} for unique per-page caching
+- [Phase 12.2-01]: tmdb_media stores voteAverage/popularity as text to avoid floating-point precision issues
+- [Phase 12.2-01]: Detail cache is permanent (no TTL); ratings have separate 7-day TTL for future use
 
 ### Pending Todos
 
@@ -106,7 +110,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-07T09:01:19.240Z
-Stopped at: Phase 12.2 context gathered
-Resume file: .planning/phases/12.2-content-discovery-and-ai-shazam/12.2-CONTEXT.md
-Next step: Phase 12.2 or Phase 13
+Last session: 2026-03-07T10:28:24Z
+Stopped at: Completed 12.2-01-PLAN.md
+Resume file: .planning/phases/12.2-content-discovery-and-ai-shazam/12.2-02-PLAN.md
+Next step: Execute 12.2-02 (Coming Soon rows + enhanced discover)
