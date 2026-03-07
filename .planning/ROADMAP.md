@@ -152,7 +152,13 @@ Plans:
 
 **Goal:** Add Coming Soon rows to /home, /discover, and /series pages. Implement TMDB lazy caching layer for popular data. Add AI "Shazam for movies" feature that identifies movies/TV shows from user descriptions.
 **Depends on:** Phase 12.1
-**Plans:** TBD
+**Plans:** 4 plans
+
+Plans:
+- [ ] 12.2-01-PLAN.md — TMDB cache schema + cache library + new endpoint functions
+- [ ] 12.2-02-PLAN.md — AI Shazam: identify_media tool + inline card in mood chat
+- [ ] 12.2-03-PLAN.md — Coming Soon rows on /home, /discover, /series with date badges
+- [ ] 12.2-04-PLAN.md — Migrate SSR page fetches and detail routes to cache layer
 
 ### Phase 12.3: Push Notifications (INSERTED)
 
@@ -192,6 +198,6 @@ Plans:
 | 11. Discovery UX | 2/2 | Complete    | 2026-03-03 | - |
 | 12. AI Polish | 2/2 | Complete    | 2026-03-07 | - |
 | 12.1. Quality of Life Improvement | 2/2 | Complete    | 2026-03-07 | - |
-| 12.2. Content Discovery & AI Shazam | v0.4 | 0/TBD | Not started | - |
+| 12.2. Content Discovery & AI Shazam | v0.4 | 0/4 | Not started | - |
 | 12.3. Push Notifications | v0.4 | 0/TBD | Not started | - |
 | 13. My Top 100 | v0.4 | 0/TBD | Not started | - |
