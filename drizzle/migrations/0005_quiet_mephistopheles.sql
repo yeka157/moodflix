@@ -1,0 +1,24 @@
+CREATE TABLE "notification_subscriptions" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_id" uuid NOT NULL,
+	"tmdb_id" integer NOT NULL,
+	"title" text NOT NULL,
+	"poster_path" text,
+	"release_date" text,
+	"last_notified_at" timestamp with time zone,
+	"created_at" timestamp with time zone DEFAULT now(),
+	CONSTRAINT "notification_subs_user_tmdb_unique" UNIQUE("user_id","tmdb_id")
+);
+--> statement-breakpoint
+CREATE TABLE "push_subscriptions" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_id" uuid NOT NULL,
+	"endpoint" text NOT NULL,
+	"p256dh" text NOT NULL,
+	"auth" text NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now(),
+	CONSTRAINT "push_subscriptions_endpoint_unique" UNIQUE("endpoint")
+);
+--> statement-breakpoint
+ALTER TABLE "notification_subscriptions" ADD CONSTRAINT "notification_subscriptions_user_id_profiles_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "push_subscriptions" ADD CONSTRAINT "push_subscriptions_user_id_profiles_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE cascade ON UPDATE no action;

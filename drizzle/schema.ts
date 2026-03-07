@@ -149,3 +149,35 @@ export const topHundred = pgTable(
     ),
   ]
 );
+
+// Push notification subscriptions (one per device per user)
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => profiles.id, { onDelete: "cascade" }),
+  endpoint: text("endpoint").notNull().unique(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+// Notification subscriptions (user wants to be notified about a specific movie/TV release)
+export const notificationSubscriptions = pgTable(
+  "notification_subscriptions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    tmdbId: integer("tmdb_id").notNull(),
+    title: text("title").notNull(),
+    posterPath: text("poster_path"),
+    releaseDate: text("release_date"),
+    lastNotifiedAt: timestamp("last_notified_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  },
+  (table) => [
+    unique("notification_subs_user_tmdb_unique").on(table.userId, table.tmdbId),
+  ]
+);
