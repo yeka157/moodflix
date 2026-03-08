@@ -234,7 +234,7 @@ export function MovieCard({
       {!readOnly && <div
         className={cn(
           "absolute top-2 right-2 z-10 flex flex-col gap-1.5 transition-opacity duration-200",
-          isInLibrary ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+          isInLibrary || hideWatchedButton ? "opacity-100" : "opacity-0 group-hover:opacity-100",
         )}
       >
         {/* Bookmark (want to watch) */}
@@ -297,7 +297,6 @@ export function MovieCard({
                     : "bg-black/60 hover:bg-black/80 text-white",
                 )}
                 onClick={handleBellClick}
-                disabled={isNotifyBusy}
                 whileTap={tapAnimation}
                 aria-label={
                   isNotifySubscribed
@@ -305,9 +304,7 @@ export function MovieCard({
                     : "Notify me when released"
                 }
               >
-                {isNotifyBusy ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : isNotifySubscribed ? (
+                {isNotifySubscribed ? (
                   <BellRing className="h-4 w-4 fill-current" />
                 ) : (
                   <Bell className="h-4 w-4" />
