@@ -91,12 +91,12 @@ export async function getCachedTopRated(page = 1): Promise<MovieListResponse> {
   );
 }
 
-export async function getCachedUpcoming(page = 1): Promise<MovieListResponse> {
+export async function getCachedUpcoming(page = 1, region = "US"): Promise<MovieListResponse> {
   return getCachedCategory(
-    `upcoming_movie_${page}`,
+    `upcoming_movie_${region}_${page}`,
     "upcoming",
     "movie",
-    () => getUpcomingMovies(page),
+    () => getUpcomingMovies(page, region),
   );
 }
 
@@ -111,7 +111,7 @@ export async function getCachedTrendingTV(page = 1): Promise<TVListResponse> {
 
 export async function getCachedOnTheAirTV(page = 1): Promise<TVListResponse> {
   return getCachedCategory(
-    `on_the_air_tv_${page}`,
+    `on_the_air_tv_v3_${page}`,
     "on_the_air",
     "tv",
     () => getOnTheAirTV(page),

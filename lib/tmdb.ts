@@ -193,15 +193,24 @@ export async function discoverChineseDramas(page = 1) {
   });
 }
 
-export async function getUpcomingMovies(page = 1) {
+export async function getUpcomingMovies(page = 1, region = "US") {
   return tmdbFetch<MovieListResponse>("/movie/upcoming", {
     page: String(page),
+    region,
   });
 }
 
 export async function getOnTheAirTV(page = 1) {
-  return tmdbFetch<TVListResponse>("/tv/on_the_air", {
+  // Use discover instead of /tv/on_the_air to filter out decades-old shows
+  const twoMonthsAgo = new Date();
+  twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+  
+  return tmdbFetch<TVListResponse>("/discover/tv", {
     page: String(page),
+    with_status: "0|4", // 0 = Returning Series, 4 = In Production
+    "first_air_date.gte": twoMonthsAgo.toISOString().slice(0, 10),
+    sort_by: "popularity.desc",
+    "vote_count.gte": "10", // Filter out obscure junk
   });
 }
 

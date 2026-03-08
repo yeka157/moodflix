@@ -28,7 +28,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       />
       <AppSidebar user={{ email: user.email ?? "" }} />
       <BottomTabBar />
-      <main className="md:pl-[60px] pb-16 md:pb-0 overflow-x-hidden">
+      <main className="md:pl-[60px] pb-16 md:pb-0 overflow-x-clip">
         <Providers>{children}</Providers>
       </main>
       <OfflineToast />

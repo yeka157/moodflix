@@ -14,6 +14,7 @@ import {
   getCachedTrending,
   getCachedTrendingTV,
   getCachedUpcoming,
+  getCachedOnTheAirTV,
 } from "@/lib/tmdb-cache";
 import { getPopularMoviesInRegion } from "@/lib/tmdb";
 import { normalizeTVShow } from "@/types/tv";
@@ -32,19 +33,22 @@ export default async function HomePage() {
 
   const displayName = user?.email?.split("@")[0] || "Explorer";
 
+  const headersList = await headers();
+  const country = getCountryFromHeaders(headersList);
+
   // Fetch trending and personalized data in parallel
-  const [trending, trendingTV, upcomingRes, personalizedData] = await Promise.all([
+  const [trending, trendingTV, upcomingRes, onTheAirTVRes, personalizedData] = await Promise.all([
     getCachedTrending(),
     getCachedTrendingTV().catch(() => ({ results: [], page: 1, total_pages: 0, total_results: 0 })),
-    getCachedUpcoming().catch(() => ({ results: [], page: 1, total_pages: 0, total_results: 0 })),
+    getCachedUpcoming(1, country).catch(() => ({ results: [], page: 1, total_pages: 0, total_results: 0 })),
+    getCachedOnTheAirTV(1).catch(() => ({ results: [], page: 1, total_pages: 0, total_results: 0 })),
     user ? getPersonalizedData(user.id) : Promise.resolve(null),
   ]);
 
   const trendingTVMovies = trendingTV.results.map(normalizeTVShow);
+  const onTheAirTVMovies = onTheAirTVRes.results.map(normalizeTVShow);
 
   // For users without personalized data, fetch regional popular movies
-  const headersList = await headers();
-  const country = getCountryFromHeaders(headersList);
   const regionalPopular = !personalizedData
     ? await getPopularMoviesInRegion(country)
     : null;
@@ -89,6 +93,7 @@ export default async function HomePage() {
           trending={trending.results}
           trendingTV={trendingTVMovies}
           upcoming={upcomingRes.results}
+          onTheAirTV={onTheAirTVMovies}
           personalizedData={personalizedData}
           regionalPopular={regionalPopular?.results}
         />

@@ -8,6 +8,7 @@ interface HomeMoviesProps {
   trending: Movie[];
   trendingTV?: Movie[];
   upcoming?: Movie[];
+  onTheAirTV?: Movie[];
   personalizedData?: PersonalizedData | null;
   regionalPopular?: Movie[];
 }
@@ -16,6 +17,7 @@ export function HomeMovies({
   trending,
   trendingTV = [],
   upcoming = [],
+  onTheAirTV = [],
   personalizedData,
   regionalPopular,
 }: HomeMoviesProps) {
@@ -37,9 +39,18 @@ export function HomeMovies({
 
       {upcoming.length > 0 && (
         <MovieRow
-          title="Coming Soon"
+          title="Upcoming Movies"
           movies={upcoming}
           mediaType="movie"
+          showReleaseBadge
+        />
+      )}
+
+      {onTheAirTV.length > 0 && (
+        <MovieRow
+          title="Currently Airing TV Series"
+          movies={onTheAirTV}
+          mediaType="tv"
           showReleaseBadge
         />
       )}

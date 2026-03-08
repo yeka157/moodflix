@@ -27,7 +27,7 @@ export function SeriesContent({
 
       {onTheAir.length > 0 && (
         <MovieRow
-          title="Coming Soon"
+          title="Currently Airing"
           movies={onTheAir}
           hrefPrefix="/tv/"
           mediaType="tv"
