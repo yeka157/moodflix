@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
-import { Star, Bookmark, CircleCheck, Loader2 } from "lucide-react";
+import { Star, Bookmark, Bell, BellRing, CircleCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Movie } from "@/types/movie";
 import type { WatchlistStatus } from "@/types/watchlist";
@@ -16,6 +16,10 @@ import {
   useRemoveFromWatchlist,
   useUpdateWatchlistStatus,
 } from "@/hooks/use-watchlist";
+import {
+  usePushSubscription,
+  useNotificationSubscription,
+} from "@/hooks/use-push-subscription";
 import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
@@ -32,6 +36,7 @@ interface MovieCardProps {
   readOnly?: boolean;
   mediaType?: MediaType;
   releaseDateBadge?: string | null;
+  hideWatchedButton?: boolean;
 }
 
 export function MovieCard({
@@ -43,6 +48,7 @@ export function MovieCard({
   readOnly = false,
   mediaType = "movie",
   releaseDateBadge,
+  hideWatchedButton = false,
 }: MovieCardProps) {
   const year = movie.release_date?.slice(0, 4) || "N/A";
   const rating = movie.vote_average.toFixed(1);
@@ -64,12 +70,17 @@ export function MovieCard({
   const isWatched = status === "watched";
   const isInLibrary = status !== null;
 
+  const { subscribe: subscribePush, isSupported: isPushSupported } = usePushSubscription();
+  const { isSubscribed: isNotifySubscribed, toggle: toggleNotify, isLoading: isNotifyLoading, isToggling: isNotifyToggling } =
+    useNotificationSubscription(hideWatchedButton ? movie.id : 0);
+
   const prefersReducedMotion = useReducedMotion();
 
   const isPending =
     addMutation.isPending ||
     removeMutation.isPending ||
     statusMutation.isPending;
+  const isNotifyBusy = isNotifyLoading || isNotifyToggling;
 
   const tapAnimation = prefersReducedMotion ? {} : { scale: 0.92 };
 
@@ -183,6 +194,24 @@ export function MovieCard({
     }
   };
 
+  const handleBellClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (isNotifyBusy) return;
+
+    if (!isNotifySubscribed) {
+      const sub = await subscribePush();
+      if (!sub) return;
+    }
+
+    toggleNotify({
+      tmdbId: movie.id,
+      title: movie.title,
+      posterPath: movie.poster_path,
+      releaseDate: movie.release_date ?? null,
+    });
+  };
+
   const cardContent = (
     <div className="relative aspect-2/3 overflow-hidden rounded-lg">
       <Image
@@ -256,49 +285,88 @@ export function MovieCard({
           </TooltipContent>
         </Tooltip>
 
-        {/* Check (watched) */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <motion.button
-              className={cn(
-                "flex items-center justify-center h-8 w-8 [@media(hover:none)]:h-11 [@media(hover:none)]:w-11 rounded-full transition-colors duration-200",
-                isWatched
-                  ? "bg-green-600 text-white"
-                  : "bg-black/60 hover:bg-black/80 text-white",
-              )}
-              onClick={handleCheckClick}
-              disabled={isPending}
-              whileTap={tapAnimation}
-              aria-label={
-                isWatched
-                  ? "Remove from watched"
-                  : "Mark as watched"
-              }
-            >
-              <motion.span
-                key={`check-${isWatched}`}
-                initial={!prefersReducedMotion && isWatched ? { scale: 0.5, opacity: 0 } : false}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: "spring", stiffness: 300, damping: 22 }}
-                className="flex items-center justify-center"
+        {/* Bell (notify on release) — only for upcoming content */}
+        {hideWatchedButton && isPushSupported && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <motion.button
+                className={cn(
+                  "flex items-center justify-center h-8 w-8 [@media(hover:none)]:h-11 [@media(hover:none)]:w-11 rounded-full transition-colors duration-200",
+                  isNotifySubscribed
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-black/60 hover:bg-black/80 text-white",
+                )}
+                onClick={handleBellClick}
+                disabled={isNotifyBusy}
+                whileTap={tapAnimation}
+                aria-label={
+                  isNotifySubscribed
+                    ? "Cancel release notification"
+                    : "Notify me when released"
+                }
               >
-                <CircleCheck
-                  className={cn(
-                    "h-4 w-4",
-                    isWatched && "fill-current",
-                  )}
-                />
-              </motion.span>
-            </motion.button>
-          </TooltipTrigger>
-          <TooltipContent side="left">
-            {isWatched
-              ? "Remove from watched"
-              : isWantToWatch
-                ? "Mark as watched"
-                : "Mark as watched"}
-          </TooltipContent>
-        </Tooltip>
+                {isNotifyBusy ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : isNotifySubscribed ? (
+                  <BellRing className="h-4 w-4 fill-current" />
+                ) : (
+                  <Bell className="h-4 w-4" />
+                )}
+              </motion.button>
+            </TooltipTrigger>
+            <TooltipContent side="left">
+              {isNotifySubscribed
+                ? "Cancel release notification"
+                : "Notify me when released"}
+            </TooltipContent>
+          </Tooltip>
+        )}
+
+        {/* Check (watched) — hidden for upcoming content */}
+        {!hideWatchedButton && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <motion.button
+                className={cn(
+                  "flex items-center justify-center h-8 w-8 [@media(hover:none)]:h-11 [@media(hover:none)]:w-11 rounded-full transition-colors duration-200",
+                  isWatched
+                    ? "bg-green-600 text-white"
+                    : "bg-black/60 hover:bg-black/80 text-white",
+                )}
+                onClick={handleCheckClick}
+                disabled={isPending}
+                whileTap={tapAnimation}
+                aria-label={
+                  isWatched
+                    ? "Remove from watched"
+                    : "Mark as watched"
+                }
+              >
+                <motion.span
+                  key={`check-${isWatched}`}
+                  initial={!prefersReducedMotion && isWatched ? { scale: 0.5, opacity: 0 } : false}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 22 }}
+                  className="flex items-center justify-center"
+                >
+                  <CircleCheck
+                    className={cn(
+                      "h-4 w-4",
+                      isWatched && "fill-current",
+                    )}
+                  />
+                </motion.span>
+              </motion.button>
+            </TooltipTrigger>
+            <TooltipContent side="left">
+              {isWatched
+                ? "Remove from watched"
+                : isWantToWatch
+                  ? "Mark as watched"
+                  : "Mark as watched"}
+            </TooltipContent>
+          </Tooltip>
+        )}
       </div>}
 
       {/* Hover overlay */}

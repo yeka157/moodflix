@@ -136,6 +136,7 @@ export function MovieRow({
                     readOnly={readOnly}
                     mediaType={mediaType}
                     releaseDateBadge={showReleaseBadge ? formatReleaseDateBadge(movie.release_date) : undefined}
+                    hideWatchedButton={showReleaseBadge}
                   />
                 </div>
               ))}

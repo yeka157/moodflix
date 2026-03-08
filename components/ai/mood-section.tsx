@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, ArrowUp, ArrowRight, AlertCircle, RotateCcw } from "lucide-react";
+import { Sparkles, ArrowRight, AlertCircle, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -104,7 +104,7 @@ export function MoodSection() {
                 {msg.role === "user" && (
                   <div className="flex justify-end">
                     <div className="bg-primary/15 text-foreground rounded-2xl rounded-br-sm px-4 py-2.5 max-w-[80%] text-sm">
-                      {msg.parts
+                      {(msg.parts ?? [])
                         .filter((p) => p.type === "text")
                         .map((p, i) => (
                           <span key={i}>
@@ -121,7 +121,7 @@ export function MoodSection() {
                         <Sparkles className="size-3.5 text-primary" />
                       </div>
                       <div className="bg-secondary rounded-2xl rounded-bl-sm px-4 py-2.5 text-sm text-foreground">
-                        {msg.parts
+                        {(msg.parts ?? [])
                           .filter((p) => p.type === "text")
                           .map((p, i) => (
                             <span key={i}>
@@ -305,7 +305,7 @@ function ChatInput({
             disabled={isStreaming}
             onClick={handleSubmit}
           >
-            <ArrowUp className="size-4" />
+            <ArrowRight className="size-4" />
           </Button>
         </PromptInputAction>
       </PromptInputActions>
