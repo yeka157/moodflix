@@ -94,10 +94,11 @@ CREATE POLICY "Users can insert own push subscriptions"
   ON public.push_subscriptions FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
-DROP POLICY IF EXISTS "Users can update own push subscriptions" ON public.push_subscriptions;
-CREATE POLICY "Users can update own push subscriptions"
+DROP POLICY IF EXISTS "Users can claim push subscriptions on device switch" ON public.push_subscriptions;
+CREATE POLICY "Users can claim push subscriptions on device switch"
   ON public.push_subscriptions FOR UPDATE
-  USING (auth.uid() = user_id);
+  USING (auth.role() = 'authenticated')
+  WITH CHECK (auth.uid() = user_id);
 
 DROP POLICY IF EXISTS "Users can delete own push subscriptions" ON public.push_subscriptions;
 CREATE POLICY "Users can delete own push subscriptions"
