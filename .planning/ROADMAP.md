@@ -167,9 +167,9 @@ Plans:
 **Plans:** 3/3 plans complete
 
 Plans:
-- [ ] 12.3-01-PLAN.md — Schema, types, web-push lib, service worker handlers, vercel.json cron
-- [ ] 12.3-02-PLAN.md — Push/notification API routes, client hook, bell icon on movie detail page
-- [ ] 12.3-03-PLAN.md — Cron release-notifications route + end-to-end verification
+- [x] 12.3-01-PLAN.md — Schema, types, web-push lib, service worker handlers, vercel.json cron
+- [x] 12.3-02-PLAN.md — Push/notification API routes, client hook, bell icon on movie detail page
+- [x] 12.3-03-PLAN.md — Cron release-notifications route + end-to-end verification
 
 ### Phase 13: My Top 100
 **Goal**: Users can build and maintain a personal ranked list of up to 100 favorite movies and TV shows, accessible from within the library.
