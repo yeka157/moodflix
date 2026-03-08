@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MovieRow } from "@/components/movies/movie-row";
+import { BellNotifyButton } from "@/components/movies/bell-notify-button";
 
 interface MovieDetailPageContentProps {
   details: MovieDetailsWithExtras;
@@ -100,6 +101,10 @@ export function MovieDetailPageContent({
   const director = details.credits?.crew?.find((c) => c.job === "Director");
   const cast = details.credits?.cast?.slice(0, 15) ?? [];
   const genres = details.genres ?? [];
+
+  const isUpcoming = details.release_date
+    ? new Date(details.release_date) > new Date()
+    : false;
 
   const hasStream = (watchProviders?.flatrate?.length ?? 0) > 0;
   const hasRent = (watchProviders?.rent?.length ?? 0) > 0;
@@ -527,6 +532,16 @@ export function MovieDetailPageContent({
                     </Button>
                   </motion.div>
                 </>
+              )}
+
+              {/* Bell notify — only for unreleased movies */}
+              {isUpcoming && (
+                <BellNotifyButton
+                  tmdbId={details.id}
+                  title={details.title}
+                  posterPath={details.poster_path}
+                  releaseDate={details.release_date ?? null}
+                />
               )}
 
               {/* Trailer button */}
