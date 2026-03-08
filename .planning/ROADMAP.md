@@ -44,7 +44,7 @@ See: `.planning/milestones/v0.3-ROADMAP.md` for full details.
 - [x] **Phase 12: AI Polish** — Origin country filtering for country-specific recommendations, off-topic guardrails, and fire-and-forget conversation logging (completed 2026-03-07)
 - [x] **Phase 12.1: Quality of Life Improvement** — Fix AI send icon, mobile detail page back button, bottom bar active state, full conversation logging (INSERTED) (completed 2026-03-07)
 - [x] **Phase 12.2: Content Discovery & AI Shazam** — Coming Soon rows, TMDB lazy caching, movie/TV identification from descriptions (INSERTED) (completed 2026-03-07)
-- [ ] **Phase 12.3: Push Notifications** — Daily cron to notify users when watchlisted upcoming movies/TV shows are released (INSERTED)
+- [x] **Phase 12.3: Push Notifications** — Daily cron to notify users when watchlisted upcoming movies/TV shows are released (INSERTED) (completed 2026-03-08)
 - [ ] **Phase 13: My Top 100** — Personal ranked list of up to 100 movies and TV shows with CRUD and move up/down reordering
 
 ## Phase Details
@@ -164,7 +164,7 @@ Plans:
 
 **Goal:** Per-movie release notification opt-in via Web Push API. Bell icon on unreleased movie detail pages lets users subscribe. Daily Vercel Cron checks TMDB release dates and sends browser push notifications to subscribed users. Movies only.
 **Depends on:** Phase 12.2
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [ ] 12.3-01-PLAN.md — Schema, types, web-push lib, service worker handlers, vercel.json cron
@@ -204,5 +204,5 @@ Plans:
 | 12. AI Polish | 2/2 | Complete    | 2026-03-07 | - |
 | 12.1. Quality of Life Improvement | 2/2 | Complete    | 2026-03-07 | - |
 | 12.2. Content Discovery & AI Shazam | 4/4 | Complete    | 2026-03-07 | - |
-| 12.3. Push Notifications | 2/3 | In Progress|  | - |
+| 12.3. Push Notifications | 3/3 | Complete   | 2026-03-08 | - |
 | 13. My Top 100 | v0.4 | 0/TBD | Not started | - |

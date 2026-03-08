@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Watchlist & Polish
 status: executing
-stopped_at: "Completed 12.3-03-PLAN.md (checkpoint: human-verify pending)"
-last_updated: "2026-03-08T07:57:25.181Z"
+stopped_at: Completed 12.3-02-PLAN.md
+last_updated: "2026-03-08T08:43:55.116Z"
 last_activity: 2026-03-08 — Plan 03 complete (Cron release notification delivery)
 progress:
   total_phases: 11
-  completed_phases: 9
+  completed_phases: 10
   total_plans: 24
-  completed_plans: 23
-  percent: 96
+  completed_plans: 24
+  percent: 100
 ---
 
 # Project State
@@ -30,7 +30,7 @@ Plan: 03 of 3 complete
 Status: In Progress
 Last activity: 2026-03-08 — Plan 03 complete (Cron release notification delivery)
 
-Progress: [██████████] 96%
+Progress: [██████████] 100%
 
 ## Accumulated Context
 
@@ -101,6 +101,9 @@ Key decisions for v0.4 (from research):
 - [Phase 12.3-01]: endpoint column marked unique on pushSubscriptions -- one subscription per device across all users
 - [Phase 12.3-01]: notificationSubscriptions uses lastNotifiedAt as idempotency guard for cron deduplication
 - [Phase 12.3]: Lazy VAPID initialization in web-push.ts -- ensureVapid() guard prevents build-time crash
+- [Phase 12.3]: useSyncExternalStore for push API support detection -- avoids setState-in-effect lint error
+- [Phase 12.3]: hasSubscribedPushRef tracks first-time push subscription -- only prompts browser permission on initial bell tap
+- [Phase 12.3]: Uint8Array<ArrayBuffer> explicit generic -- fixes TS strict mode ArrayBufferLike incompatibility with PushManager
 
 ### Pending Todos
 
@@ -121,7 +124,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-08T07:57:25.178Z
-Stopped at: Completed 12.3-03-PLAN.md (checkpoint: human-verify pending)
+Last session: 2026-03-08T08:43:55.114Z
+Stopped at: Completed 12.3-02-PLAN.md
 Resume file: None
 Next step: Phase 12.2 Plan 03 or 04
