@@ -164,7 +164,7 @@ Plans:
 
 **Goal:** Per-movie release notification opt-in via Web Push API. Bell icon on unreleased movie detail pages lets users subscribe. Daily Vercel Cron checks TMDB release dates and sends browser push notifications to subscribed users. Movies only.
 **Depends on:** Phase 12.2
-**Plans:** 3 plans
+**Plans:** 2/3 plans executed
 
 Plans:
 - [ ] 12.3-01-PLAN.md — Schema, types, web-push lib, service worker handlers, vercel.json cron
@@ -204,5 +204,5 @@ Plans:
 | 12. AI Polish | 2/2 | Complete    | 2026-03-07 | - |
 | 12.1. Quality of Life Improvement | 2/2 | Complete    | 2026-03-07 | - |
 | 12.2. Content Discovery & AI Shazam | 4/4 | Complete    | 2026-03-07 | - |
-| 12.3. Push Notifications | v0.4 | 0/3 | Not started | - |
+| 12.3. Push Notifications | 2/3 | In Progress|  | - |
 | 13. My Top 100 | v0.4 | 0/TBD | Not started | - |

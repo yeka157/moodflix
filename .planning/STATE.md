@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Watchlist & Polish
-status: completed
-stopped_at: Phase 12.3 context gathered
-last_updated: "2026-03-07T13:27:58.435Z"
-last_activity: 2026-03-07 — Plan 03 complete (Coming Soon rows with date badges)
+status: executing
+stopped_at: "Completed 12.3-03-PLAN.md (checkpoint: human-verify pending)"
+last_updated: "2026-03-08T07:57:25.181Z"
+last_activity: 2026-03-08 — Plan 03 complete (Cron release notification delivery)
 progress:
   total_phases: 11
   completed_phases: 9
-  total_plans: 21
-  completed_plans: 21
-  percent: 100
+  total_plans: 24
+  completed_plans: 23
+  percent: 96
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Users can discover movies and TV shows that match their mood and manage what they've watched — the library and discovery experience must feel instant and intuitive.
-**Current focus:** v0.4 Phase 12.2 — Content Discovery & AI Shazam
+**Current focus:** v0.4 Phase 12.3 — Push Notifications
 
 ## Current Position
 
-Phase: 12.2 of 13 (Content Discovery & AI Shazam)
-Plan: 04 of 4 complete
-Status: Complete
-Last activity: 2026-03-07 — Plan 03 complete (Coming Soon rows with date badges)
+Phase: 12.3 of 13 (Push Notifications)
+Plan: 03 of 3 complete
+Status: In Progress
+Last activity: 2026-03-08 — Plan 03 complete (Cron release notification delivery)
 
-Progress: [██████████] 100%
+Progress: [██████████] 96%
 
 ## Accumulated Context
 
@@ -97,6 +97,10 @@ Key decisions for v0.4 (from research):
 - [Phase 12.2]: showReleaseBadge prop on MovieRow rather than formatBadge callback -- keeps badge computation inside MovieRow
 - [Phase 12.2]: Coming Soon row on Discover only shown when no filters active -- avoids visual clutter during filtered browsing
 - [Phase 12.2]: On-the-air TV endpoint for Series Coming Soon -- TMDB separates upcoming movies from currently-airing TV
+- [Phase 12.3-01]: server-only import on lib/web-push.ts prevents VAPID keys from leaking to client bundle
+- [Phase 12.3-01]: endpoint column marked unique on pushSubscriptions -- one subscription per device across all users
+- [Phase 12.3-01]: notificationSubscriptions uses lastNotifiedAt as idempotency guard for cron deduplication
+- [Phase 12.3]: Lazy VAPID initialization in web-push.ts -- ensureVapid() guard prevents build-time crash
 
 ### Pending Todos
 
@@ -117,7 +121,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-07T13:27:58.426Z
-Stopped at: Phase 12.3 context gathered
-Resume file: .planning/phases/12.3-push-notifications/12.3-CONTEXT.md
+Last session: 2026-03-08T07:57:25.178Z
+Stopped at: Completed 12.3-03-PLAN.md (checkpoint: human-verify pending)
+Resume file: None
 Next step: Phase 12.2 Plan 03 or 04
