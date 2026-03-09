@@ -17,9 +17,9 @@ import {
 import { PromptSuggestion } from "@/components/ui/prompt-suggestion";
 import { Loader } from "@/components/ui/loader";
 import { useMoodChat } from "@/hooks/use-ai";
-import { ShazamCard } from "@/components/ai/shazam-card";
+import { ShazamCardList } from "@/components/ai/shazam-card";
 import { COUNTRY_LABELS } from "@/lib/constants";
-import type { GenreSuggestion, IdentifiedMedia } from "@/types/ai";
+import type { GenreSuggestion, IdentifiedMediaResult } from "@/types/ai";
 import type { UIMessage } from "@ai-sdk/react";
 
 type MessageParts = NonNullable<UIMessage["parts"]>;
@@ -41,8 +41,8 @@ function getMessageGenreSuggestion(parts: MessageParts): GenreSuggestion | null 
   return null;
 }
 
-/** Extract identified media from a single message's parts */
-function getMessageIdentifiedMedia(parts: MessageParts): IdentifiedMedia | null {
+/** Extract identified media result from a single message's parts */
+function getMessageIdentifiedMedia(parts: MessageParts): IdentifiedMediaResult | null {
   for (const part of parts) {
     if (
       part.type.startsWith("tool-") &&
@@ -50,8 +50,8 @@ function getMessageIdentifiedMedia(parts: MessageParts): IdentifiedMedia | null 
       part.state === "output-available"
     ) {
       const output = part.output as Record<string, unknown>;
-      if ("tmdbId" in output) {
-        return output as unknown as IdentifiedMedia;
+      if ("matches" in output && Array.isArray(output.matches)) {
+        return output as unknown as IdentifiedMediaResult;
       }
     }
   }
@@ -208,21 +208,14 @@ export function MoodSection() {
                         </div>
                       </div>
 
-                      {/* Identified media card — inline with this message */}
-                      {msgMedia && msgMedia.verified && !isStreaming && (
+                      {/* Identified media card(s) — inline with this message */}
+                      {msgMedia && msgMedia.matches.length > 0 && !isStreaming && (
                         <motion.div
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           className="flex justify-start pl-9"
                         >
-                          <ShazamCard
-                            title={msgMedia.title}
-                            tmdbId={msgMedia.tmdbId}
-                            mediaType={msgMedia.mediaType}
-                            year={msgMedia.year}
-                            posterPath={msgMedia.posterPath}
-                            overview={msgMedia.overview}
-                          />
+                          <ShazamCardList matches={msgMedia.matches} query={msgMedia.query} />
                         </motion.div>
                       )}
 
