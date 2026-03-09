@@ -27,7 +27,7 @@ function extractLatestIdentifiedMedia(
 ): IdentifiedMedia | null {
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i];
-    for (const part of msg.parts) {
+    for (const part of msg.parts ?? []) {
       if (
         part.type.startsWith("tool-") &&
         "output" in part &&
@@ -49,7 +49,7 @@ function extractLatestGenreSuggestion(
 ): GenreSuggestion | null {
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i];
-    for (const part of msg.parts) {
+    for (const part of msg.parts ?? []) {
       if (
         part.type.startsWith("tool-") &&
         "output" in part &&

@@ -38,9 +38,20 @@ const navLinks = [
   },
 ];
 
+// Map deep pages to their parent nav section
+const DEEP_ROUTE_PARENTS: Record<string, string> = {
+  "/movie": "/discover",
+  "/tv": "/series",
+};
+
 function isActive(pathname: string, href: string, exact: boolean) {
   if (exact) return pathname === href;
-  return pathname.startsWith(href);
+  if (pathname.startsWith(href)) return true;
+  // Check if current deep page maps to this nav item
+  for (const [prefix, parent] of Object.entries(DEEP_ROUTE_PARENTS)) {
+    if (pathname.startsWith(prefix) && href === parent) return true;
+  }
+  return false;
 }
 
 export function BottomTabBar() {
