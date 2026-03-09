@@ -27,7 +27,7 @@ export async function GET(request: Request) {
 
   // 2. Today's date in UTC as YYYY-MM-DD
   const today = new Date().toISOString().slice(0, 10);
-  const startOfToday = new Date(`${today}T00:00:00.000Z`);
+  const startOfToday = `${today}T00:00:00.000Z`;
 
   // 3. Find movies releasing today via tmdb_media join
   const tmdbMatches = await db

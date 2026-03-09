@@ -58,6 +58,11 @@ function getMessageIdentifiedMedia(parts: MessageParts): IdentifiedMedia | null 
   return null;
 }
 
+/** Strip escaped quotes from Gemini output */
+function cleanAIText(text: string): string {
+  return text.replace(/\\"/g, '"').replace(/\\'/g, "'");
+}
+
 function getFriendlyErrorMessage(raw: string): string {
   const lower = raw.toLowerCase();
   if (lower.includes("quota") || lower.includes("rate limit") || lower.includes("rate-limit") || lower.includes("429") || lower.includes("too many")) {
@@ -178,7 +183,7 @@ export function MoodSection() {
                           .filter((p) => p.type === "text")
                           .map((p, i) => (
                             <span key={i}>
-                              {p.type === "text" ? p.text : null}
+                              {p.type === "text" ? cleanAIText(p.text) : null}
                             </span>
                           ))}
                       </div>
@@ -196,7 +201,7 @@ export function MoodSection() {
                               .filter((p) => p.type === "text")
                               .map((p, i) => (
                                 <span key={i}>
-                                  {p.type === "text" ? p.text : null}
+                                  {p.type === "text" ? cleanAIText(p.text) : null}
                                 </span>
                               ))}
                           </div>
