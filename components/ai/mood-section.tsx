@@ -58,6 +58,33 @@ function getMessageIdentifiedMedia(parts: MessageParts): IdentifiedMedia | null 
   return null;
 }
 
+function getFriendlyErrorMessage(raw: string): string {
+  const lower = raw.toLowerCase();
+  if (lower.includes("quota") || lower.includes("rate limit") || lower.includes("rate-limit") || lower.includes("429") || lower.includes("too many")) {
+    // Parse retry duration from Gemini errors like "Please retry in 55.373324254s"
+    const retryMatch = raw.match(/retry in ([\d.]+)s/i);
+    const retryAfterHeader = raw.match(/Retry-After:\s*(\d+)/i);
+    const seconds = retryMatch
+      ? Math.ceil(Number(retryMatch[1]))
+      : retryAfterHeader
+        ? Number(retryAfterHeader[1])
+        : null;
+    const waitText = seconds
+      ? seconds >= 60
+        ? `Try again in ${Math.ceil(seconds / 60)} minute${Math.ceil(seconds / 60) > 1 ? "s" : ""}.`
+        : `Try again in ${seconds} second${seconds !== 1 ? "s" : ""}.`
+      : "Please try again in a few minutes.";
+    return `AI recommendations are temporarily unavailable due to high demand. ${waitText}`;
+  }
+  if (lower.includes("network") || lower.includes("fetch") || lower.includes("timeout")) {
+    return "Couldn't reach the AI service. Check your connection and try again.";
+  }
+  if (lower.includes("authentication") || lower.includes("401")) {
+    return "Your session has expired. Please refresh the page and sign in again.";
+  }
+  return "Something went wrong generating recommendations. Please try again.";
+}
+
 const MOOD_SUGGESTIONS = [
   "I want to feel inspired and motivated",
   "Something cozy for a rainy evening",
@@ -257,10 +284,25 @@ export function MoodSection() {
 
         {/* Error state */}
         {error && (
-          <div className="flex flex-col items-center text-center space-y-2 py-2">
-            <AlertCircle className="size-6 text-destructive" />
-            <p className="text-sm text-destructive">{error.message}</p>
-          </div>
+          <Card className="border-destructive/30 bg-destructive/5 p-4 max-w-sm mx-auto">
+            <div className="flex gap-3 items-start">
+              <AlertCircle className="size-5 text-destructive shrink-0 mt-0.5" />
+              <div className="space-y-2 min-w-0">
+                <p className="text-sm text-foreground font-medium">
+                  {getFriendlyErrorMessage(error.message)}
+                </p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1.5 text-xs text-muted-foreground h-7 px-2"
+                  onClick={handleReset}
+                >
+                  <RotateCcw className="size-3" />
+                  Try again
+                </Button>
+              </div>
+            </div>
+          </Card>
         )}
 
         {/* Input area */}
