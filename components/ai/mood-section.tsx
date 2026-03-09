@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Sparkles, ArrowRight, AlertCircle, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
@@ -19,6 +19,44 @@ import { Loader } from "@/components/ui/loader";
 import { useMoodChat } from "@/hooks/use-ai";
 import { ShazamCard } from "@/components/ai/shazam-card";
 import { COUNTRY_LABELS } from "@/lib/constants";
+import type { GenreSuggestion, IdentifiedMedia } from "@/types/ai";
+import type { UIMessage } from "@ai-sdk/react";
+
+type MessageParts = NonNullable<UIMessage["parts"]>;
+
+/** Extract genre suggestion from a single message's parts */
+function getMessageGenreSuggestion(parts: MessageParts): GenreSuggestion | null {
+  for (const part of parts) {
+    if (
+      part.type.startsWith("tool-") &&
+      "output" in part &&
+      part.state === "output-available"
+    ) {
+      const output = part.output as Record<string, unknown>;
+      if ("genres" in output && Array.isArray(output.genres)) {
+        return output as unknown as GenreSuggestion;
+      }
+    }
+  }
+  return null;
+}
+
+/** Extract identified media from a single message's parts */
+function getMessageIdentifiedMedia(parts: MessageParts): IdentifiedMedia | null {
+  for (const part of parts) {
+    if (
+      part.type.startsWith("tool-") &&
+      "output" in part &&
+      part.state === "output-available"
+    ) {
+      const output = part.output as Record<string, unknown>;
+      if ("tmdbId" in output) {
+        return output as unknown as IdentifiedMedia;
+      }
+    }
+  }
+  return null;
+}
 
 const MOOD_SUGGESTIONS = [
   "I want to feel inspired and motivated",
@@ -40,7 +78,6 @@ export function MoodSection() {
     setMessages,
     clearError,
     genreSuggestion,
-    identifiedMedia,
   } = useMoodChat();
 
   const isStreaming = status === "streaming" || status === "submitted";
@@ -99,29 +136,18 @@ export function MoodSection() {
             ref={chatAreaRef}
             className="max-h-[400px] overflow-y-auto space-y-3 px-1"
           >
-            {messages.map((msg) => (
-              <div key={msg.id}>
-                {msg.role === "user" && (
-                  <div className="flex justify-end">
-                    <div className="bg-primary/15 text-foreground rounded-2xl rounded-br-sm px-4 py-2.5 max-w-[80%] text-sm">
-                      {(msg.parts ?? [])
-                        .filter((p) => p.type === "text")
-                        .map((p, i) => (
-                          <span key={i}>
-                            {p.type === "text" ? p.text : null}
-                          </span>
-                        ))}
-                    </div>
-                  </div>
-                )}
-                {msg.role === "assistant" && (
-                  <div className="flex justify-start">
-                    <div className="flex gap-2.5 max-w-[85%]">
-                      <div className="size-7 rounded-lg bg-gradient-to-br from-primary/25 to-primary/5 flex items-center justify-center shrink-0 mt-0.5">
-                        <Sparkles className="size-3.5 text-primary" />
-                      </div>
-                      <div className="bg-secondary rounded-2xl rounded-bl-sm px-4 py-2.5 text-sm text-foreground">
-                        {(msg.parts ?? [])
+            {messages.map((msg) => {
+              // Extract per-message tool outputs for inline rendering
+              const msgParts = msg.parts ?? [];
+              const msgGenre = msg.role === "assistant" ? getMessageGenreSuggestion(msgParts) : null;
+              const msgMedia = msg.role === "assistant" ? getMessageIdentifiedMedia(msgParts) : null;
+
+              return (
+                <div key={msg.id}>
+                  {msg.role === "user" && (
+                    <div className="flex justify-end">
+                      <div className="bg-primary/15 text-foreground rounded-2xl rounded-br-sm px-4 py-2.5 max-w-[80%] text-sm">
+                        {msgParts
                           .filter((p) => p.type === "text")
                           .map((p, i) => (
                             <span key={i}>
@@ -130,10 +156,88 @@ export function MoodSection() {
                           ))}
                       </div>
                     </div>
-                  </div>
-                )}
-              </div>
-            ))}
+                  )}
+                  {msg.role === "assistant" && (
+                    <div className="space-y-2">
+                      <div className="flex justify-start">
+                        <div className="flex gap-2.5 max-w-[85%]">
+                          <div className="size-7 rounded-lg bg-gradient-to-br from-primary/25 to-primary/5 flex items-center justify-center shrink-0 mt-0.5">
+                            <Sparkles className="size-3.5 text-primary" />
+                          </div>
+                          <div className="bg-secondary rounded-2xl rounded-bl-sm px-4 py-2.5 text-sm text-foreground">
+                            {msgParts
+                              .filter((p) => p.type === "text")
+                              .map((p, i) => (
+                                <span key={i}>
+                                  {p.type === "text" ? p.text : null}
+                                </span>
+                              ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Identified media card — inline with this message */}
+                      {msgMedia && msgMedia.verified && !isStreaming && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="flex justify-start pl-9"
+                        >
+                          <ShazamCard
+                            title={msgMedia.title}
+                            tmdbId={msgMedia.tmdbId}
+                            mediaType={msgMedia.mediaType}
+                            year={msgMedia.year}
+                            posterPath={msgMedia.posterPath}
+                            overview={msgMedia.overview}
+                          />
+                        </motion.div>
+                      )}
+
+                      {/* Genre suggestion CTA — inline with this message */}
+                      {msgGenre && !isStreaming && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="flex justify-center pt-1"
+                        >
+                          <Card className="border-primary/30 bg-primary/5 p-4 w-full max-w-sm">
+                            <div className="space-y-3 text-center">
+                              <div className="flex flex-wrap justify-center gap-1.5">
+                                {msgGenre.genres.map((g) => {
+                                  const countryLabel = msgGenre.origin_country
+                                    ? COUNTRY_LABELS[msgGenre.origin_country]
+                                    : undefined;
+                                  return (
+                                    <Badge
+                                      key={g.id}
+                                      variant="secondary"
+                                      className="bg-primary/15 text-primary border-primary/20"
+                                    >
+                                      {countryLabel ? `${countryLabel} ${g.name}` : g.name}
+                                    </Badge>
+                                  );
+                                })}
+                              </div>
+                              <Button
+                                onClick={handleShowMovies}
+                                className="gap-2 w-full"
+                                size="sm"
+                              >
+                                {msgGenre.media_type === "tv"
+                                  ? "Show me TV shows"
+                                  : "Show me movies"}
+                                <ArrowRight className="size-4" />
+                              </Button>
+                            </div>
+                          </Card>
+                        </motion.div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
 
             {/* Streaming indicator */}
             {isStreaming && (
@@ -148,70 +252,6 @@ export function MoodSection() {
                 </div>
               </div>
             )}
-
-            {/* Genre suggestion CTA */}
-            <AnimatePresence>
-              {genreSuggestion?.genres && !isStreaming && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="flex justify-center pt-2"
-                >
-                  <Card className="border-primary/30 bg-primary/5 p-4 w-full max-w-sm">
-                    <div className="space-y-3 text-center">
-                      <div className="flex flex-wrap justify-center gap-1.5">
-                        {genreSuggestion.genres.map((g) => {
-                          const countryLabel = genreSuggestion.origin_country
-                            ? COUNTRY_LABELS[genreSuggestion.origin_country]
-                            : undefined;
-                          return (
-                            <Badge
-                              key={g.id}
-                              variant="secondary"
-                              className="bg-primary/15 text-primary border-primary/20"
-                            >
-                              {countryLabel ? `${countryLabel} ${g.name}` : g.name}
-                            </Badge>
-                          );
-                        })}
-                      </div>
-                      <Button
-                        onClick={handleShowMovies}
-                        className="gap-2 w-full"
-                        size="sm"
-                      >
-                        {genreSuggestion.media_type === "tv"
-                          ? "Show me TV shows"
-                          : "Show me movies"}
-                        <ArrowRight className="size-4" />
-                      </Button>
-                    </div>
-                  </Card>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Identified media card */}
-            <AnimatePresence>
-              {identifiedMedia && identifiedMedia.verified && !isStreaming && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="flex justify-start pl-9"
-                >
-                  <ShazamCard
-                    title={identifiedMedia.title}
-                    tmdbId={identifiedMedia.tmdbId}
-                    mediaType={identifiedMedia.mediaType}
-                    year={identifiedMedia.year}
-                    posterPath={identifiedMedia.posterPath}
-                    overview={identifiedMedia.overview}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
         )}
 
