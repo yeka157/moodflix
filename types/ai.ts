@@ -21,6 +21,11 @@ export type IdentifiedMedia = {
   overview: string | null;
 };
 
+export type IdentifiedMediaResult = {
+  matches: IdentifiedMedia[];
+  query: string;
+};
+
 export type AiConversation = {
   id: string;
   userId: string;

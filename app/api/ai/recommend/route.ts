@@ -192,14 +192,17 @@ When the user references content from a specific country or culture, include the
 If you cannot confidently determine an origin country, do NOT include origin_country -- just suggest genres without it.
 
 MEDIA IDENTIFICATION:
-When a user describes a specific movie or TV show (mentions specific scenes, plot points, characters, quotes, or distinctive elements), identify the title and call the identify_media tool.
-Examples of identification requests:
-- "the movie where the guy grows potatoes on Mars" -> The Martian
-- "that show about a chemistry teacher who makes meth" -> Breaking Bad
-- "the animated movie with the old man and balloons" -> Up
+When a user describes a specific movie or TV show (mentions specific scenes, plot points, characters, quotes, or distinctive elements), identify it by calling identify_media with 1-3 candidate matches ranked by confidence.
 
-If you're not confident about the exact title, call identify_media with your best guess. The tool will verify it.
-If you truly cannot identify it, use suggest_genres to recommend similar content based on the description instead.
+Confidence routing:
+- If you're quite sure (one clear match): provide 1 candidate with "high" confidence
+- If it could be 2-3 things: provide all candidates ranked by confidence
+- If the description is too vague to identify anything specific (no plot points, no characters, no distinctive scenes -- just a general vibe): do NOT call identify_media. Instead, ask ONE specific follow-up question to narrow it down (e.g., "Do you remember any actors?" or "Was it animated or live-action?")
+
+Examples:
+- "the movie where the guy grows potatoes on Mars" -> 1 candidate: The Martian (high)
+- "that movie about time loops" -> 3 candidates: Groundhog Day (high), Edge of Tomorrow (medium), Palm Springs (medium)
+- "some movie I saw once about a dog" -> TOO VAGUE, ask follow-up question
 
 Do NOT use identify_media for:
 - Mood descriptions ("I feel sad")
@@ -320,66 +323,61 @@ Keep responses concise: 2-4 sentences. Be warm and conversational.`;
         }),
         identify_media: tool({
           description:
-            "Identify a specific movie or TV show from the user's description of its plot, scenes, characters, or quotes.",
+            "Identify a specific movie or TV show from the user's description. Provide 1-3 candidate matches ranked by confidence.",
           inputSchema: z.object({
-            title: z
-              .string()
-              .describe("The identified movie or TV show title"),
-            mediaType: z
-              .enum(["movie", "tv"])
-              .describe("Whether it's a movie or TV show"),
-            year: z
-              .string()
-              .optional()
-              .describe("Release year if known"),
-            confidence: z
-              .enum(["high", "medium", "low"])
-              .describe("How confident the identification is"),
+            query: z.string().describe("Brief summary of what the user is describing"),
+            candidates: z.array(z.object({
+              title: z.string(),
+              mediaType: z.enum(["movie", "tv"]),
+              year: z.string().optional(),
+              confidence: z.enum(["high", "medium", "low"]),
+            })).min(1).max(3),
           }),
           execute: async (params) => {
-            // Search TMDB by title to verify (do NOT trust Gemini's TMDB ID guesses)
-            const results = await searchMulti(params.title);
-            const targetType = params.mediaType === "tv" ? "tv" : "movie";
+            // Search TMDB for each candidate to verify
+            const verifiedMatches = await Promise.all(
+              params.candidates.map(async (candidate) => {
+                const results = await searchMulti(candidate.title);
+                const targetType = candidate.mediaType === "tv" ? "tv" : "movie";
 
-            // Find best match: prefer exact media type match
-            const match =
-              results.results.find(
-                (r) =>
-                  r.media_type === targetType &&
-                  (r.title ?? r.name ?? "")
-                    .toLowerCase()
-                    .includes(params.title.toLowerCase().split(" ")[0]),
-              ) ??
-              results.results.find((r) => r.media_type === targetType) ??
-              results.results[0];
+                const match =
+                  results.results.find(
+                    (r) =>
+                      r.media_type === targetType &&
+                      (r.title ?? r.name ?? "")
+                        .toLowerCase()
+                        .includes(candidate.title.toLowerCase().split(" ")[0]),
+                  ) ??
+                  results.results.find((r) => r.media_type === targetType) ??
+                  results.results[0];
 
-            if (!match) {
-              return {
-                ...params,
-                tmdbId: 0,
-                verified: false,
-                posterPath: null,
-                overview: null,
-              };
-            }
+                if (!match) return null;
 
-            const identified = {
-              title: match.title ?? match.name ?? params.title,
-              tmdbId: match.id,
-              mediaType:
-                match.media_type === "tv"
-                  ? ("tv" as const)
-                  : ("movie" as const),
-              year:
-                (match.release_date ?? match.first_air_date ?? "").slice(0, 4) ||
-                params.year,
-              confidence: params.confidence,
-              verified: true,
-              posterPath: match.poster_path,
-              overview: match.overview,
-            };
+                return {
+                  title: match.title ?? match.name ?? candidate.title,
+                  tmdbId: match.id,
+                  mediaType:
+                    match.media_type === "tv"
+                      ? ("tv" as const)
+                      : ("movie" as const),
+                  year:
+                    (match.release_date ?? match.first_air_date ?? "").slice(0, 4) ||
+                    candidate.year,
+                  confidence: candidate.confidence,
+                  verified: true,
+                  posterPath: match.poster_path,
+                  overview: match.overview,
+                };
+              }),
+            );
+
+            // Filter out unverified (null) results
+            const matches = verifiedMatches.filter(
+              (m): m is NonNullable<typeof m> => m !== null,
+            );
 
             // Log full conversation (fire-and-forget)
+            const matchTitles = matches.map((m) => m.title).join(", ");
             const fullMessages = [
               ...uiMessages,
               {
@@ -387,7 +385,7 @@ Keep responses concise: 2-4 sentences. Be warm and conversational.`;
                 parts: [
                   {
                     type: "text",
-                    text: `Identified: ${identified.title}`,
+                    text: `Identified: ${matchTitles || "no matches"}`,
                   },
                 ],
               },
@@ -424,7 +422,7 @@ Keep responses concise: 2-4 sentences. Be warm and conversational.`;
                 });
             }
 
-            return identified;
+            return { matches, query: params.query };
           },
         }),
       },
