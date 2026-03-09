@@ -65,7 +65,7 @@ export function MoodSection() {
   };
 
   const handleShowMovies = () => {
-    if (!genreSuggestion) return;
+    if (!genreSuggestion?.genres) return;
     const genreIds = genreSuggestion.genres.map((g) => g.id).join(",");
     const mood = encodeURIComponent(genreSuggestion.moodSummary);
     const mediaType = genreSuggestion.media_type ?? "movie";
@@ -151,7 +151,7 @@ export function MoodSection() {
 
             {/* Genre suggestion CTA */}
             <AnimatePresence>
-              {genreSuggestion && !isStreaming && (
+              {genreSuggestion?.genres && !isStreaming && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}

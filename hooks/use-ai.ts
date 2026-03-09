@@ -55,7 +55,11 @@ function extractLatestGenreSuggestion(
         "output" in part &&
         part.state === "output-available"
       ) {
-        return part.output as GenreSuggestion;
+        const output = part.output as Record<string, unknown>;
+        // Only return outputs that have genres (distinguish from identify_media)
+        if ("genres" in output && Array.isArray(output.genres)) {
+          return output as unknown as GenreSuggestion;
+        }
       }
     }
   }
