@@ -18,6 +18,10 @@ export type DiscoverMoviesParams = {
   year: string;
 };
 
+export function getDefaultDiscoverParams(): DiscoverMoviesParams {
+  return { genreId: "", sortBy: "popularity.desc", year: "" };
+}
+
 export const movieKeys = {
   all: ["movies"] as const,
   upcoming: () => [...movieKeys.all, "upcoming"] as const,

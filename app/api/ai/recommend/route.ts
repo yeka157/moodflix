@@ -63,6 +63,8 @@ function isOffTopic(text: string): boolean {
   return OFF_TOPIC_PATTERNS.some((pattern) => pattern.test(text));
 }
 
+
+
 async function getWatchlistContext(userId: string): Promise<string> {
   const likedMovies = await db
     .select({ title: watchlist.title })
@@ -144,6 +146,48 @@ export async function POST(request: Request) {
     if (isOffTopic(lastMessageText)) {
       const message =
         REDIRECT_MESSAGES[Date.now() % REDIRECT_MESSAGES.length];
+
+      // Log off-topic conversation (fire-and-forget)
+      const offTopicMessages = [
+        ...uiMessages,
+        { role: "assistant", parts: [{ type: "text", text: message }] },
+      ];
+      const offTopicMetadata: Record<string, unknown> = {
+        toolUsed: "none",
+        isOffTopic: true,
+        messageCount: offTopicMessages.length,
+      };
+      const userId = user.id;
+      const moodPrompt = lastMessageText || "off-topic";
+      if (conversationId) {
+        db.insert(aiConversations)
+          .values({
+            userId,
+            prompt: moodPrompt,
+            messages: offTopicMessages,
+            conversationId,
+            metadata: offTopicMetadata,
+          })
+          .onConflictDoUpdate({
+            target: [aiConversations.conversationId],
+            set: {
+              messages: offTopicMessages,
+              prompt: moodPrompt,
+              updatedAt: new Date(),
+              metadata: offTopicMetadata,
+            },
+          })
+          .catch(() => {});
+      } else {
+        db.insert(aiConversations)
+          .values({
+            userId,
+            prompt: moodPrompt,
+            messages: offTopicMessages,
+            metadata: offTopicMetadata,
+          })
+          .catch(() => {});
+      }
 
       const stream = createUIMessageStream({
         execute: ({ writer }) => {
