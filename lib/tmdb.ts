@@ -67,7 +67,7 @@ export async function searchTV(query: string, page = 1) {
 
 export async function getMovieDetails(id: number) {
   return tmdbFetch<MovieDetailsWithExtras>(`/movie/${id}`, {
-    append_to_response: "credits,watch/providers",
+    append_to_response: "credits,watch/providers,release_dates",
   });
 }
 

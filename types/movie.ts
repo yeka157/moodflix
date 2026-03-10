@@ -84,9 +84,29 @@ export type MovieCredits = {
   }[];
 };
 
+export type ReleaseDateEntry = {
+  certification: string;
+  descriptors: string[];
+  iso_639_1: string;
+  note: string;
+  release_date: string;  // ISO date string
+  type: number;          // 1=Premiere, 2=Theatrical Limited, 3=Theatrical, 4=Digital, 5=Physical, 6=TV
+};
+
+export type ReleaseDateResult = {
+  iso_3166_1: string;    // Country code
+  release_dates: ReleaseDateEntry[];
+};
+
+export type MovieReleaseDatesResponse = {
+  id: number;
+  results: ReleaseDateResult[];
+};
+
 export type MovieDetailsWithExtras = MovieDetails & {
   credits: MovieCredits;
   "watch/providers": WatchProvidersResponse;
+  release_dates?: MovieReleaseDatesResponse;
 };
 
 export type MovieDetailsResponse = MovieDetailsWithExtras & {
