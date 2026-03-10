@@ -76,6 +76,7 @@ export const aiConversations = pgTable(
     prompt: text("prompt"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+    metadata: jsonb("metadata"),
   },
   (table) => [
     uniqueIndex("ai_conversations_conversation_id_unique")
