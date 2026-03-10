@@ -12,7 +12,11 @@ import { geminiModel } from "@/lib/ai";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { searchMulti } from "@/lib/tmdb";
 import { db } from "@/drizzle";
-import { watchlist, aiRecommendations, aiConversations } from "@/drizzle/schema";
+import {
+  watchlist,
+  aiRecommendations,
+  aiConversations,
+} from "@/drizzle/schema";
 import { eq, and, or, ne, isNull, desc, sql } from "drizzle-orm";
 import { GENRES, TV_GENRES } from "@/lib/constants";
 
@@ -63,7 +67,86 @@ function isOffTopic(text: string): boolean {
   return OFF_TOPIC_PATTERNS.some((pattern) => pattern.test(text));
 }
 
+type ConversationMetadata = {
+  toolUsed: "suggest_genres" | "identify_media" | "none";
+  genresSuggested: string[];
+  mediaIdentified: string[];
+  messageCount: number;
+  isOffTopic: boolean;
+};
 
+function buildConversationMetadata(
+  steps: ReadonlyArray<{
+    toolCalls?: ReadonlyArray<{
+      toolName: string;
+      input: unknown;
+    }>;
+    toolResults?: ReadonlyArray<{
+      toolName: string;
+      output?: unknown;
+    }>;
+  }>,
+  messageCount: number,
+): ConversationMetadata {
+  let toolUsed: ConversationMetadata["toolUsed"] = "none";
+  const genresSuggested: string[] = [];
+  const mediaIdentified: string[] = [];
+
+  for (const step of steps) {
+    for (const call of step.toolCalls ?? []) {
+      if (call.toolName === "suggest_genres") {
+        toolUsed = "suggest_genres";
+        const input = call.input as { genres?: Array<{ name: string }> };
+        if (Array.isArray(input.genres)) {
+          genresSuggested.push(...input.genres.map((g) => g.name));
+        }
+      } else if (call.toolName === "identify_media") {
+        toolUsed = "identify_media";
+      }
+    }
+    for (const toolResult of step.toolResults ?? []) {
+      if (toolResult.toolName === "identify_media") {
+        const output = toolResult.output as
+          | { matches?: Array<{ title: string }> }
+          | undefined;
+        if (Array.isArray(output?.matches)) {
+          mediaIdentified.push(...output.matches.map((m) => m.title));
+        }
+      }
+    }
+  }
+
+  return {
+    toolUsed,
+    genresSuggested,
+    mediaIdentified,
+    messageCount,
+    isOffTopic: false,
+  };
+}
+
+function upsertConversation(params: {
+  userId: string;
+  conversationId: string | undefined;
+  messages: unknown[];
+  prompt: string;
+  metadata: Record<string, unknown>;
+}): void {
+  const { userId, conversationId, messages, prompt, metadata } = params;
+  if (conversationId) {
+    db.insert(aiConversations)
+      .values({ userId, prompt, messages, conversationId, metadata })
+      .onConflictDoUpdate({
+        target: [aiConversations.conversationId],
+        set: { messages, prompt, updatedAt: new Date(), metadata },
+      })
+      .catch(() => {});
+  } else {
+    db.insert(aiConversations)
+      .values({ userId, prompt, messages, metadata })
+      .catch(() => {});
+  }
+}
 
 async function getWatchlistContext(userId: string): Promise<string> {
   const likedMovies = await db
@@ -91,7 +174,10 @@ export async function POST(request: Request) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return Response.json({ error: "Authentication required" }, { status: 401 });
+      return Response.json(
+        { error: "Authentication required" },
+        { status: 401 },
+      );
     }
 
     // 2. Parse body
@@ -144,50 +230,24 @@ export async function POST(request: Request) {
 
     // 5. Off-topic pre-check filter
     if (isOffTopic(lastMessageText)) {
-      const message =
-        REDIRECT_MESSAGES[Date.now() % REDIRECT_MESSAGES.length];
+      const message = REDIRECT_MESSAGES[Date.now() % REDIRECT_MESSAGES.length];
 
       // Log off-topic conversation (fire-and-forget)
       const offTopicMessages = [
         ...uiMessages,
         { role: "assistant", parts: [{ type: "text", text: message }] },
       ];
-      const offTopicMetadata: Record<string, unknown> = {
-        toolUsed: "none",
-        isOffTopic: true,
-        messageCount: offTopicMessages.length,
-      };
-      const userId = user.id;
-      const moodPrompt = lastMessageText || "off-topic";
-      if (conversationId) {
-        db.insert(aiConversations)
-          .values({
-            userId,
-            prompt: moodPrompt,
-            messages: offTopicMessages,
-            conversationId,
-            metadata: offTopicMetadata,
-          })
-          .onConflictDoUpdate({
-            target: [aiConversations.conversationId],
-            set: {
-              messages: offTopicMessages,
-              prompt: moodPrompt,
-              updatedAt: new Date(),
-              metadata: offTopicMetadata,
-            },
-          })
-          .catch(() => {});
-      } else {
-        db.insert(aiConversations)
-          .values({
-            userId,
-            prompt: moodPrompt,
-            messages: offTopicMessages,
-            metadata: offTopicMetadata,
-          })
-          .catch(() => {});
-      }
+      upsertConversation({
+        userId: user.id,
+        conversationId,
+        messages: offTopicMessages,
+        prompt: lastMessageText || "off-topic",
+        metadata: {
+          toolUsed: "none",
+          isOffTopic: true,
+          messageCount: offTopicMessages.length,
+        },
+      });
 
       const stream = createUIMessageStream({
         execute: ({ writer }) => {
@@ -261,7 +321,9 @@ Keep responses concise: 2-4 sentences. Be warm and conversational.`;
 
     // 8. Convert UIMessages to ModelMessages and stream response
     const userId = user.id;
-    const modelMessages = await convertToModelMessages(uiMessages as Parameters<typeof convertToModelMessages>[0]);
+    const modelMessages = await convertToModelMessages(
+      uiMessages as Parameters<typeof convertToModelMessages>[0],
+    );
 
     const result = streamText({
       model: geminiModel,
@@ -315,48 +377,15 @@ Keep responses concise: 2-4 sentences. Be warm and conversational.`;
             };
 
             // Store recommendation in DB (fire-and-forget)
-            const moodPrompt = lastMessageText || "mood chat";
-
             db.insert(aiRecommendations)
               .values({
                 userId,
-                prompt: moodPrompt,
+                prompt: lastMessageText || "mood chat",
                 recommendations: validatedParams,
               })
               .catch(() => {
                 // Non-critical: silently fail
               });
-
-            // Log full conversation (fire-and-forget)
-            const fullMessages = [...uiMessages, { role: "assistant", parts: [{ type: "text", text: `Suggested: ${validatedParams.genres.map((g) => g.name).join(", ")}` }] }];
-
-            if (conversationId) {
-              db.insert(aiConversations)
-                .values({
-                  userId,
-                  prompt: moodPrompt,
-                  messages: fullMessages,
-                  conversationId,
-                })
-                .onConflictDoUpdate({
-                  target: [aiConversations.conversationId],
-                  set: { messages: fullMessages, prompt: moodPrompt, updatedAt: new Date() },
-                })
-                .catch(() => {
-                  // Non-critical: silently fail
-                });
-            } else {
-              // Fallback for old clients without conversationId
-              db.insert(aiConversations)
-                .values({
-                  userId,
-                  prompt: moodPrompt,
-                  messages: fullMessages,
-                })
-                .catch(() => {
-                  // Non-critical: silently fail
-                });
-            }
 
             return {
               ...validatedParams,
@@ -369,13 +398,20 @@ Keep responses concise: 2-4 sentences. Be warm and conversational.`;
           description:
             "Identify a specific movie or TV show from the user's description. Provide 1-3 candidate matches ranked by confidence.",
           inputSchema: z.object({
-            query: z.string().describe("Brief summary of what the user is describing"),
-            candidates: z.array(z.object({
-              title: z.string(),
-              mediaType: z.enum(["movie", "tv"]),
-              year: z.string().optional(),
-              confidence: z.enum(["high", "medium", "low"]),
-            })).min(1).max(3),
+            query: z
+              .string()
+              .describe("Brief summary of what the user is describing"),
+            candidates: z
+              .array(
+                z.object({
+                  title: z.string(),
+                  mediaType: z.enum(["movie", "tv"]),
+                  year: z.string().optional(),
+                  confidence: z.enum(["high", "medium", "low"]),
+                }),
+              )
+              .min(1)
+              .max(3),
           }),
           execute: async (params) => {
             // Search TMDB for each candidate to verify
@@ -405,8 +441,10 @@ Keep responses concise: 2-4 sentences. Be warm and conversational.`;
                       ? ("tv" as const)
                       : ("movie" as const),
                   year:
-                    (match.release_date ?? match.first_air_date ?? "").slice(0, 4) ||
-                    candidate.year,
+                    (match.release_date ?? match.first_air_date ?? "").slice(
+                      0,
+                      4,
+                    ) || candidate.year,
                   confidence: candidate.confidence,
                   verified: true,
                   posterPath: match.poster_path,
@@ -420,52 +458,6 @@ Keep responses concise: 2-4 sentences. Be warm and conversational.`;
               (m): m is NonNullable<typeof m> => m !== null,
             );
 
-            // Log full conversation (fire-and-forget)
-            const matchTitles = matches.map((m) => m.title).join(", ");
-            const fullMessages = [
-              ...uiMessages,
-              {
-                role: "assistant",
-                parts: [
-                  {
-                    type: "text",
-                    text: `Identified: ${matchTitles || "no matches"}`,
-                  },
-                ],
-              },
-            ];
-
-            if (conversationId) {
-              db.insert(aiConversations)
-                .values({
-                  userId,
-                  prompt: lastMessageText || "identify",
-                  messages: fullMessages,
-                  conversationId,
-                })
-                .onConflictDoUpdate({
-                  target: [aiConversations.conversationId],
-                  set: {
-                    messages: fullMessages,
-                    prompt: lastMessageText || "identify",
-                    updatedAt: new Date(),
-                  },
-                })
-                .catch(() => {
-                  // Non-critical: silently fail
-                });
-            } else {
-              db.insert(aiConversations)
-                .values({
-                  userId,
-                  prompt: lastMessageText || "identify",
-                  messages: fullMessages,
-                })
-                .catch(() => {
-                  // Non-critical: silently fail
-                });
-            }
-
             return { matches, query: params.query };
           },
         }),
@@ -476,6 +468,27 @@ Keep responses concise: 2-4 sentences. Be warm and conversational.`;
       onError: ({ error }) => {
         console.error("[AI] stream error:", error);
       },
+      onFinish: (event) => {
+        // Build structured metadata from all steps (verbatim AI text)
+        const metadata = buildConversationMetadata(
+          event.steps,
+          uiMessages.length + 1,
+        ) as Record<string, unknown>;
+
+        const fullMessages = [
+          ...uiMessages,
+          { role: "assistant", parts: [{ type: "text", text: event.text }] },
+        ];
+
+        // Upsert conversation with verbatim text (fire-and-forget)
+        upsertConversation({
+          userId,
+          conversationId,
+          messages: fullMessages,
+          prompt: lastMessageText || "mood chat",
+          metadata,
+        });
+      },
     });
 
     return result.toUIMessageStreamResponse();
@@ -484,7 +497,10 @@ Keep responses concise: 2-4 sentences. Be warm and conversational.`;
 
     if (isQuotaOrRateLimitError(err)) {
       return Response.json(
-        { error: "AI recommendations are temporarily unavailable. Please try again later." },
+        {
+          error:
+            "AI recommendations are temporarily unavailable. Please try again later.",
+        },
         { status: 503 },
       );
     }
