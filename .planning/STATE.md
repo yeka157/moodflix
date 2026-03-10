@@ -133,6 +133,7 @@ None.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 1 | Improve AI movie prediction: multi-match identify_media with confidence routing | 2026-03-09 | 6da1590 | [1-improve-ai-movie-prediction-multi-match-](./quick/1-improve-ai-movie-prediction-multi-match-/) |
+| 2 | Improve UX for movies with no watch providers: contextual availability messages | 2026-03-10 | fe5d24f | [2-improve-ux-for-movies-with-no-watch-prov](./quick/2-improve-ux-for-movies-with-no-watch-prov/) |
 
 ## Session Continuity
 
