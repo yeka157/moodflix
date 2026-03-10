@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Watchlist & Polish
 status: Not started
-stopped_at: Phase 12.4 context gathered
-last_updated: "2026-03-10T05:27:08.387Z"
+stopped_at: Completed 12.4-01-PLAN.md
+last_updated: "2026-03-10T07:00:42.787Z"
 last_activity: "2026-03-09 - Completed quick task 1: Improve AI movie prediction: multi-match identify_media with confidence routing"
 progress:
   total_phases: 12
-  completed_phases: 10
-  total_plans: 24
-  completed_plans: 24
+  completed_phases: 11
+  total_plans: 26
+  completed_plans: 26
 ---
 
 # Project State
@@ -103,6 +103,9 @@ Key decisions for v0.4 (from research):
 - [Phase 12.3]: useSyncExternalStore for push API support detection -- avoids setState-in-effect lint error
 - [Phase 12.3]: hasSubscribedPushRef tracks first-time push subscription -- only prompts browser permission on initial bell tap
 - [Phase 12.3]: Uint8Array<ArrayBuffer> explicit generic -- fixes TS strict mode ArrayBufferLike incompatibility with PushManager
+- [Phase 12.4-01]: StepResult<ToolSet> generic is contravariant -- used inline structural type for buildConversationMetadata steps param instead of importing StepResult<ToolSet>
+- [Phase 12.4-01]: call.input (not call.args) and toolResult.output (not toolResult.result) -- AI SDK v6 DynamicToolCall/DynamicToolResult use these property names
+- [Phase 12.4-01]: upsertConversation extracted as module-level helper -- eliminates duplicated if/else conversationId branching across onFinish and off-topic paths
 
 ### Pending Todos
 
@@ -130,7 +133,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-10T05:27:08.379Z
-Stopped at: Phase 12.4 context gathered
-Resume file: .planning/phases/12.4-full-ai-conversation-logging-cache-performance/12.4-CONTEXT.md
+Last session: 2026-03-10T07:00:42.785Z
+Stopped at: Completed 12.4-01-PLAN.md
+Resume file: None
 Next step: Phase 13 (My Top 100) or milestone wrap-up

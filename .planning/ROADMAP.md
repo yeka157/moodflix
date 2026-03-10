@@ -45,7 +45,7 @@ See: `.planning/milestones/v0.3-ROADMAP.md` for full details.
 - [x] **Phase 12.1: Quality of Life Improvement** — Fix AI send icon, mobile detail page back button, bottom bar active state, full conversation logging (INSERTED) (completed 2026-03-07)
 - [x] **Phase 12.2: Content Discovery & AI Shazam** — Coming Soon rows, TMDB lazy caching, movie/TV identification from descriptions (INSERTED) (completed 2026-03-07)
 - [x] **Phase 12.3: Push Notifications** — Daily cron to notify users when watchlisted upcoming movies/TV shows are released (INSERTED) (completed 2026-03-08)
-- [ ] **Phase 12.4: Full AI Conversation Logging & Cache Performance** — Full AI message logging + TanStack Query cache optimization (INSERTED)
+- [x] **Phase 12.4: Full AI Conversation Logging & Cache Performance** — Full AI message logging + TanStack Query cache optimization (INSERTED) (completed 2026-03-10)
 - [ ] **Phase 13: My Top 100** — Personal ranked list of up to 100 movies and TV shows with CRUD and move up/down reordering
 
 ## Phase Details
@@ -176,7 +176,7 @@ Plans:
 
 **Goal:** Log every AI chat message (user prompts AND assistant responses) to the database for full conversation replay, and optimize TanStack Query + TMDB cache layer so returning to previously-visited pages shows instant cached content instead of multi-second loading skeletons.
 **Depends on:** Phase 12.3
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] 12.4-01-PLAN.md — Full AI conversation logging with onFinish callback + metadata column
@@ -216,5 +216,5 @@ Plans:
 | 12.1. Quality of Life Improvement | 2/2 | Complete    | 2026-03-07 | - |
 | 12.2. Content Discovery & AI Shazam | 4/4 | Complete    | 2026-03-07 | - |
 | 12.3. Push Notifications | 3/3 | Complete    | 2026-03-08 | - |
-| 12.4. Full AI Conversation Logging & Cache Performance | 0/2 | Not started | - | - |
+| 12.4. Full AI Conversation Logging & Cache Performance | 2/2 | Complete   | 2026-03-10 | - |
 | 13. My Top 100 | v0.4 | 0/TBD | Not started | - |
