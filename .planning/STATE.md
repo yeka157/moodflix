@@ -5,7 +5,7 @@ milestone_name: Watchlist & Polish
 status: Not started
 stopped_at: Completed 12.4-02-PLAN.md
 last_updated: "2026-03-10T08:12:49.069Z"
-last_activity: "2026-03-09 - Completed quick task 1: Improve AI movie prediction: multi-match identify_media with confidence routing"
+last_activity: "2026-03-10 - Completed quick task 2: Improve UX for movies with no watch providers - contextual availability messages"
 progress:
   total_phases: 12
   completed_phases: 11
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 Phase: 12.4 of 13 (Full AI Conversation Logging & Cache Performance)
 Plan: 0 of TBD
 Status: Not started
-Last activity: 2026-03-09 - Completed quick task 1: Improve AI movie prediction: multi-match identify_media with confidence routing
+Last activity: 2026-03-10 - Completed quick task 2: Improve UX for movies with no watch providers - contextual availability messages
 
 Progress: [████████████████████] 24/24 plans + Phase 12.4 pending
 
@@ -130,10 +130,10 @@ None.
 
 ### Quick Tasks Completed
 
-| # | Description | Date | Commit | Directory |
-|---|-------------|------|--------|-----------|
-| 1 | Improve AI movie prediction: multi-match identify_media with confidence routing | 2026-03-09 | 6da1590 | [1-improve-ai-movie-prediction-multi-match-](./quick/1-improve-ai-movie-prediction-multi-match-/) |
-| 2 | Improve UX for movies with no watch providers: contextual availability messages | 2026-03-10 | fe5d24f | [2-improve-ux-for-movies-with-no-watch-prov](./quick/2-improve-ux-for-movies-with-no-watch-prov/) |
+| # | Description | Date | Commit | Status | Directory |
+|---|-------------|------|--------|--------|-----------|
+| 1 | Improve AI movie prediction: multi-match identify_media with confidence routing | 2026-03-09 | 6da1590 | | [1-improve-ai-movie-prediction-multi-match-](./quick/1-improve-ai-movie-prediction-multi-match-/) |
+| 2 | Improve UX for movies with no watch providers: contextual availability messages | 2026-03-10 | fe5d24f | Verified | [2-improve-ux-for-movies-with-no-watch-prov](./quick/2-improve-ux-for-movies-with-no-watch-prov/) |
 
 ## Session Continuity
 
