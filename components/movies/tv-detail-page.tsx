@@ -11,9 +11,12 @@ import {
   ThumbsDown,
   Loader2,
   ExternalLink,
+  Clock,
+  Globe,
 } from "lucide-react";
 import type { TVDetailsWithExtras, TVSeason } from "@/types/tv";
 import type { WatchProviderResult } from "@/types/movie";
+import { getTVAvailabilityStatus } from "@/lib/availability";
 import {
   useWatchlistCheck,
   useAddToWatchlist,
@@ -278,6 +281,12 @@ export function TVDetailPageContent({
   const hasAnyProvider = hasStream || hasRent || hasBuy;
   const defaultTab = hasStream ? "stream" : hasRent ? "rent" : "buy";
 
+  const availability = getTVAvailabilityStatus({
+    watchProviders,
+    status: details.status,
+    firstAirDate: details.first_air_date,
+  });
+
   const backdropVariants = {
     hidden: { scale: prefersReducedMotion ? 1 : 1.05, opacity: 0 },
     visible: {
@@ -470,9 +479,20 @@ export function TVDetailPageContent({
               )}
             </Tabs>
           ) : (
-            <p className="text-sm text-muted-foreground">
-              Not available for streaming in your region
-            </p>
+            <div className="text-sm text-muted-foreground space-y-1">
+              {availability.type === "not_yet_streaming" && (
+                <p>
+                  <Clock className="inline h-4 w-4 mr-1.5 align-text-bottom" />
+                  Not yet on streaming — check back later
+                </p>
+              )}
+              {(availability.type === "not_in_region" || availability.type === "available") && (
+                <p>
+                  <Globe className="inline h-4 w-4 mr-1.5 align-text-bottom" />
+                  Not available for streaming in your region
+                </p>
+              )}
+            </div>
           )}
           <p className="text-[10px] text-muted-foreground">
             Streaming data powered by JustWatch

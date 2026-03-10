@@ -10,8 +10,12 @@ import {
   ThumbsDown,
   Loader2,
   ExternalLink,
+  Film,
+  Clock,
+  Globe,
 } from "lucide-react";
 import type { MovieDetailsWithExtras, Movie, WatchProviderResult } from "@/types/movie";
+import { getMovieAvailabilityStatus } from "@/lib/availability";
 import {
   useWatchlistCheck,
   useAddToWatchlist,
@@ -111,6 +115,13 @@ export function MovieDetailPageContent({
   const hasBuy = (watchProviders?.buy?.length ?? 0) > 0;
   const hasAnyProvider = hasStream || hasRent || hasBuy;
   const defaultTab = hasStream ? "stream" : hasRent ? "rent" : "buy";
+
+  const availability = getMovieAvailabilityStatus({
+    watchProviders,
+    releaseDates: details.release_dates?.results,
+    country,
+    releaseDate: details.release_date,
+  });
 
   const { data: watchlistItem, isLoading: isCheckingWatchlist } =
     useWatchlistCheck(details.id, "movie");
@@ -386,9 +397,26 @@ export function MovieDetailPageContent({
               )}
             </Tabs>
           ) : (
-            <p className="text-sm text-muted-foreground">
-              Not available for streaming in your region
-            </p>
+            <div className="text-sm text-muted-foreground space-y-1">
+              {availability.type === "in_theaters" && (
+                <p>
+                  <Film className="inline h-4 w-4 mr-1.5 align-text-bottom" />
+                  In theaters now — not yet available for streaming
+                </p>
+              )}
+              {availability.type === "not_yet_streaming" && (
+                <p>
+                  <Clock className="inline h-4 w-4 mr-1.5 align-text-bottom" />
+                  Not yet on streaming — check back later
+                </p>
+              )}
+              {(availability.type === "not_in_region" || availability.type === "available") && (
+                <p>
+                  <Globe className="inline h-4 w-4 mr-1.5 align-text-bottom" />
+                  Not available for streaming in your region
+                </p>
+              )}
+            </div>
           )}
           <p className="text-[10px] text-muted-foreground">
             Streaming data powered by JustWatch
