@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Watchlist & Polish
 status: Not started
-stopped_at: Completed 12.4-01-PLAN.md
-last_updated: "2026-03-10T07:00:42.787Z"
+stopped_at: Completed 12.4-02-PLAN.md
+last_updated: "2026-03-10T07:22:10.091Z"
 last_activity: "2026-03-09 - Completed quick task 1: Improve AI movie prediction: multi-match identify_media with confidence routing"
 progress:
   total_phases: 12
@@ -106,6 +106,9 @@ Key decisions for v0.4 (from research):
 - [Phase 12.4-01]: StepResult<ToolSet> generic is contravariant -- used inline structural type for buildConversationMetadata steps param instead of importing StepResult<ToolSet>
 - [Phase 12.4-01]: call.input (not call.args) and toolResult.output (not toolResult.result) -- AI SDK v6 DynamicToolCall/DynamicToolResult use these property names
 - [Phase 12.4-01]: upsertConversation extracted as module-level helper -- eliminates duplicated if/else conversationId branching across onFinish and off-topic paths
+- [Phase 12.4-02]: prefetchInfiniteQuery for /discover uses discoverMovies() directly (not via API route) since server-side relative URLs won't work
+- [Phase 12.4-02]: setQueryData (not prefetchQuery) for /series since SSR data is already fetched; avoids duplicate fetches
+- [Phase 12.4-02]: new QueryClient() per Server Component render (not makeQueryClient()) per TanStack Query SSR best practices
 
 ### Pending Todos
 
@@ -133,7 +136,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-10T07:00:42.785Z
-Stopped at: Completed 12.4-01-PLAN.md
+Last session: 2026-03-10T07:22:10.088Z
+Stopped at: Completed 12.4-02-PLAN.md
 Resume file: None
 Next step: Phase 13 (My Top 100) or milestone wrap-up
