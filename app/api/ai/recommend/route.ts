@@ -140,11 +140,11 @@ function upsertConversation(params: {
         target: [aiConversations.conversationId],
         set: { messages, prompt, updatedAt: new Date(), metadata },
       })
-      .catch(() => {});
+      .catch((e) => console.error("[AI] Failed to upsert conversation:", e));
   } else {
     db.insert(aiConversations)
       .values({ userId, prompt, messages, metadata })
-      .catch(() => {});
+      .catch((e) => console.error("[AI] Failed to insert conversation:", e));
   }
 }
 
@@ -383,9 +383,9 @@ Keep responses concise: 2-4 sentences. Be warm and conversational.`;
                 prompt: lastMessageText || "mood chat",
                 recommendations: validatedParams,
               })
-              .catch(() => {
-                // Non-critical: silently fail
-              });
+              .catch((e) =>
+                console.error("[AI] Failed to insert recommendation:", e),
+              );
 
             return {
               ...validatedParams,

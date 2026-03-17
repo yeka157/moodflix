@@ -8,6 +8,7 @@ import {
   jsonb,
   unique,
   uniqueIndex,
+  index,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -50,18 +51,23 @@ export const watchlist = pgTable(
       table.tmdbId,
       table.mediaType
     ),
+    index("watchlist_user_id_idx").on(table.userId),
   ]
 );
 
-export const aiRecommendations = pgTable("ai_recommendations", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => profiles.id, { onDelete: "cascade" }),
-  prompt: text("prompt").notNull(),
-  recommendations: jsonb("recommendations").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-});
+export const aiRecommendations = pgTable(
+  "ai_recommendations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    prompt: text("prompt").notNull(),
+    recommendations: jsonb("recommendations").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  },
+  (table) => [index("ai_recommendations_user_id_idx").on(table.userId)]
+);
 
 // NEW: ai_conversations for analytics logging (fire-and-forget, backend only)
 export const aiConversations = pgTable(
@@ -123,6 +129,7 @@ export const tmdbMedia = pgTable(
   },
   (table) => [
     unique("tmdb_media_tmdb_media_unique").on(table.tmdbId, table.mediaType),
+    index("tmdb_media_tmdb_id_idx").on(table.tmdbId),
   ]
 );
 
@@ -180,5 +187,6 @@ export const notificationSubscriptions = pgTable(
   },
   (table) => [
     unique("notification_subs_user_tmdb_unique").on(table.userId, table.tmdbId),
+    index("notification_subs_user_id_idx").on(table.userId),
   ]
 );

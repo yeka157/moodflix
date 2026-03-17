@@ -105,6 +105,7 @@ export function SettingsForm({
               id="displayName"
               placeholder="Enter your name"
               {...register("displayName")}
+              aria-invalid={errors.displayName ? "true" : "false"}
               className="max-w-sm"
             />
             {errors.displayName && (
