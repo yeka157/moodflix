@@ -13,7 +13,7 @@ const authSchema = z.object({
 export async function login(formData: { email: string; password: string }) {
   const parsed = authSchema.safeParse(formData);
   if (!parsed.success) {
-    return { error: parsed.error.errors[0].message };
+    return { error: parsed.error.issues[0].message };
   }
 
   const supabase = await createClient();
@@ -36,7 +36,7 @@ export async function signup(formData: {
 }) {
   const parsed = authSchema.safeParse(formData);
   if (!parsed.success) {
-    return { error: parsed.error.errors[0].message };
+    return { error: parsed.error.issues[0].message };
   }
 
   const supabase = await createClient();
