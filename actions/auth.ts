@@ -2,18 +2,29 @@
 
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 
+const authSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
 export async function login(formData: { email: string; password: string }) {
+  const parsed = authSchema.safeParse(formData);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0].message };
+  }
+
   const supabase = await createClient();
 
   const { error } = await supabase.auth.signInWithPassword({
-    email: formData.email,
-    password: formData.password,
+    email: parsed.data.email,
+    password: parsed.data.password,
   });
 
   if (error) {
-    return { error: error.message };
+    return { error: "Invalid email or password" };
   }
 
   redirect("/home");
@@ -23,15 +34,20 @@ export async function signup(formData: {
   email: string;
   password: string;
 }) {
+  const parsed = authSchema.safeParse(formData);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0].message };
+  }
+
   const supabase = await createClient();
 
   const { error } = await supabase.auth.signUp({
-    email: formData.email,
-    password: formData.password,
+    email: parsed.data.email,
+    password: parsed.data.password,
   });
 
   if (error) {
-    return { error: error.message };
+    return { error: "Something went wrong. Please try again." };
   }
 
   redirect("/home");

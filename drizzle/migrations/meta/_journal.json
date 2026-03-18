@@ -57,6 +57,13 @@
       "when": 1773123306884,
       "tag": "0007_purple_sharon_carter",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1773733384896,
+      "tag": "0008_serious_spectrum",
+      "breakpoints": true
     }
   ]
 }
