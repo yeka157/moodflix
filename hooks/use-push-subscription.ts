@@ -100,9 +100,25 @@ export function usePushSubscription() {
 // Query keys for notification subscriptions
 export const notificationKeys = {
   all: ["notifications"] as const,
+  subscribedIds: () => [...notificationKeys.all, "subscribed-ids"] as const,
   subscription: (tmdbId: number) =>
     [...notificationKeys.all, "subscription", tmdbId] as const,
 };
+
+// Single bulk query — fetches all subscribed tmdbIds at once.
+// useNotificationSubscription reads from this cache to avoid N+1 requests.
+export function useNotificationTmdbIds() {
+  return useQuery({
+    queryKey: notificationKeys.subscribedIds(),
+    queryFn: async () => {
+      const res = await fetch("/api/notifications/subscribed-ids");
+      const json = (await res.json()) as { tmdbIds: number[] };
+      return new Set(json.tmdbIds);
+    },
+    staleTime: 30_000,
+    gcTime: 5 * 60 * 1000,
+  });
+}
 
 interface NotificationToggleInput {
   tmdbId: number;
@@ -114,21 +130,9 @@ interface NotificationToggleInput {
 export function useNotificationSubscription(tmdbId: number) {
   const queryClient = useQueryClient();
 
-  const { data, isLoading } = useQuery({
-    queryKey: notificationKeys.subscription(tmdbId),
-    queryFn: async () => {
-      const res = await fetch(
-        `/api/notifications/subscribe?tmdbId=${tmdbId}`,
-      );
-      const json: unknown = await res.json();
-      return json as { subscribed: boolean };
-    },
-    enabled: tmdbId > 0,
-    staleTime: 30_000,
-    gcTime: 5 * 60 * 1000,
-  });
+  const { data: subscribedIds, isLoading } = useNotificationTmdbIds();
 
-  const isSubscribed = data?.subscribed ?? false;
+  const isSubscribed = subscribedIds?.has(tmdbId) ?? false;
 
   const toggleMutation = useMutation({
     mutationFn: async (input: NotificationToggleInput) => {
@@ -155,20 +159,26 @@ export function useNotificationSubscription(tmdbId: number) {
     },
     onMutate: async () => {
       await queryClient.cancelQueries({
-        queryKey: notificationKeys.subscription(tmdbId),
+        queryKey: notificationKeys.subscribedIds(),
       });
-      const previous = queryClient.getQueryData<{ subscribed: boolean }>(
-        notificationKeys.subscription(tmdbId),
+      const previous = queryClient.getQueryData<Set<number>>(
+        notificationKeys.subscribedIds(),
       );
-      queryClient.setQueryData(notificationKeys.subscription(tmdbId), {
-        subscribed: !isSubscribed,
-      });
+      queryClient.setQueryData(
+        notificationKeys.subscribedIds(),
+        (old: Set<number> | undefined) => {
+          const next = new Set(old ?? []);
+          if (isSubscribed) next.delete(tmdbId);
+          else next.add(tmdbId);
+          return next;
+        },
+      );
       return { previous };
     },
     onError: (_err, _vars, context) => {
       if (context?.previous) {
         queryClient.setQueryData(
-          notificationKeys.subscription(tmdbId),
+          notificationKeys.subscribedIds(),
           context.previous,
         );
       }
@@ -176,7 +186,7 @@ export function useNotificationSubscription(tmdbId: number) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: notificationKeys.subscription(tmdbId),
+        queryKey: notificationKeys.subscribedIds(),
       });
     },
   });
