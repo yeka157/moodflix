@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
 import { DiscoverGridContent } from "@/components/movies/discover-grid-content";
-import { movieKeys, getDefaultDiscoverParams } from "@/hooks/use-movies";
+import { movieKeys, getDefaultDiscoverParams } from "@/lib/movie-keys";
 import { discoverMovies } from "@/lib/tmdb";
 
 export const metadata: Metadata = {

@@ -42,7 +42,7 @@ function generatePositions(count: number) {
   return positions;
 }
 
-// Fetch via same-origin proxy → blob URL → Image → Three.js texture
+// Load TMDB images directly — image.tmdb.org supports CORS
 // Progressive: each texture updates state so posters appear one-by-one
 function usePreloadedTextures(urls: string[]) {
   const [textures, setTextures] = useState<Map<string, THREE.Texture>>(
@@ -52,37 +52,21 @@ function usePreloadedTextures(urls: string[]) {
   useEffect(() => {
     let cancelled = false;
 
-    urls.forEach(async (url) => {
-      try {
-        const proxyUrl = `/api/images/proxy?url=${encodeURIComponent(url)}`;
-        const res = await fetch(proxyUrl);
-        if (!res.ok || cancelled) return;
-
-        const blob = await res.blob();
+    urls.forEach((url) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
         if (cancelled) return;
-
-        const objectUrl = URL.createObjectURL(blob);
-
-        const img = new Image();
-        img.onload = () => {
-          URL.revokeObjectURL(objectUrl);
-          if (cancelled) return;
-
-          const tex = new THREE.Texture(img);
-          tex.needsUpdate = true;
-          tex.colorSpace = THREE.SRGBColorSpace;
-
-          setTextures((prev) => {
-            const next = new Map(prev);
-            next.set(url, tex);
-            return next;
-          });
-        };
-        img.onerror = () => URL.revokeObjectURL(objectUrl);
-        img.src = objectUrl;
-      } catch {
-        // skip failed image
-      }
+        const tex = new THREE.Texture(img);
+        tex.needsUpdate = true;
+        tex.colorSpace = THREE.SRGBColorSpace;
+        setTextures((prev) => {
+          const next = new Map(prev);
+          next.set(url, tex);
+          return next;
+        });
+      };
+      img.src = url;
     });
 
     return () => {

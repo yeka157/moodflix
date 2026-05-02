@@ -8,7 +8,7 @@ import {
   getCachedTopRatedTV,
 } from "@/lib/tmdb-cache";
 import { normalizeTVShow } from "@/types/tv";
-import { tvKeys } from "@/hooks/use-tv";
+import { tvKeys } from "@/lib/tv-keys";
 import { SeriesPageContent } from "@/components/series/series-page-content";
 
 export const metadata: Metadata = {
