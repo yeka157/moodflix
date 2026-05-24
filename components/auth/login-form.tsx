@@ -6,16 +6,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { ArrowRight } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { login, loginWithGoogle } from "@/actions/auth";
-import { cn } from "@/lib/utils";
-import { MoodflixLogo } from "@/components/brand/moodflix-logo";
 
 import type { LoginFormData } from "@/types/auth";
 
@@ -24,13 +18,23 @@ const loginSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
+const OAUTH_BUTTON_CLASSES =
+  "flex-1 flex items-center justify-center gap-2 p-3 border border-border rounded-[10px] bg-card text-foreground text-[13px] font-medium transition-[border-color,background-color] duration-200 hover:border-[var(--line-strong)] hover:bg-muted disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer";
+
+const INPUT_CLASSES =
+  "w-full px-3.5 py-[11px] bg-background border border-border rounded-[10px] text-[13.5px] text-foreground transition-colors focus:border-[var(--line-strong)] outline-none disabled:opacity-70 aria-[invalid=true]:border-primary placeholder:text-muted-foreground";
+
+const LABEL_CLASSES = "block text-xs font-medium mb-1.5 text-[var(--ink-2)]";
+
+const DIVIDER_CLASSES =
+  "flex items-center gap-3.5 font-mono text-[10.5px] tracking-[0.16em] text-muted-foreground my-7 uppercase before:content-[''] before:flex-1 before:h-px before:bg-border after:content-[''] after:flex-1 after:h-px after:bg-border";
+
+const SUBMIT_BUTTON_CLASSES =
+  "w-full justify-center mt-2 inline-flex items-center gap-2 px-[26px] py-[14px] rounded-full text-sm font-medium tracking-[0.01em] transition-[transform,background-color,color,border-color] duration-200 hover:-translate-y-px active:translate-y-0 active:scale-[0.98] whitespace-nowrap cursor-pointer disabled:opacity-60 bg-primary text-white hover:bg-[var(--red-deep)]";
+
 function GoogleIcon() {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      className="size-5"
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
       <path
         fill="#4285F4"
         d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -97,114 +101,78 @@ function LoginFormInner() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-background px-4 py-12">
-      {/* Radial glow background */}
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div className="size-[600px] rounded-full bg-primary/10 blur-[120px]" />
+    <>
+      <h1 className="font-display uppercase text-[48px] md:text-[64px] leading-[0.9] tracking-[0.005em] m-0 mb-3">
+        Welcome <span className="font-serif italic normal-case text-primary">back.</span>
+      </h1>
+      <p className="text-[var(--ink-2)] mb-9">
+        Pick up where you left off. Your library and watch history are waiting.
+      </p>
+
+      <div className="flex gap-2.5 mb-6">
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          disabled={isPending}
+          className={OAUTH_BUTTON_CLASSES}
+        >
+          <GoogleIcon />
+          {isPending ? "Signing in…" : "Continue with Google"}
+        </button>
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
-        className="relative w-full max-w-md"
-      >
-        <Card className="border-border/50">
-          <CardHeader className="space-y-4 text-center">
-            <Link
-              href="/"
-              className="inline-flex items-center justify-center hover:opacity-80 transition-opacity"
-              aria-label="Moodflix"
-            >
-              <MoodflixLogo height={36} variant="dark" />
-            </Link>
-            <div className="space-y-1">
-              <h1 className="text-2xl font-bold">Welcome back</h1>
-              <p className="text-sm text-muted-foreground">
-                Sign in to your account
-              </p>
-            </div>
-          </CardHeader>
+      <div className={DIVIDER_CLASSES}>or continue with email</div>
 
-          <CardContent className="space-y-6">
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  autoComplete="email"
-                  aria-invalid={errors.email ? "true" : "false"}
-                  className={cn(errors.email && "border-destructive")}
-                  {...register("email")}
-                />
-                {errors.email && (
-                  <p className="text-sm text-destructive">
-                    {errors.email.message}
-                  </p>
-                )}
-              </div>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
+        <div className="mb-4">
+          <label htmlFor="login-email" className={LABEL_CLASSES}>Email</label>
+          <input
+            id="login-email"
+            type="email"
+            autoComplete="email"
+            placeholder="you@email.com"
+            aria-invalid={errors.email ? "true" : "false"}
+            className={INPUT_CLASSES}
+            {...register("email")}
+          />
+          {errors.email && (
+            <p className="text-xs text-primary mt-1.5">{errors.email.message}</p>
+          )}
+        </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  autoComplete="current-password"
-                  aria-invalid={errors.password ? "true" : "false"}
-                  className={cn(errors.password && "border-destructive")}
-                  {...register("password")}
-                />
-                {errors.password && (
-                  <p className="text-sm text-destructive">
-                    {errors.password.message}
-                  </p>
-                )}
-              </div>
+        <div className="mb-4">
+          <label htmlFor="login-password" className={LABEL_CLASSES}>Password</label>
+          <input
+            id="login-password"
+            type="password"
+            autoComplete="current-password"
+            placeholder="••••••••"
+            aria-invalid={errors.password ? "true" : "false"}
+            className={INPUT_CLASSES}
+            {...register("password")}
+          />
+          {errors.password && (
+            <p className="text-xs text-primary mt-1.5">{errors.password.message}</p>
+          )}
+        </div>
 
-              <Button
-                type="submit"
-                className="w-full min-h-[44px]"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Signing in..." : "Log In"}
-              </Button>
-            </form>
+        <button
+          type="submit"
+          className={SUBMIT_BUTTON_CLASSES}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Signing in…" : "Enter Moodflix"}
+          <ArrowRight size={14} />
+        </button>
+      </form>
 
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">
-                  or continue with
-                </span>
-              </div>
-            </div>
-
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full min-h-[44px]"
-              onClick={handleGoogleLogin}
-              disabled={isPending}
-            >
-              <GoogleIcon />
-              {isPending ? "Signing in..." : "Continue with Google"}
-            </Button>
-
-            <p className="text-center text-sm text-muted-foreground">
-              Don&apos;t have an account?{" "}
-              <Link href="/signup" className="text-primary hover:underline">
-                Sign up
-              </Link>
-            </p>
-          </CardContent>
-        </Card>
-      </motion.div>
-    </div>
+      <div className="mt-6 text-[13px] text-muted-foreground text-center">
+        New here?{" "}
+        <Link href="/signup" className="text-foreground underline">
+          Create an account
+        </Link>
+      </div>
+    </>
   );
 }
 

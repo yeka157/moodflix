@@ -1,11 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import Image from "next/image";
-import { motion, useReducedMotion } from "framer-motion";
 import { toast } from "sonner";
 import {
+  ArrowLeft,
+  Play,
+  Plus,
   Bookmark,
+  Share2,
+  Star,
   CircleCheck,
   ThumbsUp,
   ThumbsDown,
@@ -24,11 +29,13 @@ import {
   useUpdateWatchlistStatus,
   useRateWatchlistItem,
 } from "@/hooks/use-watchlist";
-import { cn, getBackdropUrl } from "@/lib/utils";
-import { TMDB_IMAGE_BASE, PROVIDER_URLS, TV_GENRES, GENRES } from "@/lib/constants";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn, getBackdropUrl, getPosterUrl } from "@/lib/utils";
+import {
+  TMDB_IMAGE_BASE,
+  PROVIDER_URLS,
+  TV_GENRES,
+  GENRES,
+} from "@/lib/constants";
 
 interface TVDetailPageContentProps {
   details: TVDetailsWithExtras;
@@ -36,156 +43,91 @@ interface TVDetailPageContentProps {
   country: string;
 }
 
-function getStatusBadgeVariant(
-  status: string,
-): "default" | "secondary" | "destructive" | "outline" {
-  switch (status) {
-    case "Returning Series":
-      return "default";
-    case "Ended":
-      return "secondary";
-    case "Canceled":
-      return "destructive";
-    case "In Production":
-    case "Planned":
-    case "Pilot":
-      return "outline";
-    default:
-      return "secondary";
-  }
+type StreamRow = {
+  id: number;
+  name: string;
+  logoPath: string | null;
+  type: "Stream" | "Rent" | "Buy";
+};
+
+function flattenProviders(wp: WatchProviderResult | null): StreamRow[] {
+  if (!wp) return [];
+  const out: StreamRow[] = [];
+  const seen = new Set<number>();
+  const push = (
+    arr: typeof wp.flatrate,
+    type: StreamRow["type"],
+  ) => {
+    arr?.forEach((p) => {
+      if (seen.has(p.provider_id)) return;
+      seen.add(p.provider_id);
+      out.push({
+        id: p.provider_id,
+        name: p.provider_name,
+        logoPath: p.logo_path,
+        type,
+      });
+    });
+  };
+  push(wp.flatrate, "Stream");
+  push(wp.rent, "Rent");
+  push(wp.buy, "Buy");
+  return out;
 }
 
-function ProviderGrid({
-  providers,
-}: {
-  providers: { logo_path: string; provider_name: string; provider_id: number }[];
-}) {
-  return (
-    <div className="flex flex-wrap gap-3">
-      {providers.map((p) => {
-        const url = PROVIDER_URLS[p.provider_id];
-        const content = (
-          <>
-            <div className="relative h-12 w-12 overflow-hidden rounded-xl">
-              <Image
-                src={`${TMDB_IMAGE_BASE}/w92${p.logo_path}`}
-                alt={p.provider_name}
-                fill
-                className="object-cover"
-                sizes="48px"
-              />
-            </div>
-            <span className="text-[10px] text-muted-foreground text-center line-clamp-1 w-12">
-              {p.provider_name}
-            </span>
-          </>
-        );
-
-        return url ? (
-          <a
-            key={p.provider_id}
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex flex-col items-center gap-1.5 transition-opacity hover:opacity-80"
-          >
-            {content}
-          </a>
-        ) : (
-          <div key={p.provider_id} className="flex flex-col items-center gap-1.5">
-            {content}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function SeasonsSection({ seasons }: { seasons: TVSeason[] }) {
-  const [showAll, setShowAll] = useState(false);
-
-  // Filter out specials (season 0), sort latest first
-  const regularSeasons = seasons
-    .filter((s) => s.season_number > 0)
-    .sort((a, b) => b.season_number - a.season_number);
-
-  if (regularSeasons.length === 0) return null;
-
-  const hasMany = regularSeasons.length > 5;
-  const displayedSeasons = hasMany && !showAll ? regularSeasons.slice(0, 5) : regularSeasons;
-  const latestSeasonNumber = regularSeasons[0]?.season_number;
-
-  return (
-    <div className="space-y-3">
-      <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-        Seasons ({regularSeasons.length})
-      </h2>
-      <div className="space-y-3">
-        {displayedSeasons.map((season) => (
-          <div key={season.id} className="flex items-center gap-3">
-            <div className="relative h-16 w-11 overflow-hidden rounded-md bg-muted shrink-0">
-              {season.poster_path ? (
-                <Image
-                  src={`${TMDB_IMAGE_BASE}/w92${season.poster_path}`}
-                  alt={season.name}
-                  fill
-                  className="object-cover"
-                  sizes="44px"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
-                  S{season.season_number}
-                </div>
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-medium truncate">{season.name}</p>
-                {season.season_number === latestSeasonNumber && (
-                  <Badge variant="default" className="text-[10px] px-1.5 py-0">
-                    Latest
-                  </Badge>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {season.episode_count} {season.episode_count === 1 ? "Episode" : "Episodes"}
-                {season.air_date && ` | ${season.air_date.slice(0, 4)}`}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-      {hasMany && (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-xs"
-          onClick={() => setShowAll(!showAll)}
-        >
-          {showAll ? "Show less" : `Show all ${regularSeasons.length} seasons`}
-        </Button>
-      )}
-    </div>
-  );
-}
+const TABS = ["overview", "cast", "seasons", "streams"] as const;
+type Tab = (typeof TABS)[number];
 
 export function TVDetailPageContent({
   details,
   watchProviders,
   country,
 }: TVDetailPageContentProps) {
-  const prefersReducedMotion = useReducedMotion();
+  const backRef = useRef<HTMLImageElement | null>(null);
+  const [tab, setTab] = useState<Tab>("overview");
+  const [showAllSeasons, setShowAllSeasons] = useState(false);
 
-  const year = details.first_air_date?.slice(0, 4) ?? "";
-  const rating = details.vote_average?.toFixed(1) ?? "0.0";
+  useEffect(() => {
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const el = backRef.current;
+        if (!el) return;
+        const y = Math.min(window.scrollY, 600);
+        el.style.transform = `translateY(${y * 0.4}px) scale(${1 + y * 0.0005})`;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  const year = details.first_air_date?.slice(0, 4) ?? "—";
+  const rating = details.vote_average?.toFixed(1) ?? "—";
   const creators = details.created_by ?? [];
   const creatorNames = creators.map((c) => c.name).join(", ");
-  const cast = details.credits?.cast?.slice(0, 15) ?? [];
+  const cast = details.credits?.cast?.slice(0, 12) ?? [];
+  const genres = details.genres ?? [];
 
-  const { data: watchlistItem, isLoading: isCheckingWatchlist } = useWatchlistCheck(
-    details.id,
-    "tv",
-  );
+  const seasons: TVSeason[] = (details.seasons ?? [])
+    .filter((s) => s.season_number > 0)
+    .sort((a, b) => b.season_number - a.season_number);
+  const latestSeasonNumber = seasons[0]?.season_number;
+  const displayedSeasons =
+    showAllSeasons || seasons.length <= 5 ? seasons : seasons.slice(0, 5);
+
+  const streams = flattenProviders(watchProviders);
+  const availability = getTVAvailabilityStatus({
+    watchProviders,
+    status: details.status,
+    firstAirDate: details.first_air_date,
+  });
+
+  const { data: watchlistItem, isLoading: isCheckingWatchlist } =
+    useWatchlistCheck(details.id, "tv");
   const addMutation = useAddToWatchlist();
   const removeMutation = useRemoveFromWatchlist();
   const statusMutation = useUpdateWatchlistStatus();
@@ -194,8 +136,6 @@ export function TVDetailPageContent({
   const isInLibrary = !!watchlistItem;
   const isWantToWatch = watchlistItem?.status === "want_to_watch";
   const isWatched = watchlistItem?.status === "watched";
-
-  const tapAnimation = prefersReducedMotion ? {} : { scale: 0.85 };
 
   const handleAddToLibrary = () => {
     addMutation.mutate(
@@ -267,389 +207,476 @@ export function TVDetailPageContent({
     );
   };
 
-  const handleMoveToWantToWatch = () => {
-    if (!watchlistItem) return;
-    statusMutation.mutate({ id: watchlistItem.id, status: "want_to_watch" });
+  const handleShare = async () => {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: details.name, url });
+      } catch {
+        /* ignore */
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.success("Link copied");
+      } catch {
+        toast.error("Could not copy link");
+      }
+    }
   };
 
-  // Genre IDs can include both TV-specific and shared genres
-  const genres = details.genres ?? [];
+  const trailerUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(
+    details.name + " official trailer",
+  )}`;
 
-  const hasStream = (watchProviders?.flatrate?.length ?? 0) > 0;
-  const hasRent = (watchProviders?.rent?.length ?? 0) > 0;
-  const hasBuy = (watchProviders?.buy?.length ?? 0) > 0;
-  const hasAnyProvider = hasStream || hasRent || hasBuy;
-  const defaultTab = hasStream ? "stream" : hasRent ? "rent" : "buy";
-
-  const availability = getTVAvailabilityStatus({
-    watchProviders,
-    status: details.status,
-    firstAirDate: details.first_air_date,
-  });
-
-  const backdropVariants = {
-    hidden: { scale: prefersReducedMotion ? 1 : 1.05, opacity: 0 },
-    visible: {
-      scale: 1,
-      opacity: 1,
-      transition: { duration: 0.6, ease: "easeOut" as const },
-    },
-  };
-
-  const contentVariants = {
-    hidden: { opacity: 0, y: prefersReducedMotion ? 0 : 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.4, delay: 0.2, ease: "easeOut" as const },
-    },
-  };
-
-  // Resolve genre names: TV-specific first, fallback to shared movie genres
-  function resolveGenreName(genreId: number): string | undefined {
-    return TV_GENRES[genreId] ?? GENRES[genreId];
+  function resolveGenreName(id: number, fallback: string): string {
+    return TV_GENRES[id] ?? GENRES[id] ?? fallback;
   }
 
+  const scrollTo = (id: string) => {
+    document
+      .getElementById(id)
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
-    <div className="min-h-screen pb-32 md:pb-24">
-      {/* Full-bleed backdrop */}
-      <motion.div
-        className="relative w-full h-[50vh] min-h-[300px] overflow-hidden"
-        initial="hidden"
-        animate="visible"
-        variants={backdropVariants}
-      >
-        <Image
+    <div className="page detail">
+      <div className="detail-back">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          ref={backRef}
           src={getBackdropUrl(details.backdrop_path, "lg")}
-          alt={details.name}
-          fill
-          className="object-cover"
-          sizes="100vw"
-          priority
+          alt=""
         />
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-linear-to-t from-background via-background/50 to-transparent" />
-        <div className="absolute inset-0 bg-linear-to-r from-background/30 to-transparent" />
+      </div>
 
-        {/* Title overlay at bottom-left */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white line-clamp-2 drop-shadow-lg">
-            {details.name}
-          </h1>
-          {details.tagline && (
-            <p className="mt-2 text-sm md:text-base text-white/70 italic line-clamp-1">
-              &ldquo;{details.tagline}&rdquo;
-            </p>
-          )}
-        </div>
-      </motion.div>
+      <div className="detail-content">
+        <Link href="/series" className="detail-back-btn">
+          <ArrowLeft size={14} />
+          Back to series
+        </Link>
 
-      {/* Main content */}
-      <motion.div
-        className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 mt-6"
-        initial="hidden"
-        animate="visible"
-        variants={contentVariants}
-      >
-        {/* Metadata pills row */}
-        <div className="flex flex-wrap items-center gap-2">
-          {year && (
-            <Badge variant="secondary" className="text-sm px-3 py-1">
-              {year}
-            </Badge>
-          )}
-          {details.number_of_seasons > 0 && (
-            <Badge variant="secondary" className="text-sm px-3 py-1">
-              {details.number_of_seasons}{" "}
-              {details.number_of_seasons === 1 ? "Season" : "Seasons"}
-            </Badge>
-          )}
-          {details.number_of_episodes > 0 && (
-            <Badge variant="secondary" className="text-sm px-3 py-1">
-              {details.number_of_episodes} Episodes
-            </Badge>
-          )}
-          {(details.vote_count ?? 0) > 10 && (
-            <Badge variant="secondary" className="text-sm px-3 py-1">
-              {rating}/10
-            </Badge>
-          )}
-          {country && (
-            <Badge variant="outline" className="text-sm px-3 py-1">
-              {country}
-            </Badge>
-          )}
-          {details.status && (
-            <Badge
-              variant={getStatusBadgeVariant(details.status)}
-              className="text-sm px-3 py-1"
-            >
-              {details.status}
-            </Badge>
-          )}
-        </div>
-
-        {/* Genre tags */}
-        {genres.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {genres.map((g) => {
-              const name = resolveGenreName(g.id) ?? g.name;
-              return (
-                <Badge key={g.id} variant="outline" className="text-xs px-2.5 py-1">
-                  {name}
-                </Badge>
-              );
-            })}
+        <div className="detail-hero">
+          <div className="detail-poster fade-up">
+            <Image
+              src={getPosterUrl(details.poster_path)}
+              alt={details.name}
+              fill
+              priority
+              sizes="320px"
+            />
           </div>
-        )}
 
-        {/* Overview */}
-        {details.overview && (
-          <p className="text-base leading-relaxed text-muted-foreground max-w-3xl">
-            {details.overview}
-          </p>
-        )}
-
-        {/* Created by */}
-        {creatorNames && (
-          <p className="text-sm text-muted-foreground">
-            <span className="text-foreground font-medium">Created by:</span>{" "}
-            {creatorNames}
-          </p>
-        )}
-
-        {/* Cast chips */}
-        {cast.length > 0 && (
-          <div className="space-y-2">
-            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-              Cast
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {cast.map((person) => (
-                <Badge
-                  key={person.id}
-                  variant="secondary"
-                  className="text-xs px-2.5 py-1 font-normal"
-                >
-                  {person.name}
-                </Badge>
+          <div className="detail-info fade-up" style={{ animationDelay: "0.1s" }}>
+            <div className="detail-genres">
+              {details.status && <span className="g">{details.status}</span>}
+              {genres.map((g) => (
+                <span key={g.id} className="g">
+                  {resolveGenreName(g.id, g.name)}
+                </span>
               ))}
             </div>
-          </div>
-        )}
 
-        {/* Watch Providers */}
-        <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-            Where to Watch
-          </h2>
-          {hasAnyProvider ? (
-            <Tabs defaultValue={defaultTab}>
-              <TabsList className="h-9">
-                {hasStream && (
-                  <TabsTrigger value="stream" className="text-xs px-4">
-                    Stream
-                  </TabsTrigger>
-                )}
-                {hasRent && (
-                  <TabsTrigger value="rent" className="text-xs px-4">
-                    Rent
-                  </TabsTrigger>
-                )}
-                {hasBuy && (
-                  <TabsTrigger value="buy" className="text-xs px-4">
-                    Buy
-                  </TabsTrigger>
-                )}
-              </TabsList>
-              {hasStream && (
-                <TabsContent value="stream" className="mt-3">
-                  <ProviderGrid providers={watchProviders!.flatrate!} />
-                </TabsContent>
-              )}
-              {hasRent && (
-                <TabsContent value="rent" className="mt-3">
-                  <ProviderGrid providers={watchProviders!.rent!} />
-                </TabsContent>
-              )}
-              {hasBuy && (
-                <TabsContent value="buy" className="mt-3">
-                  <ProviderGrid providers={watchProviders!.buy!} />
-                </TabsContent>
-              )}
-            </Tabs>
-          ) : (
-            <div className="text-sm text-muted-foreground space-y-1">
-              {availability.type === "not_yet_streaming" && (
-                <p>
-                  <Clock className="inline h-4 w-4 mr-1.5 align-text-bottom" />
-                  Not yet on streaming — check back later
-                </p>
-              )}
-              {(availability.type === "not_in_region" || availability.type === "available") && (
-                <p>
-                  <Globe className="inline h-4 w-4 mr-1.5 align-text-bottom" />
-                  Not available for streaming in your region
-                </p>
+            <h1 className="detail-title">{details.name}</h1>
+
+            {details.tagline && (
+              <p className="detail-tagline">&ldquo;{details.tagline}&rdquo;</p>
+            )}
+
+            <div className="detail-meta">
+              <div className="item">
+                <div className="label">Rating</div>
+                <div className="val">
+                  <Star
+                    className="size-4 text-[var(--amber)]"
+                    fill="currentColor"
+                  />
+                  {rating}
+                  <span className="small">/ 10</span>
+                </div>
+              </div>
+              <div className="item">
+                <div className="label">Seasons</div>
+                <div className="val tnum">{details.number_of_seasons || "—"}</div>
+              </div>
+              <div className="item">
+                <div className="label">Episodes</div>
+                <div className="val tnum">
+                  {details.number_of_episodes || "—"}
+                </div>
+              </div>
+              <div className="item">
+                <div className="label">First aired</div>
+                <div className="val tnum">{year}</div>
+              </div>
+              {creatorNames && (
+                <div className="item">
+                  <div className="label">Created by</div>
+                  <div className="val text-base">{creatorNames}</div>
+                </div>
               )}
             </div>
-          )}
-          <p className="text-[10px] text-muted-foreground">
-            Streaming data powered by JustWatch
-          </p>
+
+            {details.overview && (
+              <p className="detail-desc">{details.overview}</p>
+            )}
+
+            <div className="detail-actions">
+              <a
+                href={trailerUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-red btn-lg"
+              >
+                <Play size={14} fill="currentColor" />
+                Watch trailer
+              </a>
+              {isCheckingWatchlist ? (
+                <button className="btn btn-ghost" disabled>
+                  <Loader2 size={14} className="animate-spin" />
+                  Loading
+                </button>
+              ) : isInLibrary ? (
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={handleRemove}
+                  disabled={removeMutation.isPending}
+                >
+                  {removeMutation.isPending ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <Bookmark size={14} fill="currentColor" />
+                  )}
+                  In library
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={handleAddToLibrary}
+                  disabled={addMutation.isPending}
+                >
+                  {addMutation.isPending ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <Plus size={14} />
+                  )}
+                  Add to library
+                </button>
+              )}
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={isWatched ? handleRemove : handleMarkWatched}
+                disabled={statusMutation.isPending || addMutation.isPending}
+              >
+                <CircleCheck size={14} fill={isWatched ? "currentColor" : "none"} />
+                {isWatched ? "Watched" : "Mark watched"}
+              </button>
+              <button type="button" className="btn btn-outline" onClick={handleShare}>
+                <Share2 size={14} />
+                Share
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* Seasons breakdown */}
-        {details.seasons && details.seasons.length > 0 && (
-          <SeasonsSection seasons={details.seasons} />
-        )}
+        <div className="detail-tabs">
+          {TABS.map((t) => (
+            <button
+              key={t}
+              type="button"
+              className={cn("detail-tab", tab === t && "active")}
+              onClick={() => {
+                setTab(t);
+                scrollTo(`detail-${t}`);
+              }}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
 
-      </motion.div>
+        <div className="detail-sections">
+          <div>
+            <section
+              id="detail-overview"
+              className="detail-section reveal mb-12"
+            >
+              <h3>About the series</h3>
+              <p className="text-base leading-[1.65] text-[var(--ink-2)] m-0">
+                {details.overview}
+              </p>
+            </section>
 
-      {/* Fixed bottom action bar */}
-      <div className="fixed bottom-16 md:bottom-0 left-0 right-0 md:left-[60px] z-40 bg-background/90 backdrop-blur-md border-t border-border/50 px-4 py-3">
-        <div className="max-w-5xl mx-auto flex items-center gap-2 flex-wrap">
-          {isCheckingWatchlist ? (
-            <div className="flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Loading...</span>
+            <section
+              id="detail-cast"
+              className="detail-section reveal mb-12"
+            >
+              <h3>Cast</h3>
+              {cast.length > 0 ? (
+                <div className="cast-row">
+                  {cast.map((person) => (
+                    <div key={person.id} className="cast-card">
+                      <div className="av">
+                        {person.profile_path ? (
+                          <Image
+                            src={`${TMDB_IMAGE_BASE}/w185${person.profile_path}`}
+                            alt={person.name}
+                            fill
+                            sizes="110px"
+                          />
+                        ) : (
+                          <div className="w-full h-full grid place-items-center font-display text-[32px] text-muted-foreground">
+                            {person.name.charAt(0)}
+                          </div>
+                        )}
+                      </div>
+                      <div className="name">{person.name}</div>
+                      <div className="role">{person.character ?? ""}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-[var(--ink-3)] text-[13px] m-0">
+                  No cast listed
+                </p>
+              )}
+            </section>
+
+            {seasons.length > 0 && (
+              <section
+                id="detail-seasons"
+                className="detail-section reveal mb-12"
+              >
+                <h3>Seasons ({seasons.length})</h3>
+                <div className="flex flex-col gap-3.5">
+                  {displayedSeasons.map((season) => (
+                    <div
+                      key={season.id}
+                      className="flex items-center gap-3.5 p-3 bg-[var(--bg-elev)] border border-border rounded-xl"
+                    >
+                      <div className="relative w-14 h-20 shrink-0 overflow-hidden rounded-md bg-[var(--bg-elev-2)]">
+                        {season.poster_path ? (
+                          <Image
+                            src={`${TMDB_IMAGE_BASE}/w154${season.poster_path}`}
+                            alt={season.name}
+                            fill
+                            sizes="56px"
+                          />
+                        ) : (
+                          <div className="grid place-items-center h-full text-[var(--ink-3)] font-mono text-[11px]">
+                            S{season.season_number}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium m-0 text-[var(--ink)]">
+                            {season.name}
+                          </p>
+                          {season.season_number === latestSeasonNumber && (
+                            <span className="mono text-[10px] tracking-[0.1em] px-1.5 py-0.5 bg-[var(--red)] text-white rounded uppercase">
+                              Latest
+                            </span>
+                          )}
+                        </div>
+                        <p className="mono text-[11px] text-[var(--ink-3)] mt-1 tracking-[0.08em] uppercase">
+                          {season.episode_count}{" "}
+                          {season.episode_count === 1 ? "Episode" : "Episodes"}
+                          {season.air_date &&
+                            ` · ${season.air_date.slice(0, 4)}`}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {seasons.length > 5 && (
+                  <button
+                    type="button"
+                    className="btn btn-ghost mt-3.5"
+                    onClick={() => setShowAllSeasons((v) => !v)}
+                  >
+                    {showAllSeasons
+                      ? "Show less"
+                      : `Show all ${seasons.length} seasons`}
+                  </button>
+                )}
+              </section>
+            )}
+          </div>
+
+          <aside
+            id="detail-streams"
+            className="sticky top-24 h-fit self-start flex flex-col gap-4"
+          >
+            <div className="streams">
+              <div className="head">
+                <h4>Where to watch</h4>
+                {streams.length > 0 && (
+                  <span className="mono text-[11px] text-[var(--emerald)]">
+                    ● {streams.length} available
+                  </span>
+                )}
+              </div>
+              {streams.length > 0 ? (
+                streams.map((s) => {
+                  const href = PROVIDER_URLS[s.id];
+                  const inner = (
+                    <>
+                      <div className="left">
+                        <div className="logo">
+                          {s.logoPath ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={`${TMDB_IMAGE_BASE}/w92${s.logoPath}`}
+                              alt={s.name}
+                            />
+                          ) : (
+                            s.name.charAt(0)
+                          )}
+                        </div>
+                        <div>
+                          <div className="name">{s.name}</div>
+                          <div className="type">{s.type}</div>
+                        </div>
+                      </div>
+                      <div className="price">
+                        {s.type === "Stream" ? "—" : ""}
+                      </div>
+                    </>
+                  );
+                  return href ? (
+                    <a
+                      key={s.id}
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="stream-row"
+                    >
+                      {inner}
+                    </a>
+                  ) : (
+                    <div key={s.id} className="stream-row">
+                      {inner}
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-[13px] text-[var(--ink-3)] pt-2 pb-1">
+                  {availability.type === "not_yet_streaming" && (
+                    <>
+                      <Clock className="inline size-4 mr-1.5 align-text-bottom" />
+                      Not yet on streaming
+                    </>
+                  )}
+                  {(availability.type === "not_in_region" ||
+                    availability.type === "available") && (
+                    <>
+                      <Globe className="inline size-4 mr-1.5 align-text-bottom" />
+                      Not available in your region
+                    </>
+                  )}
+                </div>
+              )}
+              <p className="mono text-[10px] text-[var(--ink-3)] mt-3 mb-0 tracking-[0.1em] uppercase">
+                Data via JustWatch
+              </p>
             </div>
-          ) : (
-            <>
-              {/* Add to Library / In Library */}
-              {isWantToWatch ? (
-                <Button
-                  size="sm"
-                  className="gap-2"
-                  onClick={handleRemove}
-                  disabled={removeMutation.isPending}
-                >
-                  {removeMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Bookmark className="h-4 w-4 fill-current" />
-                  )}
-                  In Library
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={isWatched ? handleMoveToWantToWatch : handleAddToLibrary}
-                  disabled={addMutation.isPending || statusMutation.isPending}
-                >
-                  {addMutation.isPending || statusMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Bookmark className="h-4 w-4" />
-                  )}
-                  {isWatched ? "Want to Watch" : "Add to Library"}
-                </Button>
-              )}
 
-              {/* Mark as Watched */}
-              {isWatched ? (
-                <Button
-                  size="sm"
-                  className="gap-2 bg-green-600 hover:bg-green-700 text-white"
-                  onClick={handleRemove}
-                  disabled={removeMutation.isPending}
+            <div className="streams">
+              <div className="head">
+                <h4>Your status</h4>
+              </div>
+              <div className="py-3.5 flex gap-2">
+                <button
+                  type="button"
+                  className={cn("btn flex-1 justify-center", isWatched ? "btn-red" : "btn-ghost")}
+                  onClick={isWatched ? handleRemove : handleMarkWatched}
+                  disabled={statusMutation.isPending || addMutation.isPending}
                 >
-                  {removeMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <CircleCheck className="h-4 w-4 fill-current" />
-                  )}
+                  <CircleCheck size={14} fill={isWatched ? "currentColor" : "none"} />
                   Watched
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={handleMarkWatched}
-                  disabled={addMutation.isPending || statusMutation.isPending}
+                </button>
+                <button
+                  type="button"
+                  className={cn("btn flex-1 justify-center", isWantToWatch ? "btn-red" : "btn-ghost")}
+                  onClick={isWantToWatch ? handleRemove : handleAddToLibrary}
+                  disabled={addMutation.isPending}
                 >
-                  {statusMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <CircleCheck className="h-4 w-4" />
-                  )}
-                  Mark Watched
-                </Button>
-              )}
-
-              {/* Like / Dislike — only when in library */}
+                  <Plus size={14} />
+                  Want
+                </button>
+              </div>
               {isInLibrary && watchlistItem && (
-                <>
-                  <motion.div whileTap={tapAnimation}>
-                    <Button
-                      variant="ghost"
-                      size="icon"
+                <div className="pt-4 border-t border-border">
+                  <div className="eyebrow mb-3">Your rating</div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      className={cn(
+                        "btn flex-1 justify-center",
+                        watchlistItem.rating === 1 ? "btn-red" : "btn-outline",
+                      )}
                       onClick={() => {
                         const newRating = watchlistItem.rating === 1 ? null : 1;
-                        rateMutation.mutate({ id: watchlistItem.id, rating: newRating });
+                        rateMutation.mutate({
+                          id: watchlistItem.id,
+                          rating: newRating,
+                        });
                       }}
                       disabled={rateMutation.isPending}
                       aria-label="Like"
-                      className={cn(
-                        "transition-colors duration-200",
-                        watchlistItem.rating === 1 && "text-green-500",
-                      )}
                     >
                       <ThumbsUp
-                        className={cn(
-                          "h-4 w-4",
-                          watchlistItem.rating === 1 && "fill-green-500",
-                        )}
+                        size={14}
+                        fill={watchlistItem.rating === 1 ? "currentColor" : "none"}
                       />
-                    </Button>
-                  </motion.div>
-                  <motion.div whileTap={tapAnimation}>
-                    <Button
-                      variant="ghost"
-                      size="icon"
+                      Liked
+                    </button>
+                    <button
+                      type="button"
+                      className={cn(
+                        "btn flex-1 justify-center",
+                        watchlistItem.rating === -1
+                          ? "btn-red"
+                          : "btn-outline",
+                      )}
                       onClick={() => {
-                        const newRating = watchlistItem.rating === -1 ? null : -1;
-                        rateMutation.mutate({ id: watchlistItem.id, rating: newRating });
+                        const newRating =
+                          watchlistItem.rating === -1 ? null : -1;
+                        rateMutation.mutate({
+                          id: watchlistItem.id,
+                          rating: newRating,
+                        });
                       }}
                       disabled={rateMutation.isPending}
                       aria-label="Dislike"
-                      className={cn(
-                        "transition-colors duration-200",
-                        watchlistItem.rating === -1 && "text-red-500",
-                      )}
                     >
                       <ThumbsDown
-                        className={cn(
-                          "h-4 w-4",
-                          watchlistItem.rating === -1 && "fill-red-500",
-                        )}
+                        size={14}
+                        fill={
+                          watchlistItem.rating === -1 ? "currentColor" : "none"
+                        }
                       />
-                    </Button>
-                  </motion.div>
-                </>
+                      Disliked
+                    </button>
+                  </div>
+                </div>
               )}
+            </div>
 
-              {/* Trailer button */}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-2 ml-auto"
-                asChild
-              >
-                <a
-                  href={`https://www.youtube.com/results?search_query=${encodeURIComponent(details.name + " official trailer")}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  Trailer
-                </a>
-              </Button>
-            </>
-          )}
+            <a
+              href={trailerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-outline w-full justify-center"
+            >
+              <ExternalLink size={14} />
+              Find trailer on YouTube
+            </a>
+          </aside>
         </div>
       </div>
     </div>

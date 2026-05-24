@@ -10,6 +10,7 @@ interface MovieGridProps {
   movies: (Movie | null)[];
   isLoading?: boolean;
   onMovieClick?: (movie: Movie) => void;
+  onMovieHover?: (movie: Movie) => void;
   hrefPrefix?: string;
   mediaType?: MediaType;
   sentinelRef?: ((node: HTMLDivElement | null) => void) | React.RefObject<HTMLDivElement | null>;
@@ -17,7 +18,7 @@ interface MovieGridProps {
   readOnly?: boolean;
 }
 
-export function MovieGrid({ movies, isLoading = false, onMovieClick, hrefPrefix, mediaType = "movie", sentinelRef, isFetchingMore, readOnly = false }: MovieGridProps) {
+export function MovieGrid({ movies, isLoading = false, onMovieClick, onMovieHover, hrefPrefix, mediaType = "movie", sentinelRef, isFetchingMore, readOnly = false }: MovieGridProps) {
   if (isLoading) {
     return (
       // Columns: 2 (375px) | 3 (640px) | 4 (768px) | 5 (1024px) | 6 (1280px+) — WCAG verified
@@ -48,6 +49,7 @@ export function MovieGrid({ movies, isLoading = false, onMovieClick, hrefPrefix,
                 movie={movie}
                 href={hrefPrefix ? `${hrefPrefix}${movie.id}` : undefined}
                 onClick={hrefPrefix ? undefined : onMovieClick}
+                onHover={onMovieHover}
                 readOnly={readOnly}
                 mediaType={mediaType}
               />

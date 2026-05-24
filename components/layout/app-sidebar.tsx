@@ -2,9 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Compass, Tv, Bookmark, LogOut, Settings } from "lucide-react";
-import { motion, useReducedMotion } from "framer-motion";
-import { useState } from "react";
+import {
+  Home,
+  Compass,
+  Tv,
+  Bookmark,
+  LogOut,
+  Settings,
+} from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -15,7 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { logout } from "@/actions/auth";
 import { cn } from "@/lib/utils";
-import { MoodflixLogo } from "@/components/brand/moodflix-logo";
+import { MoodflixIcon } from "@/components/brand/moodflix-icon";
 
 interface AppSidebarProps {
   user: {
@@ -24,33 +29,13 @@ interface AppSidebarProps {
 }
 
 const navLinks = [
-  {
-    href: "/home",
-    label: "Home",
-    icon: Home,
-    exact: true,
-  },
-  {
-    href: "/discover",
-    label: "Movies",
-    icon: Compass,
-    exact: false,
-  },
-  {
-    href: "/series",
-    label: "Series",
-    icon: Tv,
-    exact: false,
-  },
-  {
-    href: "/library",
-    label: "Library",
-    icon: Bookmark,
-    exact: false,
-  },
+  { href: "/home", label: "Home", icon: Home, exact: true },
+  { href: "/discover", label: "Movies", icon: Compass, exact: false },
+  { href: "/series", label: "Series", icon: Tv, exact: false },
+  { href: "/library", label: "Library", icon: Bookmark, exact: false },
+  { href: "/settings", label: "Settings", icon: Settings, exact: false },
 ];
 
-// Map deep pages to their parent nav section
 const DEEP_ROUTE_PARENTS: Record<string, string> = {
   "/movie": "/discover",
   "/tv": "/series",
@@ -59,7 +44,6 @@ const DEEP_ROUTE_PARENTS: Record<string, string> = {
 function isActive(pathname: string, href: string, exact: boolean) {
   if (exact) return pathname === href;
   if (pathname.startsWith(href)) return true;
-  // Check if current deep page maps to this nav item
   for (const [prefix, parent] of Object.entries(DEEP_ROUTE_PARENTS)) {
     if (pathname.startsWith(prefix) && href === parent) return true;
   }
@@ -68,13 +52,6 @@ function isActive(pathname: string, href: string, exact: boolean) {
 
 export function AppSidebar({ user }: AppSidebarProps) {
   const pathname = usePathname();
-  const shouldReduceMotion = useReducedMotion();
-  const [expanded, setExpanded] = useState(false);
-
-  const springTransition = shouldReduceMotion
-    ? { duration: 0 }
-    : { type: "spring" as const, stiffness: 280, damping: 26 };
-
   const userInitial = user.email.charAt(0).toUpperCase();
 
   async function handleLogout() {
@@ -82,113 +59,107 @@ export function AppSidebar({ user }: AppSidebarProps) {
   }
 
   return (
-    <motion.aside
-      className="hidden md:flex flex-col fixed top-0 left-0 h-full z-50 bg-sidebar border-r border-sidebar-border overflow-hidden"
-      initial={false}
-      animate={{ width: expanded ? 200 : 60 }}
-      transition={springTransition}
-      onHoverStart={() => setExpanded(true)}
-      onHoverEnd={() => setExpanded(false)}
+    <aside
+      className="hidden md:flex fixed top-0 left-0 bottom-0 z-50 flex-col items-center bg-sidebar border-r border-sidebar-border w-[72px] pt-[18px] pb-6"
+      aria-label="Primary navigation"
     >
-      {/* Logo area — always render full logo, clip text based on expanded state */}
-      <div className="flex items-center h-16 px-4 shrink-0 overflow-hidden">
-        <motion.div
-          className="shrink-0 overflow-hidden"
-          animate={{ width: expanded ? "auto" : 28 }}
-          transition={shouldReduceMotion ? { duration: 0 } : { type: "spring", stiffness: 280, damping: 26 }}
-        >
-          <MoodflixLogo height={28} variant="dark" />
-        </motion.div>
-      </div>
+      {/* Logo mark */}
+      <Link
+        href="/home"
+        className="mb-7 grid place-items-center rounded-[9px]"
+        aria-label="Moodflix home"
+      >
+        <MoodflixIcon size={26} variant="dark" cutoutColor="#14110f" />
+      </Link>
 
-      {/* Nav items */}
-      <nav className="flex-1 flex flex-col gap-1 px-2 py-2" aria-label="Main navigation">
+      <nav className="flex flex-col items-center gap-1.5 flex-1">
         {navLinks.map((link) => {
           const Icon = link.icon;
           const active = isActive(pathname, link.href, link.exact);
-
           return (
             <Link
               key={link.href}
               href={link.href}
-              className={cn(
-                "relative flex items-center gap-3 h-11 px-3 rounded-md transition-colors",
-                active
-                  ? "text-primary"
-                  : "text-sidebar-foreground/60 hover:text-sidebar-foreground",
-              )}
               aria-current={active ? "page" : undefined}
+              className={cn(
+                "group relative grid place-items-center w-11 h-11 rounded-[10px] transition-colors",
+                active
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+              )}
             >
               {active && (
-                <motion.span
-                  layoutId={shouldReduceMotion ? undefined : "sidebar-active-pill"}
-                  className="absolute inset-0 rounded-md bg-primary/10"
-                  transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
+                <span
+                  aria-hidden
+                  className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[22px] rounded-r-[3px] bg-primary"
                 />
               )}
-              <Icon className="size-5 shrink-0 relative z-10" aria-hidden="true" />
-              <motion.span
-                className="relative z-10 whitespace-nowrap text-sm font-medium overflow-hidden"
-                animate={{
-                  opacity: expanded ? 1 : 0,
-                  width: expanded ? "auto" : 0,
-                }}
-                transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.15 }}
+              <Icon className="size-5" aria-hidden="true" />
+              {/* Tooltip flyout */}
+              <span
+                className={cn(
+                  "pointer-events-none absolute left-[calc(100%+14px)] top-1/2 -translate-y-1/2",
+                  "whitespace-nowrap rounded-md border border-border bg-card px-2.5 py-1.5",
+                  "text-xs text-foreground opacity-0 transition-opacity duration-150",
+                  "group-hover:opacity-100 group-focus-visible:opacity-100",
+                )}
+                role="tooltip"
               >
                 {link.label}
-              </motion.span>
+              </span>
             </Link>
           );
         })}
       </nav>
 
-      {/* User section */}
-      <div className="px-2 pb-4 shrink-0">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              className={cn(
-                "flex items-center gap-3 w-full h-11 px-3 rounded-md transition-colors",
-                "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-              )}
-              aria-label="User menu"
+      {/* User avatar */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            className="relative grid place-items-center"
+            aria-label="User menu"
+          >
+            <Avatar
+              className="size-9 border-2"
+              style={{ borderColor: "var(--bg-elev)" }}
             >
-              <Avatar className="size-7 shrink-0">
-                <AvatarFallback className="bg-primary/20 text-primary text-xs font-semibold">
-                  {userInitial}
-                </AvatarFallback>
-              </Avatar>
-              <motion.span
-                className="text-sm truncate overflow-hidden"
-                animate={{
-                  opacity: expanded ? 1 : 0,
-                  width: expanded ? "auto" : 0,
+              <AvatarFallback
+                className="text-[13px] font-semibold text-white"
+                style={{
+                  background:
+                    "linear-gradient(135deg, var(--violet), var(--red))",
                 }}
-                transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.15 }}
               >
-                {user.email}
-              </motion.span>
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent side="right" align="end" className="w-56">
-            <DropdownMenuItem asChild>
-              <Link href="/settings" className="cursor-pointer">
-                <Settings className="mr-2 size-4" />
-                <span>Settings</span>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={handleLogout}
-              className="cursor-pointer text-destructive focus:text-destructive"
-            >
-              <LogOut className="mr-2 size-4" />
-              <span>Log out</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </motion.aside>
+                {userInitial}
+              </AvatarFallback>
+            </Avatar>
+            <span
+              aria-hidden
+              className="absolute bottom-0 right-0 size-2 rounded-full border-2"
+              style={{
+                background: "var(--emerald)",
+                borderColor: "var(--bg-elev)",
+              }}
+            />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent side="right" align="end" className="w-56">
+          <DropdownMenuItem asChild>
+            <Link href="/settings" className="cursor-pointer">
+              <Settings className="mr-2 size-4" />
+              <span>Settings</span>
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={handleLogout}
+            className="cursor-pointer text-destructive focus:text-destructive"
+          >
+            <LogOut className="mr-2 size-4" />
+            <span>Log out</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </aside>
   );
 }

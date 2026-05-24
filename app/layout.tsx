@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
-import { Inter, Geist_Mono, Bebas_Neue } from "next/font/google";
+import {
+  Inter,
+  Bebas_Neue,
+  Instrument_Serif,
+  JetBrains_Mono,
+} from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { SwRegister } from "@/components/pwa/sw-register";
 import "./globals.css";
@@ -10,8 +15,8 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jetBrainsMono = JetBrains_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
 });
 
@@ -20,6 +25,14 @@ const bebasNeue = Bebas_Neue({
   variable: "--font-display",
   subsets: ["latin"],
   display: "block",
+});
+
+const instrumentSerif = Instrument_Serif({
+  weight: "400",
+  style: ["normal", "italic"],
+  variable: "--font-serif",
+  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -76,7 +89,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${inter.variable} ${geistMono.variable} ${bebasNeue.variable} font-sans antialiased`}
+        className={`${inter.variable} ${jetBrainsMono.variable} ${bebasNeue.variable} ${instrumentSerif.variable} font-sans antialiased cinematic-skin`}
       >
         <SwRegister>
           {children}

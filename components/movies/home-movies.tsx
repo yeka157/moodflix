@@ -22,16 +22,27 @@ export function HomeMovies({
   regionalPopular,
 }: HomeMoviesProps) {
   return (
-    <>
+    <div className="space-y-16">
       <MovieRow
-        title="Trending This Week"
-        movies={trending}
+        eyebrowId="TRENDING / 24h"
+        title={
+          <>
+            Most <span className="it">talked about</span>
+          </>
+        }
+        movies={trending.slice(0, 12)}
         mediaType="movie"
+        showRank
       />
 
       {trendingTV.length > 0 && (
         <MovieRow
-          title="Trending TV Shows"
+          eyebrowId="SERIES / NEW SEASONS"
+          title={
+            <>
+              The <span className="it">small</span> screen
+            </>
+          }
           movies={trendingTV}
           mediaType="tv"
         />
@@ -39,7 +50,12 @@ export function HomeMovies({
 
       {upcoming.length > 0 && (
         <MovieRow
-          title="Upcoming Movies"
+          eyebrowId="UPCOMING / IN THEATERS SOON"
+          title={
+            <>
+              Coming <span className="it">soon</span>
+            </>
+          }
           movies={upcoming}
           mediaType="movie"
           showReleaseBadge
@@ -48,26 +64,32 @@ export function HomeMovies({
 
       {onTheAirTV.length > 0 && (
         <MovieRow
-          title="Currently Airing TV Series"
+          eyebrowId="ON AIR / NEW EPISODES"
+          title={
+            <>
+              Currently <span className="it">airing</span>
+            </>
+          }
           movies={onTheAirTV}
           mediaType="tv"
           showReleaseBadge
         />
       )}
 
-      {personalizedData && (
-        <PersonalizedSection
-          data={personalizedData}
-        />
-      )}
+      {personalizedData && <PersonalizedSection data={personalizedData} />}
 
       {!personalizedData && regionalPopular && regionalPopular.length > 0 && (
         <MovieRow
-          title="Popular in Your Region"
+          eyebrowId="REGIONAL / FOR YOUR AREA"
+          title={
+            <>
+              Popular <span className="it">near you</span>
+            </>
+          }
           movies={regionalPopular}
           mediaType="movie"
         />
       )}
-    </>
+    </div>
   );
 }

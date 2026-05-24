@@ -8,10 +8,9 @@ import type { Movie } from "@/types/movie";
 import { useTVSearchInfinite } from "@/hooks/use-tv";
 import useInfiniteScroll from "react-infinite-scroll-hook";
 import { MovieGrid } from "@/components/movies/movie-grid";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { SeriesContent } from "@/components/series/series-content";
 import { SeriesGridContent } from "@/components/series/series-grid-content";
+import { SeriesFeatured } from "@/components/series/series-featured";
 
 interface SeriesPageContentProps {
   trending: Movie[];
@@ -45,6 +44,10 @@ function dedupeShows(
   return result;
 }
 
+function pad(n: number, len = 3) {
+  return String(n).padStart(len, "0");
+}
+
 export function SeriesPageContent({
   trending,
   onTheAir = [],
@@ -76,64 +79,85 @@ export function SeriesPageContent({
     rootMargin: "0px 0px 400px 0px",
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setInputValue(value);
-    debouncedSetQuery(value);
-  };
-
-  const handleClear = () => {
-    setInputValue("");
-    setDebouncedQuery("");
-  };
+  const featured = trending.find((s) => s.backdrop_path) ?? null;
+  const totalCount =
+    trending.length + korean.length + chinese.length + topRated.length;
 
   return (
-    <div>
-      {/* Search bar — always visible */}
-      <div className="mb-8 max-w-full sm:max-w-xl">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Search TV shows..."
-            value={inputValue}
-            onChange={handleInputChange}
-            className="h-12 text-base pl-10 pr-10"
-          />
-          {inputValue && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10"
-              onClick={handleClear}
-              disabled={searchQuery.isFetching}
-              aria-label="Clear search"
-            >
-              {searchQuery.isFetching ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <X className="h-4 w-4" />
-              )}
-            </Button>
-          )}
+    <>
+      {/* Header */}
+      <div className="mb-8">
+        <div className="section-eyebrow">
+          <span className="bar" />
+          <span className="id">SERIES · {pad(totalCount)} TITLES</span>
+        </div>
+        <div className="flex items-end justify-between gap-6 flex-wrap">
+          <h1 className="display text-[clamp(56px,7vw,104px)] m-0">
+            The{" "}
+            <span className="serif-it text-[var(--ink-2)] normal-case tracking-[-0.015em]">
+              long
+            </span>
+            <br />
+            form.
+          </h1>
+          <p className="text-[var(--ink-3)] max-w-[380px] text-sm m-0 leading-[1.55]">
+            Series we keep returning to, season after season. Filtered, ranked,
+            and ready when you are.
+          </p>
         </div>
       </div>
 
+      {/* Search */}
+      <div className="search-pill max-w-[520px] mb-8">
+        <Search className="size-4 text-[var(--ink-3)]" />
+        <input
+          type="text"
+          placeholder="Search TV shows…"
+          value={inputValue}
+          onChange={(e) => {
+            setInputValue(e.target.value);
+            debouncedSetQuery(e.target.value);
+          }}
+        />
+        {inputValue ? (
+          <button
+            type="button"
+            onClick={() => {
+              setInputValue("");
+              setDebouncedQuery("");
+            }}
+            aria-label="Clear search"
+            className="text-[var(--ink-3)] cursor-pointer grid place-items-center"
+          >
+            {searchQuery.isFetching ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <X className="size-4" />
+            )}
+          </button>
+        ) : (
+          <span className="kbd">⌘K</span>
+        )}
+      </div>
+
       {isSearchActive ? (
-        /* Search results — curated rows and Browse All are hidden */
         <div className="space-y-4">
           {searchQuery.isLoading ? (
             <MovieGrid movies={[]} isLoading />
           ) : searchQuery.isError ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+              <AlertCircle className="size-12 text-destructive mb-4" />
               <h3 className="text-lg font-semibold mb-2">Search failed</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Something went wrong while searching. Please try again.
+                Something went wrong. Please try again.
               </p>
-              <Button variant="outline" onClick={() => searchQuery.refetch()}>
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={() => searchQuery.refetch()}
+              >
                 Retry
-              </Button>
+              </button>
             </div>
           ) : searchShows.length > 0 ? (
             <div
@@ -142,14 +166,6 @@ export function SeriesPageContent({
                 searchQuery.isPlaceholderData && "opacity-50 pointer-events-none",
               )}
             >
-              {searchQuery.isPlaceholderData && (
-                <div className="absolute inset-0 z-10 flex items-start justify-center pt-20">
-                  <div className="bg-background/80 backdrop-blur-sm px-4 py-2 rounded-full border shadow-lg flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                    <span className="text-sm font-medium">Updating results...</span>
-                  </div>
-                </div>
-              )}
               <MovieGrid
                 movies={searchShows}
                 hrefPrefix="/tv/"
@@ -161,17 +177,18 @@ export function SeriesPageContent({
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <Search className="h-12 w-12 text-muted-foreground mb-4" />
+              <Search className="size-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">No TV shows found</h3>
               <p className="text-sm text-muted-foreground">
-                No TV shows found for &ldquo;{debouncedQuery}&rdquo;
+                No matches for &ldquo;{debouncedQuery}&rdquo;
               </p>
             </div>
           )}
         </div>
       ) : (
-        /* Curated rows + Browse All — shown when search is inactive */
         <>
+          {featured && <SeriesFeatured show={featured} />}
+
           <SeriesContent
             trending={trending}
             onTheAir={onTheAir}
@@ -180,16 +197,19 @@ export function SeriesPageContent({
             topRated={topRated}
           />
 
-          <div className="mt-12 mb-8">
-            <h2 className="text-2xl font-bold tracking-tight">Browse All</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Filter and sort all TV shows
-            </p>
+          <div className="mt-20 mb-8">
+            <div className="section-eyebrow">
+              <span className="bar" />
+              <span className="id">BROWSE ALL · FILTER &amp; SORT</span>
+            </div>
+            <h2 className="section-title text-[clamp(40px,5vw,72px)] m-0">
+              The <span className="it">full</span> catalog
+            </h2>
           </div>
 
           <SeriesGridContent />
         </>
       )}
-    </div>
+    </>
   );
 }

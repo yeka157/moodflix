@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AppSidebar } from "@/components/layout/app-sidebar";
+import { AppTopBar } from "@/components/layout/app-topbar";
 import { BottomTabBar } from "@/components/layout/bottom-tab-bar";
 import { Providers } from "@/components/providers";
 import { OfflineToast } from "@/components/pwa/offline-toast";
@@ -28,8 +29,11 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       />
       <AppSidebar user={{ email: user.email ?? "" }} />
       <BottomTabBar />
-      <main className="md:pl-[60px] pb-16 md:pb-0 overflow-x-clip">
-        <Providers>{children}</Providers>
+      <main className="md:pl-[72px] pb-16 md:pb-0 overflow-x-clip">
+        <Providers>
+          <AppTopBar />
+          {children}
+        </Providers>
       </main>
       <OfflineToast />
       <InstallPrompt />

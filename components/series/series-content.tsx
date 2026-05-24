@@ -17,17 +17,28 @@ export function SeriesContent({
   topRated,
 }: SeriesContentProps) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-16">
       <MovieRow
-        title="Trending TV Shows"
+        eyebrowId="TRENDING / WEEK"
+        title={
+          <>
+            Most <span className="it">watched</span>
+          </>
+        }
         movies={trending}
         hrefPrefix="/tv/"
         mediaType="tv"
+        showRank
       />
 
       {onTheAir.length > 0 && (
         <MovieRow
-          title="Currently Airing"
+          eyebrowId="ON AIR / NEW EPISODES"
+          title={
+            <>
+              Currently <span className="it">airing</span>
+            </>
+          }
           movies={onTheAir}
           hrefPrefix="/tv/"
           mediaType="tv"
@@ -36,21 +47,36 @@ export function SeriesContent({
       )}
 
       <MovieRow
-        title="Korean Drama"
+        eyebrowId="REGION / KOREA"
+        title={
+          <>
+            K-drama <span className="it">specials</span>
+          </>
+        }
         movies={korean}
         hrefPrefix="/tv/"
         mediaType="tv"
       />
 
       <MovieRow
-        title="Chinese Drama"
+        eyebrowId="REGION / CHINA"
+        title={
+          <>
+            C-drama <span className="it">picks</span>
+          </>
+        }
         movies={chinese}
         hrefPrefix="/tv/"
         mediaType="tv"
       />
 
       <MovieRow
-        title="Top Rated Series"
+        eyebrowId="ALL TIME / TOP RATED"
+        title={
+          <>
+            Top rated, <span className="it">all time</span>
+          </>
+        }
         movies={topRated}
         hrefPrefix="/tv/"
         mediaType="tv"

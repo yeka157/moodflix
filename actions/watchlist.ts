@@ -59,6 +59,41 @@ export async function getWatchlist(
   return rows.map(serializeItem);
 }
 
+export type WatchlistStats = {
+  inLibrary: number;
+  watched: number;
+  thisYear: number;
+};
+
+export async function getWatchlistStats(): Promise<WatchlistStats> {
+  const userId = await getAuthUserId();
+  if (!userId) return { inLibrary: 0, watched: 0, thisYear: 0 };
+
+  const rows = await db
+    .select({
+      status: watchlist.status,
+      watchedAt: watchlist.watchedAt,
+    })
+    .from(watchlist)
+    .where(eq(watchlist.userId, userId));
+
+  const currentYear = new Date().getFullYear();
+  let inLibrary = 0;
+  let watched = 0;
+  let thisYear = 0;
+  for (const r of rows) {
+    if (r.status === "watched") {
+      watched++;
+      if (r.watchedAt && r.watchedAt.getFullYear() === currentYear) {
+        thisYear++;
+      }
+    } else {
+      inLibrary++;
+    }
+  }
+  return { inLibrary, watched, thisYear };
+}
+
 export async function getWatchlistTmdbIds(): Promise<WatchlistTmdbEntry[]> {
   const userId = await getAuthUserId();
   if (!userId) return [];

@@ -2,18 +2,20 @@ interface MoodflixIconProps {
   size?: number;
   variant?: "dark" | "light";
   className?: string;
+  cutoutColor?: string;
 }
 
 export function MoodflixIcon({
   size = 32,
   variant = "dark",
   className,
+  cutoutColor: cutoutColorProp,
 }: MoodflixIconProps) {
   const crimson = "#FB2C36";
-  // cutoutColor must match the background the icon is placed on
-  // dark variant (app): rects are #0a0a0a (app background)
-  // light variant (press): rects are #ffffff
-  const cutoutColor = variant === "dark" ? "#0a0a0a" : "#ffffff";
+  // cutoutColor must match the background the icon is placed on.
+  // Override via prop when the surface differs from the default page bg.
+  const cutoutColor =
+    cutoutColorProp ?? (variant === "dark" ? "#0a0908" : "#ffffff");
   const letterColor = variant === "dark" ? crimson : "#1a1a1a";
 
   return (

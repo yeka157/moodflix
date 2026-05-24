@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
-import { LandingNavbar } from "@/components/landing/landing-navbar";
-import { HeroSection } from "@/components/landing/hero-section";
-import { FeaturesSection } from "@/components/landing/features-section";
-import { MovieShowcase } from "@/components/landing/movie-showcase";
-import { AIPreviewSection } from "@/components/landing/ai-preview-section";
-import { CTASection } from "@/components/landing/cta-section";
-import { Footer } from "@/components/landing/footer";
-import { getHeroBackdrop, getShowcasePosters } from "@/lib/tmdb";
+import {
+  LandingRevamp,
+  type LandingMovie,
+} from "@/components/landing/landing-revamp";
+import { getTrendingMovies } from "@/lib/tmdb";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -20,15 +17,43 @@ export const metadata: Metadata = {
   },
 };
 
+const POSTER_BASE = "https://image.tmdb.org/t/p/w500";
+const BACKDROP_BASE = "https://image.tmdb.org/t/p/w1280";
+const FALLBACK_BACKDROP = "/placeholder-backdrop.svg";
+const FALLBACK_POSTER = "/placeholder-poster.svg";
+
 export default async function Home() {
   const supabase = await createClient();
-  const [{ data: { user } }, backdropUrl, posters] = await Promise.all([
+  const [
+    {
+      data: { user },
+    },
+    trending,
+  ] = await Promise.all([
     supabase.auth.getUser(),
-    getHeroBackdrop(),
-    getShowcasePosters(20, "w500"),
+    getTrendingMovies().catch(() => null),
   ]);
 
   const actionHref = user ? "/home" : "/login";
+
+  const movies: LandingMovie[] = (trending?.results ?? [])
+    .filter((m) => m.poster_path && m.backdrop_path)
+    .slice(0, 24)
+    .map((m) => ({
+      id: m.id,
+      title: m.title,
+      year: m.release_date ? m.release_date.slice(0, 4) : "",
+      posterUrl: m.poster_path
+        ? `${POSTER_BASE}${m.poster_path}`
+        : FALLBACK_POSTER,
+      backdropUrl: m.backdrop_path
+        ? `${BACKDROP_BASE}${m.backdrop_path}`
+        : FALLBACK_BACKDROP,
+    }));
+
+  const heroBackdropUrl = movies[0]?.backdropUrl ?? FALLBACK_BACKDROP;
+  const finalBackdropUrl =
+    movies[7]?.backdropUrl ?? movies[0]?.backdropUrl ?? FALLBACK_BACKDROP;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -57,13 +82,12 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <LandingNavbar />
-      <HeroSection backdropUrl={backdropUrl} actionHref={actionHref} />
-      <FeaturesSection />
-      <MovieShowcase posters={posters} />
-      <AIPreviewSection actionHref={actionHref} />
-      <CTASection actionHref={actionHref} />
-      <Footer />
+      <LandingRevamp
+        actionHref={actionHref}
+        heroBackdropUrl={heroBackdropUrl}
+        finalBackdropUrl={finalBackdropUrl}
+        movies={movies}
+      />
     </>
   );
 }

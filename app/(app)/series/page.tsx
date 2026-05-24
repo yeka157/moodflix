@@ -41,14 +41,10 @@ export default async function SeriesPage() {
   queryClient.setQueryData(tvKeys.category("airing_today"), onTheAir);
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Series</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Discover TV shows filtered by genre, year, and popularity
-        </p>
-      </div>
-
+    <div
+      className="page section"
+      style={{ paddingTop: 24, paddingBottom: 120 }}
+    >
       <HydrationBoundary state={dehydrate(queryClient)}>
         <SeriesPageContent
           trending={trending}

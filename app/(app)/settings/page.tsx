@@ -37,12 +37,21 @@ export default async function SettingsPage() {
     (user.user_metadata?.avatar_url as string | undefined) ?? null;
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-8 max-w-2xl mx-auto space-y-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Manage your profile and preferences
-        </p>
+    <div
+      className="page section"
+      style={{ paddingTop: 24, paddingBottom: 120 }}
+    >
+      <div style={{ marginBottom: 56 }}>
+        <div className="section-eyebrow">
+          <span className="bar" />
+          <span className="id">PROFILE &amp; PREFERENCES</span>
+        </div>
+        <h1
+          className="display"
+          style={{ fontSize: "clamp(56px, 7vw, 104px)", margin: 0 }}
+        >
+          Settings.
+        </h1>
       </div>
 
       <SettingsForm

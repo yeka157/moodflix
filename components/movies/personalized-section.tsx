@@ -50,10 +50,22 @@ export function PersonalizedSection({
   const rec1Movies = filterMovies(rec1.data?.results ?? [], excludeSet);
   const filteredGenreMovies = filterMovies(genreMovies, excludeSet);
 
+  const renderTitle = (str: string) => {
+    const parts = str.split(/\s+/);
+    if (parts.length < 2) return str;
+    const head = parts.slice(0, -1).join(" ");
+    const tail = parts[parts.length - 1];
+    return (
+      <>
+        {head} <span className="it">{tail}</span>
+      </>
+    );
+  };
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-16">
       <motion.div
-        className="flex items-center gap-3"
+        className="flex items-center gap-3 reveal"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.3 }}
@@ -61,14 +73,19 @@ export function PersonalizedSection({
         <div className="size-8 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(251,44,54,0.12)]">
           <Sparkles className="size-4 text-primary" />
         </div>
-        <p className="text-lg text-muted-foreground italic">
+        <p className="serif-it text-lg text-muted-foreground">
           {data.moodMessage}
         </p>
       </motion.div>
 
       {data.sourceMovies[0] && (rec0.isLoading || rec0Movies.length > 0) && (
         <MovieRow
-          title={ROW_PATTERNS[data.rowPatternIndex % ROW_PATTERNS.length](data.sourceMovies[0].title)}
+          eyebrowId="FOR YOU / SOURCE PICK"
+          title={renderTitle(
+            ROW_PATTERNS[data.rowPatternIndex % ROW_PATTERNS.length](
+              data.sourceMovies[0].title,
+            ),
+          )}
           movies={rec0Movies}
           isLoading={rec0.isLoading}
           isUpdating={rec0.isPlaceholderData}
@@ -78,7 +95,12 @@ export function PersonalizedSection({
 
       {data.sourceMovies[1] && (rec1.isLoading || rec1Movies.length > 0) && (
         <MovieRow
-          title={ROW_PATTERNS[(data.rowPatternIndex + 1) % ROW_PATTERNS.length](data.sourceMovies[1].title)}
+          eyebrowId="FOR YOU / SECOND PICK"
+          title={renderTitle(
+            ROW_PATTERNS[(data.rowPatternIndex + 1) % ROW_PATTERNS.length](
+              data.sourceMovies[1].title,
+            ),
+          )}
           movies={rec1Movies}
           isLoading={rec1.isLoading}
           isUpdating={rec1.isPlaceholderData}
@@ -88,7 +110,13 @@ export function PersonalizedSection({
 
       {(genreDiscover.isLoading || filteredGenreMovies.length > 0) && (
         <MovieRow
-          title={`Top ${data.topGenreName} Picks for You`}
+          eyebrowId={`FOR YOU / ${data.topGenreName.toUpperCase()}`}
+          title={
+            <>
+              Top {data.topGenreName.toLowerCase()}{" "}
+              <span className="it">for you</span>
+            </>
+          }
           movies={filteredGenreMovies}
           isLoading={genreDiscover.isLoading}
           isUpdating={genreDiscover.isPlaceholderData}

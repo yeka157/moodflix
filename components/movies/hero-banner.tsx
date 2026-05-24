@@ -1,121 +1,140 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
-import Image from "next/image";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
-import { Play } from "lucide-react";
+import { Play, Plus, Bookmark } from "lucide-react";
 import type { Movie } from "@/types/movie";
 import { getBackdropUrl } from "@/lib/utils";
 import { GENRES } from "@/lib/constants";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 
 interface HeroBannerProps {
   movie: Movie;
+  marqueeMovies?: Movie[];
+  index?: number;
 }
 
-const containerVariants = {
-  hidden: {},
-  visible: {
-    transition: { staggerChildren: 0.08, delayChildren: 0.25 },
-  },
-};
+function splitTitle(title: string): { head: string; tail: string | null } {
+  const trimmed = title.trim();
+  const lastSpace = trimmed.lastIndexOf(" ");
+  if (lastSpace < 0) return { head: trimmed, tail: null };
+  return {
+    head: trimmed.slice(0, lastSpace),
+    tail: trimmed.slice(lastSpace + 1),
+  };
+}
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.45, ease: "easeOut" as const },
-  },
-};
+function padIndex(n: number) {
+  return String(n).padStart(3, "0");
+}
 
-export function HeroBanner({ movie }: HeroBannerProps) {
-  const shouldReduceMotion = useReducedMotion();
-  const year = movie.release_date?.slice(0, 4) || "N/A";
-  const displayGenres = movie.genre_ids
-    .slice(0, 3)
+export function HeroBanner({ movie, marqueeMovies = [], index = 1 }: HeroBannerProps) {
+  const ref = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const el = ref.current;
+        if (!el) return;
+        const y = window.scrollY;
+        const bg = el.querySelector<HTMLImageElement>(".hero-bg img");
+        if (bg) {
+          bg.style.transform = `translate3d(0, ${y * 0.35}px, 0) scale(1.08)`;
+        }
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  const year = movie.release_date?.slice(0, 4) || "—";
+  const rating = movie.vote_average?.toFixed(1) ?? "—";
+  const displayGenres = (movie.genre_ids ?? [])
+    .slice(0, 2)
     .map((id) => GENRES[id])
     .filter(Boolean);
 
+  const { head, tail } = splitTitle(movie.title);
+  const detailHref = `/${movie.media_type ?? "movie"}/${movie.id}`;
+
   return (
-    <div className="relative -mx-4 -mt-8 h-[50vh] min-h-[400px] max-h-[600px] overflow-hidden">
-      {/* Backdrop image — cinematic scale-in */}
-      <motion.div
-        className="absolute inset-0"
-        initial={shouldReduceMotion ? false : { opacity: 0, scale: 1.05 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-      >
-        <Image
-          src={getBackdropUrl(movie.backdrop_path, "lg")}
-          alt={movie.title}
-          fill
-          priority
-          className="object-cover object-top"
-          sizes="100vw"
-        />
-      </motion.div>
+    <section className="hero" ref={ref}>
+      <div className="hero-bg">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={getBackdropUrl(movie.backdrop_path, "lg")} alt={movie.title} />
+      </div>
 
-      {/* Gradient overlays */}
-      <div className="absolute inset-0 bg-linear-to-t from-background via-background/60 to-transparent" />
-      <div className="absolute inset-0 bg-linear-to-r from-background/80 via-transparent to-transparent" />
+      <div className="hero-rating">
+        <div className="eyebrow mb-2">
+          Critics&apos; choice
+        </div>
+        <div className="num tnum">{rating}</div>
+        <div className="label mt-1.5">
+          out of 10
+        </div>
+      </div>
 
-      {/* Content — staggered children */}
-      <motion.div
-        className="absolute bottom-0 left-4 sm:left-0 right-0 px-4 sm:px-6 lg:px-8 pb-6 sm:pb-8 space-y-3 sm:space-y-4"
-        variants={shouldReduceMotion ? undefined : containerVariants}
-        initial={shouldReduceMotion ? false : "hidden"}
-        animate={shouldReduceMotion ? undefined : "visible"}
-      >
-        {/* Genre badges and year */}
-        <motion.div
-          className="flex gap-2 flex-wrap"
-          variants={shouldReduceMotion ? undefined : itemVariants}
-        >
-          {displayGenres.map((genre) => (
-            <Badge
-              key={genre}
-              variant="secondary"
-              className="bg-white/10 text-white border-0 text-xs"
-            >
-              {genre}
-            </Badge>
-          ))}
-          <Badge
-            variant="secondary"
-            className="bg-white/10 text-white border-0 text-xs"
-          >
-            {year}
-          </Badge>
-        </motion.div>
+      <div className="hero-content fade-up">
+        <div className="hero-meta">
+          <span className="pill">NOW SHOWING · {padIndex(index)}</span>
+          <span>{year}</span>
+          {displayGenres.length > 0 && (
+            <>
+              <span className="dot" />
+              <span>{displayGenres.join(" · ")}</span>
+            </>
+          )}
+        </div>
+        <h1 className="hero-title">
+          {tail ? (
+            <>
+              {head}
+              <br />
+              <span className="it">{tail}</span>
+            </>
+          ) : (
+            head
+          )}
+        </h1>
+        <p className="hero-desc">{movie.overview}</p>
+        <div className="hero-actions">
+          <Link href={detailHref} className="btn btn-primary btn-lg">
+            <Play size={14} fill="currentColor" />
+            View details
+          </Link>
+          <Link href={detailHref} className="btn btn-ghost btn-lg">
+            <Plus size={14} />
+            Add to library
+          </Link>
+          <button type="button" className="btn btn-ghost btn-lg">
+            <Bookmark size={14} />
+            Save for later
+          </button>
+        </div>
+      </div>
 
-        {/* Title */}
-        <motion.h1
-          className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white"
-          variants={shouldReduceMotion ? undefined : itemVariants}
-        >
-          {movie.title}
-        </motion.h1>
-
-        {/* Overview */}
-        <motion.p
-          className="text-sm sm:text-base text-white/80 line-clamp-3 max-w-lg"
-          variants={shouldReduceMotion ? undefined : itemVariants}
-        >
-          {movie.overview}
-        </motion.p>
-
-        {/* CTA Button */}
-        <motion.div variants={shouldReduceMotion ? undefined : itemVariants}>
-          <Button asChild size="lg" className="gap-2">
-            <Link href="/discover">
-              <Play className="h-5 w-5" />
-              Discover More
-            </Link>
-          </Button>
-        </motion.div>
-      </motion.div>
-    </div>
+      {marqueeMovies.length > 0 && (
+        <div className="marquee">
+          <div className="marquee-track">
+            {[...marqueeMovies, ...marqueeMovies].map((m, i) => (
+              <div key={`${m.id}-${i}`} className="marquee-item">
+                <span className="star">✦</span>
+                <span style={{ color: "var(--ink)" }}>{m.title}</span>
+                {m.release_date && (
+                  <span style={{ color: "var(--ink-3)" }}>
+                    · {m.release_date.slice(0, 4)}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </section>
   );
 }

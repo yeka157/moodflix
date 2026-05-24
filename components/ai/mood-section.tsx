@@ -146,133 +146,148 @@ export function MoodSection() {
   };
 
   return (
-    <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-      <div className="p-6 space-y-4">
-        {/* Header */}
-        <div className="flex flex-col items-center text-center space-y-2">
-          <div className="size-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shadow-[0_0_20px_rgba(251,44,54,0.15)]">
-            <Sparkles className="size-6 text-primary" />
-          </div>
-          <h2 className="text-xl font-semibold">
-            What are you in the mood for?
-          </h2>
-          <p className="text-sm text-muted-foreground max-w-md">
-            Describe how you feel and get personalized movie recommendations
-            powered by AI
-          </p>
-        </div>
+    <div className="mood reveal">
+      <div className="mood-eyebrow">
+        <span className="pulse" />
+        AI MOOD · LIVE
+      </div>
+      <h2 className="mood-title">
+        Tell me your <span className="it">mood,</span>
+        <br />
+        I&apos;ll tell you what to watch.
+      </h2>
+      <div className="mood-body space-y-4">
 
-        {/* Chat area */}
+        {/* Chat area — transcript style */}
         {hasMessages && (
           <div
             ref={chatAreaRef}
-            className="max-h-[400px] overflow-y-auto space-y-3 px-1"
+            className="mt-7 pt-7 border-t border-border flex flex-col gap-7 max-h-[640px] overflow-y-auto"
           >
-            {messages.map((msg) => {
-              // Extract per-message tool outputs for inline rendering
+            {messages.map((msg, mi) => {
               const msgParts = msg.parts ?? [];
               const msgGenre = msg.role === "assistant" ? getMessageGenreSuggestion(msgParts) : null;
               const msgMedia = msg.role === "assistant" ? getMessageIdentifiedMedia(msgParts) : null;
+              const text = msgParts
+                .filter((p) => p.type === "text")
+                .map((p) => (p.type === "text" ? cleanAIText(p.text) : ""))
+                .join("");
 
               return (
                 <div key={msg.id}>
                   {msg.role === "user" && (
-                    <div className="flex justify-end">
-                      <div className="bg-primary/15 text-foreground rounded-2xl rounded-br-sm px-4 py-2.5 max-w-[80%] text-sm">
-                        {msgParts
-                          .filter((p) => p.type === "text")
-                          .map((p, i) => (
-                            <span key={i}>
-                              {p.type === "text" ? cleanAIText(p.text) : null}
-                            </span>
-                          ))}
+                    <div className="ai-msg-user relative pl-9">
+                      <p className="font-serif italic text-[26px] leading-[1.35] text-foreground max-w-[720px] m-0">
+                        {text}
+                      </p>
+                      <div className="font-mono text-[11px] text-muted-foreground tracking-[0.12em] uppercase mt-2.5 flex items-center gap-2.5">
+                        <span className="w-[22px] h-px bg-[var(--ink-4)]" />
+                        YOU · {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                       </div>
                     </div>
                   )}
                   {msg.role === "assistant" && (
-                    <div className="space-y-2">
-                      <div className="flex justify-start">
-                        <div className="flex gap-2.5 max-w-[85%]">
-                          <div className="size-7 rounded-lg bg-gradient-to-br from-primary/25 to-primary/5 flex items-center justify-center shrink-0 mt-0.5">
-                            <Sparkles className="size-3.5 text-primary" />
-                          </div>
-                          <div className="bg-secondary rounded-2xl rounded-bl-sm px-4 py-2.5 text-sm text-foreground">
-                            {msgParts
-                              .filter((p) => p.type === "text")
-                              .map((p, i) => (
-                                <span key={i}>
-                                  {p.type === "text" ? cleanAIText(p.text) : null}
-                                </span>
-                              ))}
-                          </div>
-                        </div>
+                    <div className="grid grid-cols-[36px_1fr] gap-[18px] items-start">
+                      <div className="ai-badge">
+                        <Sparkles />
                       </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2.5 font-mono text-[11px] text-muted-foreground tracking-[0.12em] uppercase mb-3.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-[pulse-ring_1.8s_infinite] shadow-[0_0_0_0_rgba(255,59,63,0.6)]" />
+                          <span className="text-foreground">MOODFLIX AI</span>
+                          <span>·</span>
+                          <span>{msgMedia ? "IDENTIFYING" : "CURATING"}</span>
+                        </div>
+                        {text && (
+                          <p className="text-[17px] leading-[1.55] text-foreground m-0 mb-4 max-w-[720px]">
+                            {text}
+                            {isStreaming && mi === messages.length - 1 && (
+                              <span className="ai-cursor inline-block w-px h-[1em] bg-primary align-text-bottom ml-0.5" />
+                            )}
+                          </p>
+                        )}
 
-                      {/* Identified media card(s) — inline with this message */}
-                      {msgMedia && msgMedia.matches.length > 0 && !isStreaming && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="flex justify-start pl-9"
-                        >
-                          <ShazamCardList matches={msgMedia.matches} query={msgMedia.query} />
-                        </motion.div>
-                      )}
+                        {msgMedia && msgMedia.matches.length > 0 && !isStreaming && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                          >
+                            <ShazamCardList matches={msgMedia.matches} query={msgMedia.query} />
+                          </motion.div>
+                        )}
 
-                      {/* Genre suggestion CTA — inline with this message */}
-                      {msgGenre && !isStreaming && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="flex justify-center pt-1"
-                        >
-                          <Card className="border-primary/30 bg-primary/5 p-4 w-full max-w-sm">
-                            <div className="space-y-3 text-center">
-                              <div className="flex flex-wrap justify-center gap-1.5">
-                                {msgGenre.genres.map((g) => {
+                        {msgGenre && !isStreaming && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="mt-2 flex flex-col gap-[18px] max-w-[720px]"
+                          >
+                            <div>
+                              <div className="flex gap-2 font-mono text-[11px] text-muted-foreground tracking-[0.1em] mb-2.5">
+                                <span>· DETECTED GENRES</span>
+                              </div>
+                              <div className="flex gap-2 flex-wrap">
+                                {msgGenre.genres.map((g, i) => {
                                   const countryLabel = msgGenre.origin_country
                                     ? COUNTRY_LABELS[msgGenre.origin_country]
                                     : undefined;
                                   return (
-                                    <Badge
+                                    <span
                                       key={g.id}
-                                      variant="secondary"
-                                      className="bg-primary/15 text-primary border-primary/20"
+                                      className="ai-genre"
+                                      style={{ animationDelay: `${i * 0.1}s` }}
                                     >
+                                      <span className="w-[5px] h-[5px] rounded-full bg-primary" />
                                       {countryLabel ? `${countryLabel} ${g.name}` : g.name}
-                                    </Badge>
+                                    </span>
                                   );
                                 })}
                               </div>
-                              <Button
+                            </div>
+                            <div className="flex gap-2.5 items-center flex-wrap">
+                              <button
+                                type="button"
+                                className="btn btn-red"
                                 onClick={handleShowMovies}
-                                className="gap-2 w-full"
-                                size="sm"
                               >
                                 {msgGenre.media_type === "tv"
                                   ? "Show me TV shows"
-                                  : "Show me movies"}
-                                <ArrowRight className="size-4" />
-                              </Button>
+                                  : "Show me the picks"}
+                                <ArrowRight size={14} />
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-ghost"
+                                onClick={handleReset}
+                              >
+                                Start over
+                              </button>
                             </div>
-                          </Card>
-                        </motion.div>
-                      )}
+                          </motion.div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
               );
             })}
 
-            {/* Streaming indicator */}
-            {isStreaming && (
-              <div className="flex justify-start">
-                <div className="flex gap-2.5">
-                  <div className="size-7 rounded-lg bg-gradient-to-br from-primary/25 to-primary/5 flex items-center justify-center shrink-0">
-                    <Sparkles className="size-3.5 text-primary" />
+            {/* Streaming indicator (no text yet) */}
+            {isStreaming && messages[messages.length - 1]?.role === "user" && (
+              <div className="grid grid-cols-[36px_1fr] gap-[18px] items-start">
+                <div className="ai-badge">
+                  <Sparkles />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2.5 font-mono text-[11px] text-muted-foreground tracking-[0.12em] uppercase mb-3.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-[pulse-ring_1.8s_infinite] shadow-[0_0_0_0_rgba(255,59,63,0.6)]" />
+                    <span className="text-foreground">MOODFLIX AI</span>
+                    <span>·</span>
+                    <span>CURATING</span>
                   </div>
-                  <div className="bg-secondary rounded-2xl px-4 py-3">
-                    <Loader variant="typing" size="sm" />
+                  <div className="flex items-center gap-3.5 text-[var(--ink-2)] font-mono text-xs tracking-[0.08em]">
+                    <span className="ai-reel" />
+                    reading the room…
                   </div>
                 </div>
               </div>
@@ -341,7 +356,7 @@ export function MoodSection() {
           </div>
         )}
       </div>
-    </Card>
+    </div>
   );
 }
 

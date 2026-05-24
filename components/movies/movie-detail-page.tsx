@@ -1,10 +1,16 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import Image from "next/image";
-import { motion, useReducedMotion } from "framer-motion";
 import { toast } from "sonner";
 import {
+  ArrowLeft,
+  Play,
+  Plus,
   Bookmark,
+  Share2,
+  Star,
   CircleCheck,
   ThumbsUp,
   ThumbsDown,
@@ -14,7 +20,11 @@ import {
   Clock,
   Globe,
 } from "lucide-react";
-import type { MovieDetailsWithExtras, Movie, WatchProviderResult } from "@/types/movie";
+import type {
+  MovieDetailsWithExtras,
+  Movie,
+  WatchProviderResult,
+} from "@/types/movie";
 import { getMovieAvailabilityStatus } from "@/lib/availability";
 import {
   useWatchlistCheck,
@@ -23,11 +33,12 @@ import {
   useUpdateWatchlistStatus,
   useRateWatchlistItem,
 } from "@/hooks/use-watchlist";
-import { cn, getBackdropUrl, getPosterUrl } from "@/lib/utils";
+import {
+  cn,
+  getBackdropUrl,
+  getPosterUrl,
+} from "@/lib/utils";
 import { TMDB_IMAGE_BASE, PROVIDER_URLS } from "@/lib/constants";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MovieRow } from "@/components/movies/movie-row";
 import { BellNotifyButton } from "@/components/movies/bell-notify-button";
 
@@ -38,58 +49,47 @@ interface MovieDetailPageContentProps {
   country: string;
 }
 
+type StreamRow = {
+  id: number;
+  name: string;
+  logoPath: string | null;
+  type: "Stream" | "Rent" | "Buy";
+};
+
 function formatRuntime(minutes: number | null): string {
-  if (!minutes) return "";
+  if (!minutes) return "—";
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
-function ProviderGrid({
-  providers,
-}: {
-  providers: { logo_path: string; provider_name: string; provider_id: number }[];
-}) {
-  return (
-    <div className="flex flex-wrap gap-3">
-      {providers.map((p) => {
-        const url = PROVIDER_URLS[p.provider_id];
-        const content = (
-          <>
-            <div className="relative h-12 w-12 overflow-hidden rounded-xl">
-              <Image
-                src={`${TMDB_IMAGE_BASE}/w92${p.logo_path}`}
-                alt={p.provider_name}
-                fill
-                className="object-cover"
-                sizes="48px"
-              />
-            </div>
-            <span className="text-[10px] text-muted-foreground text-center line-clamp-1 w-12">
-              {p.provider_name}
-            </span>
-          </>
-        );
-
-        return url ? (
-          <a
-            key={p.provider_id}
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex flex-col items-center gap-1.5 transition-opacity hover:opacity-80"
-          >
-            {content}
-          </a>
-        ) : (
-          <div key={p.provider_id} className="flex flex-col items-center gap-1.5">
-            {content}
-          </div>
-        );
-      })}
-    </div>
-  );
+function flattenProviders(wp: WatchProviderResult | null): StreamRow[] {
+  if (!wp) return [];
+  const out: StreamRow[] = [];
+  const seen = new Set<number>();
+  const push = (
+    arr: typeof wp.flatrate,
+    type: StreamRow["type"],
+  ) => {
+    arr?.forEach((p) => {
+      if (seen.has(p.provider_id)) return;
+      seen.add(p.provider_id);
+      out.push({
+        id: p.provider_id,
+        name: p.provider_name,
+        logoPath: p.logo_path,
+        type,
+      });
+    });
+  };
+  push(wp.flatrate, "Stream");
+  push(wp.rent, "Rent");
+  push(wp.buy, "Buy");
+  return out;
 }
+
+const TABS = ["overview", "cast", "streams", "related"] as const;
+type Tab = (typeof TABS)[number];
 
 export function MovieDetailPageContent({
   details,
@@ -97,25 +97,39 @@ export function MovieDetailPageContent({
   recommendations,
   country,
 }: MovieDetailPageContentProps) {
-  const prefersReducedMotion = useReducedMotion();
+  const backRef = useRef<HTMLImageElement | null>(null);
+  const [tab, setTab] = useState<Tab>("overview");
 
-  const year = details.release_date?.slice(0, 4) ?? "";
+  useEffect(() => {
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const el = backRef.current;
+        if (!el) return;
+        const y = Math.min(window.scrollY, 600);
+        el.style.transform = `translateY(${y * 0.4}px) scale(${1 + y * 0.0005})`;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  const year = details.release_date?.slice(0, 4) ?? "—";
   const runtime = formatRuntime(details.runtime);
-  const rating = details.vote_average?.toFixed(1) ?? "0.0";
+  const rating = details.vote_average?.toFixed(1) ?? "—";
   const director = details.credits?.crew?.find((c) => c.job === "Director");
-  const cast = details.credits?.cast?.slice(0, 15) ?? [];
+  const cast = details.credits?.cast?.slice(0, 12) ?? [];
   const genres = details.genres ?? [];
 
   const isUpcoming = details.release_date
     ? new Date(details.release_date) > new Date()
     : false;
 
-  const hasStream = (watchProviders?.flatrate?.length ?? 0) > 0;
-  const hasRent = (watchProviders?.rent?.length ?? 0) > 0;
-  const hasBuy = (watchProviders?.buy?.length ?? 0) > 0;
-  const hasAnyProvider = hasStream || hasRent || hasBuy;
-  const defaultTab = hasStream ? "stream" : hasRent ? "rent" : "buy";
-
+  const streams = flattenProviders(watchProviders);
   const availability = getMovieAvailabilityStatus({
     watchProviders,
     releaseDates: details.release_dates?.results,
@@ -133,8 +147,6 @@ export function MovieDetailPageContent({
   const isInLibrary = !!watchlistItem;
   const isWantToWatch = watchlistItem?.status === "want_to_watch";
   const isWatched = watchlistItem?.status === "watched";
-
-  const tapAnimation = prefersReducedMotion ? {} : { scale: 0.85 };
 
   const handleAddToLibrary = () => {
     addMutation.mutate(
@@ -206,363 +218,165 @@ export function MovieDetailPageContent({
     );
   };
 
-  const handleMoveToWantToWatch = () => {
-    if (!watchlistItem) return;
-    statusMutation.mutate({ id: watchlistItem.id, status: "want_to_watch" });
+  const handleShare = async () => {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: details.title, url });
+      } catch {
+        /* ignore */
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.success("Link copied");
+      } catch {
+        toast.error("Could not copy link");
+      }
+    }
   };
 
-  const backdropVariants = {
-    hidden: { scale: prefersReducedMotion ? 1 : 1.05, opacity: 0 },
-    visible: {
-      scale: 1,
-      opacity: 1,
-      transition: { duration: 0.6, ease: "easeOut" as const },
-    },
-  };
+  const trailerUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(
+    details.title + " official trailer",
+  )}`;
 
-  const contentVariants = {
-    hidden: { opacity: 0, y: prefersReducedMotion ? 0 : 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.4, delay: 0.2, ease: "easeOut" as const },
-    },
+  const scrollTo = (id: string) => {
+    document
+      .getElementById(id)
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   return (
-    <div className="min-h-screen pb-32 md:pb-24">
-      {/* Full-bleed backdrop */}
-      <motion.div
-        className="relative w-full h-[50vh] min-h-[300px] overflow-hidden"
-        initial="hidden"
-        animate="visible"
-        variants={backdropVariants}
-      >
-        <Image
+    <div className="page detail">
+      <div className="detail-back">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          ref={backRef}
           src={getBackdropUrl(details.backdrop_path, "lg")}
-          alt={details.title}
-          fill
-          className="object-cover"
-          sizes="100vw"
-          priority
+          alt=""
         />
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-linear-to-t from-background via-background/50 to-transparent" />
-        <div className="absolute inset-0 bg-linear-to-r from-background/30 to-transparent" />
-      </motion.div>
+      </div>
 
-      {/* Main content — poster + info layout */}
-      <motion.div
-        className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-32 relative z-10"
-        initial="hidden"
-        animate="visible"
-        variants={contentVariants}
-      >
-        <div className="flex gap-6 md:gap-8 items-end mb-8">
-          {/* Poster */}
-          {details.poster_path && (
-            <div className="relative shrink-0 w-32 md:w-44 lg:w-52 aspect-2/3 rounded-lg overflow-hidden shadow-2xl border border-white/10 hidden sm:block">
-              <Image
-                src={getPosterUrl(details.poster_path)}
-                alt={details.title}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 128px, (max-width: 1024px) 176px, 208px"
-                priority
-              />
-            </div>
-          )}
-          {/* Title + tagline */}
-          <div className="min-w-0 pb-1">
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white line-clamp-2 drop-shadow-lg">
-              {details.title}
-            </h1>
-            {details.tagline && (
-              <p className="mt-2 text-sm md:text-base text-white/70 italic line-clamp-1">
-                &ldquo;{details.tagline}&rdquo;
-              </p>
-            )}
-          </div>
-        </div>
+      <div className="detail-content">
+        <Link href="/discover" className="detail-back-btn">
+          <ArrowLeft size={14} />
+          Back to discovery
+        </Link>
 
-        <div className="space-y-6">
-        {/* Metadata pills row */}
-        <div className="flex flex-wrap items-center gap-2">
-          {year && (
-            <Badge variant="secondary" className="text-sm px-3 py-1">
-              {year}
-            </Badge>
-          )}
-          {runtime && (
-            <Badge variant="secondary" className="text-sm px-3 py-1">
-              {runtime}
-            </Badge>
-          )}
-          {(details.vote_count ?? 0) > 10 && (
-            <Badge variant="secondary" className="text-sm px-3 py-1">
-              {rating}/10
-            </Badge>
-          )}
-          {country && (
-            <Badge variant="outline" className="text-sm px-3 py-1">
-              {country}
-            </Badge>
-          )}
-        </div>
-
-        {/* Genre tags */}
-        {genres.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {genres.map((g) => (
-              <Badge key={g.id} variant="outline" className="text-xs px-2.5 py-1">
-                {g.name}
-              </Badge>
-            ))}
-          </div>
-        )}
-
-        {/* Overview */}
-        {details.overview && (
-          <p className="text-base leading-relaxed text-muted-foreground max-w-3xl">
-            {details.overview}
-          </p>
-        )}
-
-        {/* Director */}
-        {director && (
-          <p className="text-sm text-muted-foreground">
-            <span className="text-foreground font-medium">Director:</span>{" "}
-            {director.name}
-          </p>
-        )}
-
-        {/* Cast chips */}
-        {cast.length > 0 && (
-          <div className="space-y-2">
-            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-              Cast
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {cast.map((person) => (
-                <Badge
-                  key={person.id}
-                  variant="secondary"
-                  className="text-xs px-2.5 py-1 font-normal"
-                >
-                  {person.name}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Watch Providers */}
-        <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-            Where to Watch
-          </h2>
-          {hasAnyProvider ? (
-            <Tabs defaultValue={defaultTab}>
-              <TabsList className="h-9">
-                {hasStream && (
-                  <TabsTrigger value="stream" className="text-xs px-4">
-                    Stream
-                  </TabsTrigger>
-                )}
-                {hasRent && (
-                  <TabsTrigger value="rent" className="text-xs px-4">
-                    Rent
-                  </TabsTrigger>
-                )}
-                {hasBuy && (
-                  <TabsTrigger value="buy" className="text-xs px-4">
-                    Buy
-                  </TabsTrigger>
-                )}
-              </TabsList>
-              {hasStream && (
-                <TabsContent value="stream" className="mt-3">
-                  <ProviderGrid providers={watchProviders!.flatrate!} />
-                </TabsContent>
-              )}
-              {hasRent && (
-                <TabsContent value="rent" className="mt-3">
-                  <ProviderGrid providers={watchProviders!.rent!} />
-                </TabsContent>
-              )}
-              {hasBuy && (
-                <TabsContent value="buy" className="mt-3">
-                  <ProviderGrid providers={watchProviders!.buy!} />
-                </TabsContent>
-              )}
-            </Tabs>
-          ) : (
-            <div className="text-sm text-muted-foreground space-y-1">
-              {availability.type === "in_theaters" && (
-                <p>
-                  <Film className="inline h-4 w-4 mr-1.5 align-text-bottom" />
-                  In theaters now — not yet available for streaming
-                </p>
-              )}
-              {availability.type === "not_yet_streaming" && (
-                <p>
-                  <Clock className="inline h-4 w-4 mr-1.5 align-text-bottom" />
-                  Not yet on streaming — check back later
-                </p>
-              )}
-              {(availability.type === "not_in_region" || availability.type === "available") && (
-                <p>
-                  <Globe className="inline h-4 w-4 mr-1.5 align-text-bottom" />
-                  Not available for streaming in your region
-                </p>
-              )}
-            </div>
-          )}
-          <p className="text-[10px] text-muted-foreground">
-            Streaming data powered by JustWatch
-          </p>
-        </div>
-
-        {/* More Like This */}
-        {recommendations.length > 0 && (
-          <div className="space-y-3 pb-4">
-            <MovieRow
-              title="More Like This"
-              movies={recommendations}
-              readOnly
+        <div className="detail-hero">
+          <div className="detail-poster fade-up">
+            <Image
+              src={getPosterUrl(details.poster_path)}
+              alt={details.title}
+              fill
+              priority
+              sizes="320px"
             />
           </div>
-        )}
-        </div>
-      </motion.div>
 
-      {/* Fixed bottom action bar */}
-      <div className="fixed bottom-16 md:bottom-0 left-0 right-0 md:left-[60px] z-40 bg-background/90 backdrop-blur-md border-t border-border/50 px-4 py-3">
-        <div className="max-w-5xl mx-auto flex items-center gap-2 flex-wrap">
-          {isCheckingWatchlist ? (
-            <div className="flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Loading...</span>
+          <div className="detail-info fade-up" style={{ animationDelay: "0.1s" }}>
+            {genres.length > 0 && (
+              <div className="detail-genres">
+                {genres.map((g) => (
+                  <span key={g.id} className="g">
+                    {g.name}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <h1 className="detail-title">{details.title}</h1>
+
+            {details.tagline && (
+              <p className="detail-tagline">&ldquo;{details.tagline}&rdquo;</p>
+            )}
+
+            <div className="detail-meta">
+              <div className="item">
+                <div className="label">Rating</div>
+                <div className="val">
+                  <Star className="size-4 text-[var(--amber)]" fill="currentColor" />
+                  {rating}
+                  <span className="small">/ 10</span>
+                </div>
+              </div>
+              <div className="item">
+                <div className="label">Runtime</div>
+                <div className="val tnum">{runtime}</div>
+              </div>
+              <div className="item">
+                <div className="label">Released</div>
+                <div className="val tnum">{year}</div>
+              </div>
+              {director && (
+                <div className="item">
+                  <div className="label">Director</div>
+                  <div className="val text-base">{director.name}</div>
+                </div>
+              )}
             </div>
-          ) : (
-            <>
-              {/* Add to Library / In Library */}
-              {isWantToWatch ? (
-                <Button
-                  size="sm"
-                  className="gap-2"
+
+            {details.overview && (
+              <p className="detail-desc">{details.overview}</p>
+            )}
+
+            <div className="detail-actions">
+              <a
+                href={trailerUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-red btn-lg"
+              >
+                <Play size={14} fill="currentColor" />
+                Watch trailer
+              </a>
+              {isCheckingWatchlist ? (
+                <button className="btn btn-ghost" disabled>
+                  <Loader2 size={14} className="animate-spin" />
+                  Loading
+                </button>
+              ) : isInLibrary ? (
+                <button
+                  type="button"
+                  className="btn btn-ghost"
                   onClick={handleRemove}
                   disabled={removeMutation.isPending}
                 >
                   {removeMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 size={14} className="animate-spin" />
                   ) : (
-                    <Bookmark className="h-4 w-4 fill-current" />
+                    <Bookmark size={14} fill="currentColor" />
                   )}
-                  In Library
-                </Button>
+                  In library
+                </button>
               ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={isWatched ? handleMoveToWantToWatch : handleAddToLibrary}
-                  disabled={addMutation.isPending || statusMutation.isPending}
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={handleAddToLibrary}
+                  disabled={addMutation.isPending}
                 >
-                  {addMutation.isPending || statusMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                  {addMutation.isPending ? (
+                    <Loader2 size={14} className="animate-spin" />
                   ) : (
-                    <Bookmark className="h-4 w-4" />
+                    <Plus size={14} />
                   )}
-                  {isWatched ? "Want to Watch" : "Add to Library"}
-                </Button>
+                  Add to library
+                </button>
               )}
-
-              {/* Mark as Watched */}
-              {isWatched ? (
-                <Button
-                  size="sm"
-                  className="gap-2 bg-green-600 hover:bg-green-700 text-white"
-                  onClick={handleRemove}
-                  disabled={removeMutation.isPending}
-                >
-                  {removeMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <CircleCheck className="h-4 w-4 fill-current" />
-                  )}
-                  Watched
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={handleMarkWatched}
-                  disabled={addMutation.isPending || statusMutation.isPending}
-                >
-                  {statusMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <CircleCheck className="h-4 w-4" />
-                  )}
-                  Mark Watched
-                </Button>
-              )}
-
-              {/* Like / Dislike — only when in library */}
-              {isInLibrary && watchlistItem && (
-                <>
-                  <motion.div whileTap={tapAnimation}>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        const newRating = watchlistItem.rating === 1 ? null : 1;
-                        rateMutation.mutate({ id: watchlistItem.id, rating: newRating });
-                      }}
-                      disabled={rateMutation.isPending}
-                      aria-label="Like"
-                      className={cn(
-                        "transition-colors duration-200",
-                        watchlistItem.rating === 1 && "text-green-500",
-                      )}
-                    >
-                      <ThumbsUp
-                        className={cn(
-                          "h-4 w-4",
-                          watchlistItem.rating === 1 && "fill-green-500",
-                        )}
-                      />
-                    </Button>
-                  </motion.div>
-                  <motion.div whileTap={tapAnimation}>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        const newRating = watchlistItem.rating === -1 ? null : -1;
-                        rateMutation.mutate({ id: watchlistItem.id, rating: newRating });
-                      }}
-                      disabled={rateMutation.isPending}
-                      aria-label="Dislike"
-                      className={cn(
-                        "transition-colors duration-200",
-                        watchlistItem.rating === -1 && "text-red-500",
-                      )}
-                    >
-                      <ThumbsDown
-                        className={cn(
-                          "h-4 w-4",
-                          watchlistItem.rating === -1 && "fill-red-500",
-                        )}
-                      />
-                    </Button>
-                  </motion.div>
-                </>
-              )}
-
-              {/* Bell notify — only for unreleased movies */}
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={isWatched ? handleRemove : handleMarkWatched}
+                disabled={statusMutation.isPending || addMutation.isPending}
+              >
+                <CircleCheck size={14} fill={isWatched ? "currentColor" : "none"} />
+                {isWatched ? "Watched" : "Mark watched"}
+              </button>
+              <button type="button" className="btn btn-outline" onClick={handleShare}>
+                <Share2 size={14} />
+                Share
+              </button>
               {isUpcoming && (
                 <BellNotifyButton
                   tmdbId={details.id}
@@ -571,25 +385,260 @@ export function MovieDetailPageContent({
                   releaseDate={details.release_date ?? null}
                 />
               )}
+            </div>
+          </div>
+        </div>
 
-              {/* Trailer button */}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-2 ml-auto"
-                asChild
-              >
-                <a
-                  href={`https://www.youtube.com/results?search_query=${encodeURIComponent(details.title + " official trailer")}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
+        {/* Tabs */}
+        <div className="detail-tabs">
+          {TABS.map((t) => (
+            <button
+              key={t}
+              type="button"
+              className={cn("detail-tab", tab === t && "active")}
+              onClick={() => {
+                setTab(t);
+                scrollTo(`detail-${t}`);
+              }}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+
+        <div className="detail-sections">
+          <div>
+            <section id="detail-overview" className="detail-section reveal mb-12">
+              <h3>About the film</h3>
+              <p className="text-base leading-[1.65] text-[var(--ink-2)] m-0">
+                {details.overview}
+              </p>
+            </section>
+
+            <section id="detail-cast" className="detail-section reveal mb-12">
+              <h3>Cast</h3>
+              {cast.length > 0 ? (
+                <div className="cast-row">
+                  {cast.map((person) => (
+                    <div key={person.id} className="cast-card">
+                      <div className="av">
+                        {person.profile_path ? (
+                          <Image
+                            src={`${TMDB_IMAGE_BASE}/w185${person.profile_path}`}
+                            alt={person.name}
+                            fill
+                            sizes="110px"
+                          />
+                        ) : (
+                          <div className="w-full h-full grid place-items-center font-display text-[32px] text-muted-foreground">
+                            {person.name.charAt(0)}
+                          </div>
+                        )}
+                      </div>
+                      <div className="name">{person.name}</div>
+                      <div className="role">{person.character ?? ""}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-[var(--ink-3)] text-[13px] m-0">
+                  No cast listed
+                </p>
+              )}
+            </section>
+
+            {recommendations.length > 0 && (
+              <section id="detail-related" className="detail-section reveal">
+                <MovieRow
+                  eyebrowId="MORE LIKE THIS"
+                  title={
+                    <>
+                      If you liked <span className="it">this</span>
+                    </>
+                  }
+                  movies={recommendations}
+                  readOnly
+                />
+              </section>
+            )}
+          </div>
+
+          <aside
+            id="detail-streams"
+            className="sticky top-24 h-fit self-start flex flex-col gap-4"
+          >
+            <div className="streams">
+              <div className="head">
+                <h4>Where to watch</h4>
+                {streams.length > 0 && (
+                  <span className="mono text-[11px] text-[var(--emerald)]">
+                    ● {streams.length} available
+                  </span>
+                )}
+              </div>
+              {streams.length > 0 ? (
+                streams.map((s) => {
+                  const href = PROVIDER_URLS[s.id];
+                  const inner = (
+                    <>
+                      <div className="left">
+                        <div className="logo">
+                          {s.logoPath ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={`${TMDB_IMAGE_BASE}/w92${s.logoPath}`}
+                              alt={s.name}
+                            />
+                          ) : (
+                            s.name.charAt(0)
+                          )}
+                        </div>
+                        <div>
+                          <div className="name">{s.name}</div>
+                          <div className="type">{s.type}</div>
+                        </div>
+                      </div>
+                      <div className="price">
+                        {s.type === "Stream" ? "—" : ""}
+                      </div>
+                    </>
+                  );
+                  return href ? (
+                    <a
+                      key={s.id}
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="stream-row"
+                    >
+                      {inner}
+                    </a>
+                  ) : (
+                    <div key={s.id} className="stream-row">
+                      {inner}
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-[13px] text-[var(--ink-3)] pt-2 pb-1">
+                  {availability.type === "in_theaters" && (
+                    <>
+                      <Film className="inline size-4 mr-1.5 align-text-bottom" />
+                      In theaters now — not yet streaming
+                    </>
+                  )}
+                  {availability.type === "not_yet_streaming" && (
+                    <>
+                      <Clock className="inline size-4 mr-1.5 align-text-bottom" />
+                      Not yet on streaming
+                    </>
+                  )}
+                  {(availability.type === "not_in_region" ||
+                    availability.type === "available") && (
+                    <>
+                      <Globe className="inline size-4 mr-1.5 align-text-bottom" />
+                      Not available in your region
+                    </>
+                  )}
+                </div>
+              )}
+              <p className="mono text-[10px] text-[var(--ink-3)] mt-3 mb-0 tracking-[0.1em] uppercase">
+                Data via JustWatch
+              </p>
+            </div>
+
+            <div className="streams">
+              <div className="head">
+                <h4>Your status</h4>
+              </div>
+              <div className="py-3.5 flex gap-2">
+                <button
+                  type="button"
+                  className={cn("btn flex-1 justify-center", isWatched ? "btn-red" : "btn-ghost")}
+                  onClick={isWatched ? handleRemove : handleMarkWatched}
+                  disabled={statusMutation.isPending || addMutation.isPending}
                 >
-                  <ExternalLink className="h-4 w-4" />
-                  Trailer
-                </a>
-              </Button>
-            </>
-          )}
+                  <CircleCheck size={14} fill={isWatched ? "currentColor" : "none"} />
+                  Watched
+                </button>
+                <button
+                  type="button"
+                  className={cn("btn flex-1 justify-center", isWantToWatch ? "btn-red" : "btn-ghost")}
+                  onClick={isWantToWatch ? handleRemove : handleAddToLibrary}
+                  disabled={addMutation.isPending}
+                >
+                  <Plus size={14} />
+                  Want
+                </button>
+              </div>
+              {isInLibrary && watchlistItem && (
+                <div className="pt-4 border-t border-border">
+                  <div className="eyebrow mb-3">Your rating</div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      className={cn(
+                        "btn flex-1 justify-center",
+                        watchlistItem.rating === 1 ? "btn-red" : "btn-outline",
+                      )}
+                      onClick={() => {
+                        const newRating = watchlistItem.rating === 1 ? null : 1;
+                        rateMutation.mutate({
+                          id: watchlistItem.id,
+                          rating: newRating,
+                        });
+                      }}
+                      disabled={rateMutation.isPending}
+                      aria-label="Like"
+                    >
+                      <ThumbsUp
+                        size={14}
+                        fill={watchlistItem.rating === 1 ? "currentColor" : "none"}
+                      />
+                      Liked
+                    </button>
+                    <button
+                      type="button"
+                      className={cn(
+                        "btn flex-1 justify-center",
+                        watchlistItem.rating === -1
+                          ? "btn-red"
+                          : "btn-outline",
+                      )}
+                      onClick={() => {
+                        const newRating =
+                          watchlistItem.rating === -1 ? null : -1;
+                        rateMutation.mutate({
+                          id: watchlistItem.id,
+                          rating: newRating,
+                        });
+                      }}
+                      disabled={rateMutation.isPending}
+                      aria-label="Dislike"
+                    >
+                      <ThumbsDown
+                        size={14}
+                        fill={
+                          watchlistItem.rating === -1 ? "currentColor" : "none"
+                        }
+                      />
+                      Disliked
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <a
+              href={trailerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-outline w-full justify-center"
+            >
+              <ExternalLink size={14} />
+              Find trailer on YouTube
+            </a>
+          </aside>
         </div>
       </div>
     </div>
