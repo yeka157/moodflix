@@ -125,7 +125,6 @@ export function WatchlistContent() {
       {/* Header */}
       <div className="mb-8">
         <div className="section-eyebrow">
-          <span className="bar" />
           <span className="id">
             YOUR LIBRARY · {pad(totalCount)} TITLES
           </span>

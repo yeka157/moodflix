@@ -370,7 +370,7 @@ export function LandingRevamp({
 
       {/* MOOD AI DEMO */}
       <section className="px-14 py-[120px] max-w-[1440px] mx-auto" id="how">
-        <SectionEyebrow label="HOW IT FEELS · 01" />
+        <SectionEyebrow label="HOW IT FEELS" />
         <h2 className="font-display uppercase text-[clamp(56px,8vw,112px)] leading-[0.88] tracking-[0.002em] m-0 mb-6" data-lp-reveal>
           Type a feeling.
           <br />
@@ -398,9 +398,8 @@ export function LandingRevamp({
           </div>
 
           <div className="lp-3d-headline">
-            <div className="inline-flex items-center justify-center gap-2.5 font-mono text-[11px] text-muted-foreground tracking-[0.14em] uppercase mb-6">
-              <span className="w-8 h-px bg-[var(--ink-4)]" />
-              <span>CATALOG · 02</span>
+            <div className="inline-flex items-center justify-center font-mono text-[11px] text-muted-foreground tracking-[0.14em] uppercase mb-6">
+              <span>CATALOG</span>
             </div>
             <h2>
               Eighty thousand films,
@@ -476,7 +475,7 @@ export function LandingRevamp({
 
       {/* FEATURES */}
       <section className="px-14 py-[120px] max-w-[1440px] mx-auto" id="features">
-        <SectionEyebrow label="WHAT YOU GET · 03" />
+        <SectionEyebrow label="WHAT YOU GET" />
         <h2 className="font-display uppercase text-[clamp(56px,8vw,112px)] leading-[0.88] tracking-[0.002em] m-0 mb-6" data-lp-reveal>
           Everything a{" "}
           <span className="font-serif italic normal-case tracking-[-0.015em] text-[var(--ink-2)]">
@@ -528,9 +527,8 @@ export function LandingRevamp({
 
       {/* MANIFESTO */}
       <section className="px-14 py-40 text-center border-y border-border" id="manifesto">
-        <div className="inline-flex items-center justify-center gap-2.5 font-mono text-[11px] text-muted-foreground tracking-[0.14em] uppercase mb-6" data-lp-reveal>
-          <span className="w-8 h-px bg-[var(--ink-4)]" />
-          <span>MANIFESTO · 04</span>
+        <div className="inline-flex items-center justify-center font-mono text-[11px] text-muted-foreground tracking-[0.14em] uppercase mb-6" data-lp-reveal>
+          <span>MANIFESTO</span>
         </div>
         <h2 className="font-display uppercase text-[clamp(40px,4.4vw,64px)] leading-[1.05] tracking-[0.002em] max-w-[1100px] mx-auto text-balance" data-lp-reveal>
           We made{" "}
@@ -564,7 +562,7 @@ export function LandingRevamp({
 
       {/* TESTIMONIALS */}
       <section className="px-14 py-[120px] max-w-[1440px] mx-auto">
-        <SectionEyebrow label="WHAT PEOPLE SAY · 05" />
+        <SectionEyebrow label="WHAT PEOPLE SAY" />
         <h2 className="font-display uppercase text-[clamp(56px,8vw,112px)] leading-[0.88] tracking-[0.002em] m-0 mb-6" data-lp-reveal>
           From the people
           <br />
@@ -603,7 +601,7 @@ export function LandingRevamp({
 
       {/* PRICING */}
       <section className="px-14 py-[120px] max-w-[1440px] mx-auto" id="pricing">
-        <SectionEyebrow label="PRICING · 06" />
+        <SectionEyebrow label="PRICING" />
         <h2 className="font-display uppercase text-[clamp(56px,8vw,112px)] leading-[0.88] tracking-[0.002em] m-0 mb-6" data-lp-reveal>
           Two plans. Both{" "}
           <span className="font-serif italic normal-case tracking-[-0.015em] text-[var(--ink-2)]">
@@ -685,19 +683,25 @@ export function LandingRevamp({
           </div>
           <FooterCol
             title="Product"
-            items={["Discover", "Library", "Series", "Mood AI", "API"]}
+            items={[
+              { label: "Discover", href: "/discover" },
+              { label: "Library", href: "/library" },
+              { label: "Series", href: "/series" },
+            ]}
           />
           <FooterCol
             title="Company"
-            items={["Manifesto", "Roadmap", "Press", "Contact"]}
+            items={[
+              { label: "Manifesto", href: "#manifesto" },
+              { label: "Contact", href: "mailto:hello@yuliuskevin.com" },
+            ]}
           />
           <FooterCol
             title="Legal"
-            items={["Privacy", "Terms", "Data", "Cookies"]}
-          />
-          <FooterCol
-            title="Follow"
-            items={["Twitter", "Instagram", "Letterboxd", "RSS"]}
+            items={[
+              { label: "Privacy", href: "/privacy" },
+              { label: "Terms", href: "/terms" },
+            ]}
           />
         </div>
         <div className="max-w-[1440px] mx-auto px-14 py-6 border-t border-border flex justify-between flex-wrap gap-3">
@@ -716,10 +720,9 @@ export function LandingRevamp({
 function SectionEyebrow({ label }: { label: string }) {
   return (
     <div
-      className="inline-flex items-center gap-2.5 font-mono text-[11px] text-muted-foreground tracking-[0.14em] uppercase mb-6"
+      className="inline-flex items-center font-mono text-[11px] text-muted-foreground tracking-[0.14em] uppercase mb-6"
       data-lp-reveal
     >
-      <span className="w-8 h-px bg-[var(--ink-4)]" />
       <span>{label}</span>
     </div>
   );
@@ -979,18 +982,40 @@ function PriceCard({
   );
 }
 
-function FooterCol({ title, items }: { title: string; items: string[] }) {
+type FooterItem = string | { label: string; href: string };
+
+function FooterCol({ title, items }: { title: string; items: FooterItem[] }) {
   return (
     <div>
       <div className={`${EYEBROW} mb-3`}>{title}</div>
       <ul className="list-none p-0 m-0 flex flex-col gap-2">
-        {items.map((i) => (
-          <li key={i}>
-            <a className="text-[13px] text-[var(--ink-2)] cursor-pointer no-underline hover:text-foreground transition-colors">
-              {i}
-            </a>
-          </li>
-        ))}
+        {items.map((item) => {
+          const label = typeof item === "string" ? item : item.label;
+          const href = typeof item === "string" ? undefined : item.href;
+          const className =
+            "text-[13px] text-[var(--ink-2)] cursor-pointer no-underline hover:text-foreground transition-colors";
+          if (!href) {
+            return (
+              <li key={label}>
+                <a className={className}>{label}</a>
+              </li>
+            );
+          }
+          const isInternal = href.startsWith("/");
+          return (
+            <li key={label}>
+              {isInternal ? (
+                <Link href={href} className={className}>
+                  {label}
+                </Link>
+              ) : (
+                <a href={href} className={className}>
+                  {label}
+                </a>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

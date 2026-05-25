@@ -41,12 +41,9 @@ export function SectionHeader({
               </span>
             )}
             {eyebrowLabel && (
-              <>
-                <span className="w-8 h-px bg-[var(--ink-4)]" />
-                <span className="font-mono text-[11px] text-muted-foreground tracking-[0.14em] uppercase">
-                  {eyebrowLabel}
-                </span>
-              </>
+              <span className="font-mono text-[11px] text-muted-foreground tracking-[0.14em] uppercase">
+                {eyebrowLabel}
+              </span>
             )}
           </div>
         )}

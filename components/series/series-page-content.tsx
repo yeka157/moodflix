@@ -88,7 +88,6 @@ export function SeriesPageContent({
       {/* Header */}
       <div className="mb-8">
         <div className="section-eyebrow">
-          <span className="bar" />
           <span className="id">SERIES · {pad(totalCount)} TITLES</span>
         </div>
         <div className="flex items-end justify-between gap-6 flex-wrap">
@@ -199,7 +198,6 @@ export function SeriesPageContent({
 
           <div className="mt-20 mb-8">
             <div className="section-eyebrow">
-              <span className="bar" />
               <span className="id">BROWSE ALL · FILTER &amp; SORT</span>
             </div>
             <h2 className="section-title text-[clamp(40px,5vw,72px)] m-0">

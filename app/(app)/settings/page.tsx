@@ -43,7 +43,6 @@ export default async function SettingsPage() {
     >
       <div style={{ marginBottom: 56 }}>
         <div className="section-eyebrow">
-          <span className="bar" />
           <span className="id">PROFILE &amp; PREFERENCES</span>
         </div>
         <h1

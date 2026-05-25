@@ -158,7 +158,6 @@ export function DiscoverGridContent() {
       {/* Header */}
       <div className="mb-8">
         <div className="section-eyebrow">
-          <span className="bar" />
           <span className="id">
             CATALOG · {pad(totalLabel || 0)} TITLES
           </span>
