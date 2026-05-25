@@ -206,15 +206,16 @@ export function LandingRevamp({
   return (
     <div className="landing-page page">
       {/* NAVBAR */}
-      <nav className="fixed top-0 left-0 right-0 z-[100] px-14 pt-4 flex justify-center pointer-events-none">
-        <div className="flex items-center justify-between w-full max-w-[1440px] py-2.5 pl-[22px] pr-4 rounded-full bg-[rgba(20,17,15,0.65)] backdrop-blur-[18px] backdrop-saturate-[1.4] border border-border pointer-events-auto">
+      <nav className="fixed top-0 left-0 right-0 z-[100] px-3 sm:px-6 md:px-14 pt-3 md:pt-4 flex justify-center pointer-events-none">
+        <div className="flex items-center justify-between w-full max-w-[1440px] gap-2 py-2 md:py-2.5 pl-3 pr-2 md:pl-[22px] md:pr-4 rounded-full bg-[rgba(20,17,15,0.65)] backdrop-blur-[18px] backdrop-saturate-[1.4] border border-border pointer-events-auto">
           <Link
             href="/"
             aria-label="Moodflix home"
-            className="flex items-center gap-2 no-underline"
+            className="flex items-center gap-2 no-underline shrink-0"
           >
-            <MoodflixIcon size={32} variant="dark" cutoutColor="#14110f" />
-            <span className="font-display uppercase tracking-[0.04em] text-[22px] text-foreground leading-none">
+            <MoodflixIcon size={28} variant="dark" cutoutColor="#14110f" className="md:hidden" />
+            <MoodflixIcon size={32} variant="dark" cutoutColor="#14110f" className="hidden md:block" />
+            <span className="font-display uppercase tracking-[0.04em] text-[18px] md:text-[22px] text-foreground leading-none">
               oodflix
             </span>
           </Link>
@@ -232,11 +233,11 @@ export function LandingRevamp({
               Manifesto
             </a>
           </div>
-          <div className="flex gap-2">
-            <Link href={actionHref} className={`${BTN_BASE} ${BTN_GHOST}`}>
+          <div className="flex gap-1.5 md:gap-2 shrink-0">
+            <Link href={actionHref} className={`${BTN_BASE} ${BTN_GHOST} px-3 md:px-5 text-[12px] md:text-[13px]`}>
               Sign in
             </Link>
-            <Link href={actionHref} className={`${BTN_BASE} ${BTN_RED}`}>
+            <Link href={actionHref} className={`${BTN_BASE} ${BTN_RED} px-3 md:px-5 text-[12px] md:text-[13px]`}>
               Start free
               <ArrowRight size={12} />
             </Link>
