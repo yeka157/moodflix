@@ -150,12 +150,3 @@ All tables RLS-enabled. Key tables:
 
 - `docs/superpowers/specs/` — Design specs from the brainstorming skill
 - `docs/superpowers/plans/` — Bite-sized implementation plans
-
-## Notion Documentation
-
-Project documentation mirrored to Notion. Update after completing a phase or making significant project-level changes (route structure, tech stack, architecture).
-
-- **Main page:** `3022b505-590c-80b8-8159-c1591b5c24e1`
-- **To Do page:** `3022b505-590c-8082-b0b6-c227a0bd65a1`
-
-Sync targets: Project Status table, Key Directories, Route Structure, new sections relevant to completed work. Keep updates concise — project-scope, not plan-scope.
