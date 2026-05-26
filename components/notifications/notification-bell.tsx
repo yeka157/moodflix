@@ -9,8 +9,10 @@ import { useUnreadCount } from "@/hooks/use-notifications";
 import { NotificationList } from "./notification-list";
 import { cn } from "@/lib/utils";
 
+// Note: omit display class here so the breakpoint variant classes
+// (md:hidden / hidden md:grid) win without tailwind-merge collisions.
 const BUTTON_BASE =
-  "relative grid h-9 w-9 place-items-center rounded-[10px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground";
+  "relative h-9 w-9 place-items-center rounded-[10px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground";
 
 function UnreadBadge({ count }: { count: number }) {
   if (count <= 0) return null;
@@ -36,7 +38,7 @@ export function NotificationBell() {
       <Link
         href="/notifications"
         aria-label={ariaLabel}
-        className={cn("md:hidden", BUTTON_BASE)}
+        className={cn("grid md:hidden", BUTTON_BASE)}
       >
         <Bell className="size-4" aria-hidden="true" />
         <UnreadBadge count={unread} />
