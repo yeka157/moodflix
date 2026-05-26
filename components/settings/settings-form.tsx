@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { LogOut, Loader2 } from "lucide-react";
 import { updateDisplayName } from "@/actions/profile";
 import { logout } from "@/actions/auth";
+import { usePushSubscription } from "@/hooks/use-push-subscription";
 import { cn } from "@/lib/utils";
 import type { SettingsFormValues } from "@/types/settings";
 
@@ -66,6 +67,17 @@ export function SettingsForm({
   const [showWatched, setShowWatched] = useState(true);
   const [analytics, setAnalytics] = useState(true);
 
+  // Push notification state (source of truth = browser PushManager + server)
+  const {
+    subscribe: subscribePush,
+    unsubscribe: unsubscribePush,
+    isSupported: pushSupported,
+  } = usePushSubscription();
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushPermission, setPushPermission] =
+    useState<NotificationPermission | null>(null);
+  const [pushPending, setPushPending] = useState(false);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     const stored = (key: string, def: boolean) => {
@@ -87,6 +99,50 @@ export function SettingsForm({
   useEffect(() => {
     document.body.classList.toggle("no-grain", !grain);
   }, [grain]);
+
+  useEffect(() => {
+    if (!pushSupported) return;
+    let cancelled = false;
+    (async () => {
+      setPushPermission(Notification.permission);
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        const sub = await reg.pushManager.getSubscription();
+        if (!cancelled) setPushEnabled(!!sub);
+      } catch {
+        if (!cancelled) setPushEnabled(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [pushSupported]);
+
+  async function handlePushToggle(next: boolean) {
+    if (pushPending) return;
+    setPushPending(true);
+    try {
+      if (next) {
+        const sub = await subscribePush();
+        if (sub) {
+          setPushEnabled(true);
+          setPushPermission(Notification.permission);
+          toast.success("Push notifications enabled");
+        } else if (Notification.permission === "denied") {
+          setPushPermission("denied");
+          toast.error("Notifications blocked. Enable in browser settings.");
+        }
+      } else {
+        await unsubscribePush();
+        setPushEnabled(false);
+        toast.success("Push notifications disabled");
+      }
+    } catch {
+      toast.error("Failed to update push notifications");
+    } finally {
+      setPushPending(false);
+    }
+  }
 
   function handleLogout() {
     startLogoutTransition(async () => {
@@ -288,37 +344,68 @@ export function SettingsForm({
         )}
 
         {section === "privacy" && (
-          <div className={SET_CARD}>
-            <h3 className={SET_CARD_HEADING}>Privacy</h3>
-            <p className={SET_CARD_HELP}>Control what others can see.</p>
-            <ToggleRow
-              label="Public profile"
-              desc="Anyone can find you by username."
-              on={publicProfile}
-              onChange={(v) => {
-                setPublicProfile(v);
-                persist("publicProfile", v);
-              }}
-            />
-            <ToggleRow
-              label="Show watched list"
-              desc="Visible on your public profile."
-              on={showWatched}
-              onChange={(v) => {
-                setShowWatched(v);
-                persist("showWatched", v);
-              }}
-            />
-            <ToggleRow
-              label="Anonymous usage analytics"
-              desc="Helps us improve recommendations."
-              on={analytics}
-              onChange={(v) => {
-                setAnalytics(v);
-                persist("analytics", v);
-              }}
-            />
-          </div>
+          <>
+            <div className={SET_CARD}>
+              <h3 className={SET_CARD_HEADING}>Push notifications</h3>
+              <p className={SET_CARD_HELP}>
+                Get release alerts and updates from movies you&apos;ve
+                subscribed to.
+              </p>
+              {!pushSupported ? (
+                <p className="text-[12.5px] text-muted-foreground">
+                  Push notifications are not supported in this browser.
+                </p>
+              ) : (
+                <>
+                  <ToggleRow
+                    label="Enable push notifications"
+                    desc={
+                      pushPermission === "denied"
+                        ? "Blocked in your browser settings."
+                        : "Receive alerts on this device."
+                    }
+                    on={pushEnabled}
+                    disabled={
+                      pushPending || pushPermission === "denied"
+                    }
+                    onChange={handlePushToggle}
+                  />
+                </>
+              )}
+            </div>
+
+            <div className={SET_CARD}>
+              <h3 className={SET_CARD_HEADING}>Privacy</h3>
+              <p className={SET_CARD_HELP}>Control what others can see.</p>
+              <ToggleRow
+                label="Public profile"
+                desc="Anyone can find you by username."
+                on={publicProfile}
+                onChange={(v) => {
+                  setPublicProfile(v);
+                  persist("publicProfile", v);
+                }}
+              />
+              <ToggleRow
+                label="Show watched list"
+                desc="Visible on your public profile."
+                on={showWatched}
+                onChange={(v) => {
+                  setShowWatched(v);
+                  persist("showWatched", v);
+                }}
+              />
+              <ToggleRow
+                label="Anonymous usage analytics"
+                desc="Helps us improve recommendations."
+                on={analytics}
+                onChange={(v) => {
+                  setAnalytics(v);
+                  persist("analytics", v);
+                }}
+              />
+            </div>
+          </>
         )}
 
         {section === "subscription" && (
@@ -354,11 +441,13 @@ function ToggleRow({
   desc,
   on,
   onChange,
+  disabled,
 }: {
   label: string;
   desc: string;
   on: boolean;
   onChange: (v: boolean) => void;
+  disabled?: boolean;
 }) {
   return (
     <div className="flex items-center justify-between py-3.5 border-b border-border last:border-b-0 gap-4">
@@ -370,8 +459,9 @@ function ToggleRow({
       </div>
       <button
         type="button"
-        className={cn("switch", on && "on")}
-        onClick={() => onChange(!on)}
+        className={cn("switch", on && "on", disabled && "opacity-50 cursor-not-allowed")}
+        onClick={() => !disabled && onChange(!on)}
+        disabled={disabled}
         aria-label={label}
         aria-pressed={on}
       />
