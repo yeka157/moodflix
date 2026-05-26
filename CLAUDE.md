@@ -131,20 +131,6 @@ VAPID_SUBJECT=              # mailto: address
 
 - `middleware.ts` — Next.js middleware (auth session refresh + route protection)
 
-## Strict Conventions
-
-Project-wide coding rules live in `.claude/rules/`. Read these before non-trivial work.
-
-- [typescript.md](./.claude/rules/typescript.md) — Zero `any`, types in `types/` folder
-- [components.md](./.claude/rules/components.md) — Naming, client/server boundaries, Tailwind merge gotchas
-- [data-fetching.md](./.claude/rules/data-fetching.md) — TanStack Query, server actions, Drizzle auth
-- [ui.md](./.claude/rules/ui.md) — Loading states, a11y, **page metadata title rule** (root layout adds `| Moodflix` suffix automatically — pages must not include it)
-- [ai-endpoints.md](./.claude/rules/ai-endpoints.md) — Auth, rate limits, Vercel AI SDK v5 quirks
-- [animations.md](./.claude/rules/animations.md) — Framer Motion, Tailwind v4 motion variants
-- [database.md](./.claude/rules/database.md) — Drizzle bypasses RLS — explicit user_id guards required
-- [git.md](./.claude/rules/git.md) — Commit format, branch naming, multi-account SSH, `yeka157` for `gh`
-- [package-management.md](./.claude/rules/package-management.md) — shadcn CLI, prompt-kit, `radix-ui` umbrella imports
-
 ## Database Schema (high level)
 
 All tables RLS-enabled. Key tables:
