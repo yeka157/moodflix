@@ -421,33 +421,26 @@ Keep responses concise: 2-4 sentences. Be warm and conversational.`;
                 const targetType = candidate.mediaType === "tv" ? "tv" : "movie";
 
                 const match =
-                  results.results.find(
+                  results.find(
                     (r) =>
-                      r.media_type === targetType &&
-                      (r.title ?? r.name ?? "")
+                      r.mediaType === targetType &&
+                      r.title
                         .toLowerCase()
                         .includes(candidate.title.toLowerCase().split(" ")[0]),
                   ) ??
-                  results.results.find((r) => r.media_type === targetType) ??
-                  results.results[0];
+                  results.find((r) => r.mediaType === targetType) ??
+                  results[0];
 
                 if (!match) return null;
 
                 return {
-                  title: match.title ?? match.name ?? candidate.title,
+                  title: match.title || candidate.title,
                   tmdbId: match.id,
-                  mediaType:
-                    match.media_type === "tv"
-                      ? ("tv" as const)
-                      : ("movie" as const),
-                  year:
-                    (match.release_date ?? match.first_air_date ?? "").slice(
-                      0,
-                      4,
-                    ) || candidate.year,
+                  mediaType: match.mediaType,
+                  year: match.year || candidate.year,
                   confidence: candidate.confidence,
                   verified: true,
-                  posterPath: match.poster_path,
+                  posterPath: match.posterPath,
                   overview: match.overview,
                 };
               }),

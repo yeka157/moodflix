@@ -1,4 +1,9 @@
-import type { MovieListResponse, MovieDetailsWithExtras } from "@/types/movie";
+import type {
+  MovieListResponse,
+  MovieDetailsWithExtras,
+  MultiSearchResult,
+  TmdbMultiResponseRaw,
+} from "@/types/movie";
 import type { TVListResponse, TVDetailsWithExtras } from "@/types/tv";
 
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
@@ -214,24 +219,41 @@ export async function getOnTheAirTV(page = 1) {
   });
 }
 
-export async function searchMulti(query: string, page = 1) {
-  return tmdbFetch<{
-    results: Array<{
-      id: number;
-      media_type: string;
-      title?: string;
-      name?: string;
-      poster_path: string | null;
-      overview: string | null;
-      release_date?: string;
-      first_air_date?: string;
-      vote_average?: number;
-    }>;
-  }>("/search/multi", {
+export async function searchMulti(
+  query: string,
+  limit = 20,
+): Promise<MultiSearchResult[]> {
+  if (!query.trim()) return [];
+
+  const raw = await tmdbFetch<TmdbMultiResponseRaw>("/search/multi", {
     query,
-    page: String(page),
     include_adult: "false",
+    page: "1",
   });
+
+  const normalized: MultiSearchResult[] = [];
+  for (const item of raw.results) {
+    if (item.media_type !== "movie" && item.media_type !== "tv") continue;
+
+    const title = item.media_type === "movie" ? item.title : item.name;
+    if (!title) continue;
+
+    const dateStr =
+      item.media_type === "movie" ? item.release_date : item.first_air_date;
+    const year = dateStr && dateStr.length >= 4 ? dateStr.slice(0, 4) : null;
+
+    normalized.push({
+      id: item.id,
+      mediaType: item.media_type,
+      title,
+      year,
+      posterPath: item.poster_path ?? null,
+      overview: item.overview ?? null,
+    });
+
+    if (normalized.length >= limit) break;
+  }
+  return normalized;
 }
 
 export async function discoverTVByGenre(genreIds: string, page = 1, originCountry?: string) {
