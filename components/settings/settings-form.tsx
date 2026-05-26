@@ -11,7 +11,7 @@ import { updateDisplayName } from "@/actions/profile";
 import { logout } from "@/actions/auth";
 import { usePushSubscription } from "@/hooks/use-push-subscription";
 import { cn } from "@/lib/utils";
-import type { SettingsFormValues } from "@/types/settings";
+import type { AccentTone, SettingsFormValues } from "@/types/settings";
 
 const SECTIONS = [
   { id: "profile", label: "Profile" },
@@ -34,7 +34,23 @@ interface SettingsFormProps {
   avatarUrl: string | null;
 }
 
-const TONES = ["red", "amber", "violet", "emerald", "cyan"] as const;
+const TONES: readonly AccentTone[] = [
+  "red",
+  "amber",
+  "violet",
+  "emerald",
+  "cyan",
+] as const;
+
+function isAccentTone(v: string | null): v is AccentTone {
+  return (
+    v === "red" ||
+    v === "amber" ||
+    v === "violet" ||
+    v === "emerald" ||
+    v === "cyan"
+  );
+}
 
 const SET_CARD =
   "bg-card border border-border rounded-[20px] px-7 py-6 mb-[18px]";
@@ -61,11 +77,9 @@ export function SettingsForm({
 
   // Client-only preferences persisted in localStorage
   const [reducedMotion, setReducedMotion] = useState(false);
-  const [autoplay, setAutoplay] = useState(true);
   const [grain, setGrain] = useState(true);
-  const [publicProfile, setPublicProfile] = useState(false);
-  const [showWatched, setShowWatched] = useState(true);
   const [analytics, setAnalytics] = useState(true);
+  const [accent, setAccent] = useState<AccentTone>("red");
 
   // Push notification state (source of truth = browser PushManager + server)
   const {
@@ -85,11 +99,10 @@ export function SettingsForm({
       return v === null ? def : v === "1";
     };
     setReducedMotion(stored("reducedMotion", false));
-    setAutoplay(stored("autoplay", true));
     setGrain(stored("grain", true));
-    setPublicProfile(stored("publicProfile", false));
-    setShowWatched(stored("showWatched", true));
     setAnalytics(stored("analytics", true));
+    const storedAccent = localStorage.getItem("mf:accent");
+    if (isAccentTone(storedAccent)) setAccent(storedAccent);
   }, []);
 
   function persist(key: string, value: boolean) {
@@ -99,6 +112,33 @@ export function SettingsForm({
   useEffect(() => {
     document.body.classList.toggle("no-grain", !grain);
   }, [grain]);
+
+  useEffect(() => {
+    if (reducedMotion) {
+      document.documentElement.dataset.reduceMotion = "true";
+    } else {
+      delete document.documentElement.dataset.reduceMotion;
+    }
+  }, [reducedMotion]);
+
+  useEffect(() => {
+    if (accent === "red") {
+      delete document.documentElement.dataset.accent;
+    } else {
+      document.documentElement.dataset.accent = accent;
+    }
+  }, [accent]);
+
+  function handleAccentChange(next: AccentTone) {
+    setAccent(next);
+    localStorage.setItem("mf:accent", next);
+  }
+
+  function handleAnalyticsChange(next: boolean) {
+    setAnalytics(next);
+    persist("analytics", next);
+    window.dispatchEvent(new Event("mf:analytics-change"));
+  }
 
   useEffect(() => {
     if (!pushSupported) return;
@@ -291,19 +331,21 @@ export function SettingsForm({
             <div className={SET_CARD}>
               <h3 className={SET_CARD_HEADING}>Accent color</h3>
               <p className={SET_CARD_HELP}>
-                Visual preference only — preview swatch (theme accent stays
-                crimson app-wide).
+                Tints buttons, links, and highlights throughout the app.
               </p>
               <div className="flex gap-3 flex-wrap">
                 {TONES.map((t) => (
-                  <div
+                  <button
                     key={t}
+                    type="button"
+                    onClick={() => handleAccentChange(t)}
                     className={cn(
-                      "w-14 h-14 rounded-xl border-[3px]",
-                      t === "red" ? "border-foreground" : "border-card"
+                      "w-14 h-14 rounded-xl border-[3px] cursor-pointer transition-transform duration-150 hover:-translate-y-px",
+                      t === accent ? "border-foreground" : "border-card",
                     )}
                     style={{ background: `var(--${t})` }}
-                    aria-label={t}
+                    aria-label={`Set accent color to ${t}`}
+                    aria-pressed={t === accent}
                   />
                 ))}
               </div>
@@ -328,15 +370,6 @@ export function SettingsForm({
                 onChange={(v) => {
                   setReducedMotion(v);
                   persist("reducedMotion", v);
-                }}
-              />
-              <ToggleRow
-                label="Autoplay trailers on hover"
-                desc="Plays short trailer when hovering posters."
-                on={autoplay}
-                onChange={(v) => {
-                  setAutoplay(v);
-                  persist("autoplay", v);
                 }}
               />
             </div>
@@ -375,34 +408,13 @@ export function SettingsForm({
             </div>
 
             <div className={SET_CARD}>
-              <h3 className={SET_CARD_HEADING}>Privacy</h3>
-              <p className={SET_CARD_HELP}>Control what others can see.</p>
+              <h3 className={SET_CARD_HEADING}>Analytics</h3>
+              <p className={SET_CARD_HELP}>Control what we measure.</p>
               <ToggleRow
-                label="Public profile"
-                desc="Anyone can find you by username."
-                on={publicProfile}
-                onChange={(v) => {
-                  setPublicProfile(v);
-                  persist("publicProfile", v);
-                }}
-              />
-              <ToggleRow
-                label="Show watched list"
-                desc="Visible on your public profile."
-                on={showWatched}
-                onChange={(v) => {
-                  setShowWatched(v);
-                  persist("showWatched", v);
-                }}
-              />
-              <ToggleRow
-                label="Anonymous usage analytics"
-                desc="Helps us improve recommendations."
+                label="Anonymous performance analytics"
+                desc="Helps us spot slow pages. No personal data is collected."
                 on={analytics}
-                onChange={(v) => {
-                  setAnalytics(v);
-                  persist("analytics", v);
-                }}
+                onChange={handleAnalyticsChange}
               />
             </div>
           </>

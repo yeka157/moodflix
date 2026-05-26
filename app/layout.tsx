@@ -7,8 +7,19 @@ import {
 } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { SwRegister } from "@/components/pwa/sw-register";
+import { AnalyticsGate } from "@/components/analytics-gate";
 import "./globals.css";
-import { SpeedInsights } from "@vercel/speed-insights/next";
+
+const PREFS_BOOTSTRAP_SCRIPT = `
+(function() {
+  try {
+    var d = document.documentElement;
+    var accent = localStorage.getItem("mf:accent");
+    if (accent && accent !== "red") d.dataset.accent = accent;
+    if (localStorage.getItem("mf:reducedMotion") === "1") d.dataset.reduceMotion = "true";
+  } catch (_) {}
+})();
+`;
 
 const inter = Inter({
   variable: "--font-inter",
@@ -87,13 +98,16 @@ export default function RootLayout({
           name="apple-mobile-web-app-status-bar-style"
           content="black-translucent"
         />
+        <script
+          dangerouslySetInnerHTML={{ __html: PREFS_BOOTSTRAP_SCRIPT }}
+        />
       </head>
       <body
         className={`${inter.variable} ${jetBrainsMono.variable} ${bebasNeue.variable} ${instrumentSerif.variable} font-sans antialiased cinematic-skin`}
       >
         <SwRegister>
           {children}
-          <SpeedInsights />
+          <AnalyticsGate />
           <Toaster />
         </SwRegister>
       </body>

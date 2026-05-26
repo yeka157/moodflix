@@ -7,3 +7,5 @@ export type UserProfile = {
   displayName: string;
   avatarUrl: string | null;
 };
+
+export type AccentTone = "red" | "amber" | "violet" | "emerald" | "cyan";

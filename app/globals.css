@@ -105,9 +105,17 @@
 
   /* Mood accents */
   --amber: oklch(0.78 0.16 70);
+  --amber-deep: oklch(0.66 0.16 60);
+  --amber-soft: oklch(0.78 0.16 70 / 0.16);
   --emerald: oklch(0.72 0.14 160);
+  --emerald-deep: oklch(0.6 0.14 160);
+  --emerald-soft: oklch(0.72 0.14 160 / 0.16);
   --cyan: oklch(0.75 0.12 220);
+  --cyan-deep: oklch(0.63 0.12 220);
+  --cyan-soft: oklch(0.75 0.12 220 / 0.16);
   --violet: oklch(0.68 0.18 290);
+  --violet-deep: oklch(0.56 0.18 290);
+  --violet-soft: oklch(0.68 0.18 290 / 0.16);
 
   /* shadcn tokens mapped to cinematic ramp */
   --background: var(--bg);
@@ -141,6 +149,61 @@
   --sidebar-accent-foreground: var(--ink);
   --sidebar-border: var(--line);
   --sidebar-ring: var(--red);
+}
+
+/* Accent color overrides — applied via [data-accent] on <html>.
+   Red is the default (no override block needed). */
+.dark[data-accent="amber"],
+[data-accent="amber"] {
+  --red: var(--amber);
+  --red-deep: var(--amber-deep);
+  --red-soft: var(--amber-soft);
+  --primary: var(--amber);
+  --ring: var(--amber);
+  --sidebar-primary: var(--amber);
+  --sidebar-ring: var(--amber);
+}
+.dark[data-accent="violet"],
+[data-accent="violet"] {
+  --red: var(--violet);
+  --red-deep: var(--violet-deep);
+  --red-soft: var(--violet-soft);
+  --primary: var(--violet);
+  --ring: var(--violet);
+  --sidebar-primary: var(--violet);
+  --sidebar-ring: var(--violet);
+}
+.dark[data-accent="emerald"],
+[data-accent="emerald"] {
+  --red: var(--emerald);
+  --red-deep: var(--emerald-deep);
+  --red-soft: var(--emerald-soft);
+  --primary: var(--emerald);
+  --ring: var(--emerald);
+  --sidebar-primary: var(--emerald);
+  --sidebar-ring: var(--emerald);
+}
+.dark[data-accent="cyan"],
+[data-accent="cyan"] {
+  --red: var(--cyan);
+  --red-deep: var(--cyan-deep);
+  --red-soft: var(--cyan-soft);
+  --primary: var(--cyan);
+  --ring: var(--cyan);
+  --sidebar-primary: var(--cyan);
+  --sidebar-ring: var(--cyan);
+}
+
+/* Reduced motion — applied via [data-reduce-motion="true"] on <html>.
+   Belt-and-braces alongside prefers-reduced-motion media query. */
+html[data-reduce-motion="true"] *,
+html[data-reduce-motion="true"] *::before,
+html[data-reduce-motion="true"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-delay: 0ms !important;
+  transition-duration: 0.001ms !important;
+  transition-delay: 0ms !important;
+  scroll-behavior: auto !important;
 }
 
 @layer base {
