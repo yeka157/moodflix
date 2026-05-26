@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { NotificationList } from "@/components/notifications/notification-list";
 
 export const metadata: Metadata = {
-  title: "Notifications | Moodflix",
+  title: "Notifications",
 };
 
 export default async function NotificationsPage() {

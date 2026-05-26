@@ -40,7 +40,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-.claude
+# Claude Code: ignore personal settings, keep shared project rules
+.claude/*
+!.claude/rules
+!.claude/rules/**
 .playwright-mcp
 
 # supabase CLI temp files
