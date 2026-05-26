@@ -126,3 +126,33 @@ export type PersonalizedData = {
   topGenreName: string;
   rowPatternIndex: number;
 };
+
+// TMDB raw /search/multi result item — keep loosely typed; only fields we read are required
+export type TmdbMultiResultRaw = {
+  id: number;
+  media_type: "movie" | "tv" | "person";
+  title?: string;          // movie
+  name?: string;           // tv | person
+  release_date?: string;   // movie
+  first_air_date?: string; // tv
+  poster_path?: string | null;
+  overview?: string;
+  popularity?: number;
+};
+
+export type TmdbMultiResponseRaw = {
+  page: number;
+  results: TmdbMultiResultRaw[];
+  total_pages: number;
+  total_results: number;
+};
+
+// Normalized shape consumed by the search palette
+export type MultiSearchResult = {
+  id: number;
+  mediaType: "movie" | "tv";
+  title: string;
+  year: string | null;           // "YYYY" or null
+  posterPath: string | null;
+  overview: string | null;
+};
