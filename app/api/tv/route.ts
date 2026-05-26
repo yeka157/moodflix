@@ -8,9 +8,21 @@ import {
   discoverTV,
   searchTV,
 } from "@/lib/tmdb";
+import { createClient } from "@/lib/supabase/server";
+import { checkWindowedLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function GET(request: NextRequest) {
   try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const rate = checkWindowedLimit(`tv:${user.id}`, 60, 60_000);
+    if (!rate.allowed) return rateLimitResponse(rate);
+
     const { searchParams } = request.nextUrl;
     const category = searchParams.get("category");
     const page = Number(searchParams.get("page") ?? "1");

@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  checkWindowedLimit,
+  getClientIp,
+  rateLimitResponse,
+} from "@/lib/rate-limit";
 
 // Server-side proxy for TMDB images — bypasses CORS restrictions
 // that block client-side fetch() from loading cross-origin images as WebGL textures.
 export async function GET(request: NextRequest) {
+  const ip = getClientIp(request.headers);
+  const rate = checkWindowedLimit(`images:${ip}`, 200, 60_000);
+  if (!rate.allowed) return rateLimitResponse(rate);
+
   const url = request.nextUrl.searchParams.get("url");
 
   if (!url || !url.startsWith("https://image.tmdb.org/")) {

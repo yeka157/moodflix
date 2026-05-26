@@ -1,12 +1,24 @@
 import { NextRequest } from "next/server";
 import { getTVDetails } from "@/lib/tmdb";
 import { getCountryFromHeaders } from "@/lib/country";
+import { createClient } from "@/lib/supabase/server";
+import { checkWindowedLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const rate = checkWindowedLimit(`tv:${user.id}`, 60, 60_000);
+    if (!rate.allowed) return rateLimitResponse(rate);
+
     const { id } = await params;
 
     if (Number.isNaN(Number(id))) {

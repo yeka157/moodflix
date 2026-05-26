@@ -8,9 +8,21 @@ import {
   discoverMoviesByGenre,
   discoverMovies,
 } from "@/lib/tmdb";
+import { createClient } from "@/lib/supabase/server";
+import { checkWindowedLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function GET(request: NextRequest) {
   try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const rate = checkWindowedLimit(`movies:${user.id}`, 60, 60_000);
+    if (!rate.allowed) return rateLimitResponse(rate);
+
     const { searchParams } = request.nextUrl;
     const query = searchParams.get("query");
     const category = searchParams.get("category");
