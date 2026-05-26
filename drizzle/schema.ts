@@ -190,3 +190,34 @@ export const notificationSubscriptions = pgTable(
     index("notification_subs_user_id_idx").on(table.userId),
   ]
 );
+
+export const notificationTypeEnum = pgEnum("notification_type", [
+  "release",
+  "ai_event",
+  "system",
+]);
+
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    type: notificationTypeEnum("type").notNull().default("release"),
+    title: text("title").notNull(),
+    body: text("body"),
+    posterPath: text("poster_path"),
+    href: text("href"),
+    tmdbId: integer("tmdb_id"),
+    mediaType: text("media_type"),
+    readAt: timestamp("read_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("notifications_user_unread_idx").on(t.userId, t.readAt),
+    index("notifications_user_created_idx").on(t.userId, t.createdAt),
+  ],
+);

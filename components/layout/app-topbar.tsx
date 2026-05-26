@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SearchPaletteTrigger } from "@/components/search/search-palette-trigger";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 
 export function AppTopBar() {
   const [scrolled, setScrolled] = useState(false);
@@ -27,13 +27,7 @@ export function AppTopBar() {
       <SearchPaletteTrigger />
 
       <div className="ml-auto flex items-center gap-1">
-        <button
-          type="button"
-          aria-label="Notifications"
-          className="relative grid h-9 w-9 place-items-center rounded-[10px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-        >
-          <Bell className="size-4" aria-hidden="true" />
-        </button>
+        <NotificationBell />
       </div>
     </header>
   );

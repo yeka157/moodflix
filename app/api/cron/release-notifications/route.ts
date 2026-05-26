@@ -3,6 +3,7 @@ import { eq, and, sql, notInArray } from "drizzle-orm";
 import { db } from "@/drizzle";
 import {
   notificationSubscriptions,
+  notifications,
   pushSubscriptions,
   tmdbMedia,
 } from "@/drizzle/schema";
@@ -168,6 +169,35 @@ export async function GET(request: Request) {
             .where(eq(pushSubscriptions.endpoint, endpoint));
           staleSubscriptionsRemoved++;
         }
+      }
+    }
+
+    // Insert one notifications inbox row per (userId, tmdbId) that succeeded
+    const successfulTmdbIds = new Set(
+      notifiedPairs
+        .filter((p) => p.userId === userId)
+        .map((p) => p.tmdbId),
+    );
+
+    for (const movie of movies) {
+      if (!successfulTmdbIds.has(movie.tmdbId)) continue;
+      try {
+        await db.insert(notifications).values({
+          userId,
+          type: "release",
+          title: `${movie.title} is now available`,
+          body: null,
+          posterPath: movie.posterPath,
+          href: `/movie/${movie.tmdbId}`,
+          tmdbId: movie.tmdbId,
+          mediaType: "movie",
+        });
+      } catch (error) {
+        console.error(
+          "[cron/release-notifications] failed to insert notification row",
+          { userId, tmdbId: movie.tmdbId, error },
+        );
+        // Do not throw — push already delivered; row absence is acceptable
       }
     }
   }
