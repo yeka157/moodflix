@@ -1,3 +1,8 @@
+---
+paths:
+  - "hooks/**/*.ts"
+---
+
 # Hooks
 
 - **All client-side API calls live here** as custom hooks using TanStack Query

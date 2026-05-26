@@ -1,3 +1,9 @@
+---
+paths:
+  - "**/*.ts"
+  - "**/*.tsx"
+---
+
 # TypeScript
 
 - **Zero `any`** — use `unknown` and narrow instead

@@ -1,3 +1,9 @@
+---
+paths:
+  - "components/**/*.tsx"
+  - "app/**/*.tsx"
+---
+
 # Animations
 
 - **Framer Motion** for UI animations (not GSAP)

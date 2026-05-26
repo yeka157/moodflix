@@ -1,3 +1,9 @@
+---
+paths:
+  - "components/**/*.tsx"
+  - "components/**/*.ts"
+---
+
 # Components
 
 - **File naming:** kebab-case (`movie-card.tsx`, `notification-bell.tsx`)

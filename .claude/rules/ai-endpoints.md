@@ -1,3 +1,11 @@
+---
+paths:
+  - "app/api/ai/**/*.ts"
+  - "components/ai/**/*.tsx"
+  - "hooks/use-ai.ts"
+  - "lib/ai.ts"
+---
+
 # AI Endpoints
 
 - **Authentication is mandatory** — every AI route must verify `supabase.auth.getUser()` and 401 on null.

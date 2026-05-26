@@ -1,3 +1,9 @@
+---
+paths:
+  - "app/**/*.tsx"
+  - "app/**/*.ts"
+---
+
 # App Router
 
 ## Page metadata
@@ -23,5 +29,5 @@
 ## API routes
 
 - API routes live under `app/api/`. They are server-only and can call Drizzle/TMDB directly.
-- AI-specific rules live in `app/api/ai/CLAUDE.md`.
+- AI-specific rules live in `.claude/rules/ai-endpoints.md` (path-scoped to `app/api/ai/`).
 - Cron routes live under `app/api/cron/` and require `Authorization: Bearer ${CRON_SECRET}` header check.

@@ -1,3 +1,8 @@
+---
+paths:
+  - "actions/**/*.ts"
+---
+
 # Server Actions
 
 - **File header:** `"use server";` is mandatory.
