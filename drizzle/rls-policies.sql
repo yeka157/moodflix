@@ -138,3 +138,12 @@ DROP POLICY IF EXISTS "Authenticated users can read tmdb media" ON public.tmdb_m
 CREATE POLICY "Authenticated users can read tmdb media"
   ON public.tmdb_media FOR SELECT
   USING (auth.role() = 'authenticated');
+
+-- ============================================================================
+-- notifications: users can read their own; writes happen via Drizzle (direct conn)
+-- ============================================================================
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view own notifications" ON public.notifications;
+CREATE POLICY "Users can view own notifications" ON public.notifications
+  FOR SELECT USING (auth.uid() = user_id);
