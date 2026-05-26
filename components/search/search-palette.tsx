@@ -10,7 +10,7 @@ import {
   CommandList,
   CommandEmpty,
 } from "@/components/ui/command";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { VisuallyHidden } from "radix-ui";
 import { useSearchMulti } from "@/hooks/use-search-multi";
 import { useAddToWatchlist } from "@/hooks/use-watchlist";
 import {
@@ -126,9 +126,9 @@ export function SearchPalette({ open, onOpenChange }: SearchPaletteProps) {
         className="overflow-hidden p-0 sm:max-w-[640px] gap-0"
         showCloseButton={false}
       >
-        <VisuallyHidden asChild>
+        <VisuallyHidden.Root asChild>
           <DialogTitle>Search films and series</DialogTitle>
-        </VisuallyHidden>
+        </VisuallyHidden.Root>
         <Command shouldFilter={false} loop>
           <CommandInput
             value={query}
