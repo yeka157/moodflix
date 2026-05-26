@@ -10,8 +10,12 @@ export function SearchPaletteTrigger() {
   const [isMac, setIsMac] = useState(false);
 
   useEffect(() => {
+    const ua = navigator as Navigator & {
+      userAgentData?: { platform?: string };
+    };
+    const platform = ua.userAgentData?.platform ?? navigator.platform ?? "";
     // eslint-disable-next-line react-hooks/set-state-in-effect -- platform detection requires window/navigator (client-only)
-    setIsMac(/Mac|iPhone|iPad|iPod/i.test(navigator.platform));
+    setIsMac(/mac|iphone|ipad|ipod/i.test(platform));
   }, []);
 
   useEffect(() => {

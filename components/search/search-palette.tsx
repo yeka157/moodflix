@@ -113,6 +113,8 @@ export function SearchPalette({ open, onOpenChange }: SearchPaletteProps) {
   );
 
   const showResults = isEnabled && results.length > 0;
+  const showLoadingSkeleton =
+    isEnabled && isLoading && results.length === 0;
   const showEmpty =
     isEnabled &&
     !isLoading &&
@@ -142,6 +144,19 @@ export function SearchPalette({ open, onOpenChange }: SearchPaletteProps) {
               <CommandEmpty>
                 No matches for &ldquo;{debouncedQuery}&rdquo;.
               </CommandEmpty>
+            )}
+            {showLoadingSkeleton && (
+              <div className="px-2 py-2" aria-hidden="true">
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 px-2 py-1.5"
+                  >
+                    <div className="size-8 h-12 shrink-0 rounded bg-muted/40 animate-pulse" />
+                    <div className="flex-1 h-4 rounded bg-muted/40 animate-pulse" />
+                  </div>
+                ))}
+              </div>
             )}
             {showResults && (
               <ResultsSection
