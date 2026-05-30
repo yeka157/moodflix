@@ -116,7 +116,7 @@ export function LandingRevamp({
         if (heroRef.current) {
           const rect = heroRef.current.getBoundingClientRect();
           const total = heroRef.current.offsetHeight - vh;
-          const p = Math.max(0, Math.min(1, -rect.top / total));
+          const p = total > 0 ? Math.max(0, Math.min(1, -rect.top / total)) : 0;
           const bg = heroRef.current.querySelector<HTMLImageElement>(
             ".lp-hero-bg img",
           );
@@ -294,57 +294,47 @@ export function LandingRevamp({
           <div className="relative z-[2] text-center max-w-[880px] px-8 will-change-[transform,opacity]">
             <div className="lp-badge inline-flex items-center gap-2 px-3.5 py-[7px] rounded-full border border-primary bg-[var(--red-soft)] text-primary font-mono text-[11px] uppercase tracking-[0.1em] mb-8">
               <span className="pulse" />
-              AI-powered mood discovery
+              Movie &amp; series discovery
             </div>
 
             <h1 className="lp-hero-title">
-              <SplitText text="Movies that" baseDelay={0.2} />
+              <SplitText text="Discover films" baseDelay={0.2} />
               <br />
-              <SplitText text="match your " baseDelay={0.6} />
+              <SplitText text="& series you&apos;ll " baseDelay={0.6} />
               <span className="split">
                 <span
                   className="serif-it"
                   style={{ animationDelay: "0.95s" }}
                 >
-                  mood.
+                  love.
                 </span>
               </span>
             </h1>
 
             <p className="text-lg leading-[1.55] text-[var(--ink-2)] max-w-[580px] mx-auto mb-9">
-              Tell us how you feel — slow Sunday, raining outside, can&apos;t
-              sleep — and we&apos;ll pull the films and series that fit. Built
-              for people who want fewer, better picks.
+              Browse thousands of films and series, track what you watch, and
+              see where to stream — all in one place. Can&apos;t decide? Our AI
+              reads your mood and narrows it to a few that fit.
             </p>
 
             <div className="flex gap-3 justify-center mb-14 flex-wrap">
               <Link href={actionHref} className={`${BTN_BASE} ${BTN_RED} ${BTN_LG}`}>
-                Start watching, free
+                Start discovering, free
                 <ArrowRight size={14} />
               </Link>
-              <a className={`${BTN_BASE} ${BTN_GHOST} ${BTN_LG}`}>
+              <a href="#how" className={`${BTN_BASE} ${BTN_GHOST} ${BTN_LG}`}>
                 <Play size={12} />
-                Watch the 90-sec tour
+                See how it works
               </a>
             </div>
 
-            <div className="inline-flex items-center gap-4 px-[18px] py-2.5 rounded-full border border-border bg-[rgba(20,17,15,0.5)] backdrop-blur-[12px]">
-              <div className="flex">
-                {[14, 32, 47, 5, 12].map((n) => (
-                  <div
-                    key={n}
-                    className="w-7 h-7 rounded-full bg-cover bg-center -ml-2 first:ml-0 border-2 border-background"
-                    style={{
-                      backgroundImage: `url(https://i.pravatar.cc/80?img=${n})`,
-                    }}
-                  />
-                ))}
-              </div>
-              <div>
+            <div className="inline-flex items-center gap-3 px-[18px] py-2.5 rounded-full border border-border bg-[rgba(20,17,15,0.5)] backdrop-blur-[12px]">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+              <div className="text-left">
                 <div className="font-mono text-xs">
-                  ★ 4.9 · 12,400+ film lovers
+                  Now in early access — be one of the first
                 </div>
-                <div className={EYEBROW}>JOINED IN THE LAST WEEK</div>
+                <div className={EYEBROW}>BUILT IN THE OPEN, BY ONE PERSON</div>
               </div>
             </div>
           </div>
@@ -369,20 +359,46 @@ export function LandingRevamp({
         </div>
       </div>
 
+      {/* THE PROBLEM — streaming vs. deciding */}
+      <section className="px-5 sm:px-8 md:px-14 py-16 md:py-[120px] max-w-[1440px] mx-auto">
+        <SectionEyebrow label="THE REAL PROBLEM" />
+        <h2 className="font-display uppercase text-[clamp(44px,7vw,104px)] leading-[0.9] tracking-[0.002em] m-0 mb-6" data-lp-reveal>
+          Streaming is for watching.
+          <br />
+          <span className="font-serif italic normal-case tracking-[-0.015em] text-primary">
+            Deciding what to watch
+          </span>{" "}
+          is on you.
+        </h2>
+        <p className="text-[19px] text-[var(--ink-2)] leading-[1.55] max-w-[680px] mt-0 mb-12" data-lp-reveal>
+          You&apos;re not short on things to watch — you&apos;re short on a
+          decision. Netflix, Prime, Max and the rest are built to keep you
+          scrolling, not to help you land on the one film for tonight. Moodflix
+          is the layer on top: discover, decide, and keep track — then jump out
+          to wherever it&apos;s streaming.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mt-2" data-lp-reveal>
+          <ProblemStat big="5+" label="streaming apps to check, one title at a time" />
+          <ProblemStat big="20 min" label="scrolling, then giving up on nothing" />
+          <ProblemStat big="1" label="place to decide — then go watch" accent />
+        </div>
+      </section>
+
       {/* MOOD AI DEMO */}
       <section className="px-5 sm:px-8 md:px-14 py-16 md:py-[120px] max-w-[1440px] mx-auto" id="how">
-        <SectionEyebrow label="HOW IT FEELS" />
+        <SectionEyebrow label="WHEN YOU CAN'T DECIDE" />
         <h2 className="font-display uppercase text-[clamp(56px,8vw,112px)] leading-[0.88] tracking-[0.002em] m-0 mb-6" data-lp-reveal>
           Type a feeling.
           <br />
-          We do the{" "}
+          Get a{" "}
           <span className="font-serif italic normal-case tracking-[-0.015em] text-[var(--ink-2)]">
-            rest.
+            shortlist.
           </span>
         </h2>
         <p className="text-[19px] text-[var(--ink-2)] leading-[1.55] max-w-[640px] mt-0 mb-12" data-lp-reveal>
-          Our AI reads tone, not keywords. Speak naturally — the way you&apos;d
-          describe a movie to a friend you trust.
+          Browsing is the main event — but on the nights nothing jumps out, our
+          AI reads tone, not keywords. Describe it the way you&apos;d tell a
+          friend, and get a handful worth your evening.
         </p>
 
         <MoodDemoCard movies={movies} />
@@ -395,7 +411,7 @@ export function LandingRevamp({
             <span>FILM</span>
             <span className="num">00</span>
             <span className="bar" />
-            <span>OF 80,000</span>
+            <span>VIA TMDB</span>
           </div>
 
           <div className="lp-3d-headline">
@@ -403,14 +419,14 @@ export function LandingRevamp({
               <span>CATALOG</span>
             </div>
             <h2>
-              Eighty thousand films,
+              Every film and series,
               <br />
               one library that{" "}
               <span className="serif-it">listens.</span>
             </h2>
             <p>
-              Films, series, K-drama, documentaries, festival picks — re-ranked
-              by your taste.
+              Films, series, K-drama, documentaries, festival picks — all from
+              TMDB, re-ranked by your taste.
             </p>
           </div>
 
@@ -489,27 +505,27 @@ export function LandingRevamp({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 mt-14">
           <FeatureCard
             num="01"
-            title="AI mood discovery"
-            desc="Describe how you're feeling. Get five films, each with a sentence on why it fits. No genres to wade through."
-            icon={<Sparkles size={20} />}
-          />
-          <FeatureCard
-            num="02"
             title="A library that's yours"
             desc="Want to watch, watching, watched. Personal ratings, private notes, no algorithm pushing the obvious."
             icon={<BookMarked size={20} />}
           />
           <FeatureCard
-            num="03"
+            num="02"
             title="Where to watch — instantly"
             desc="Stream, rent, or buy. We surface availability across Netflix, Mubi, Criterion, Prime — region-aware."
             icon={<Tv size={20} />}
           />
           <FeatureCard
-            num="04"
+            num="03"
             title="Series, in long-form"
             desc="K-drama, C-drama, prestige TV, festival miniseries. Track season-by-season with no fuss."
             icon={<Play size={20} />}
+          />
+          <FeatureCard
+            num="04"
+            title="AI when you're stuck"
+            desc="Describe how you're feeling. Get a short list of films and series, each with a sentence on why it fits. No genres to wade through."
+            icon={<Sparkles size={20} />}
           />
           <FeatureCard
             num="05"
@@ -561,42 +577,34 @@ export function LandingRevamp({
         </h2>
       </section>
 
-      {/* TESTIMONIALS */}
+      {/* MAKER'S NOTE */}
       <section className="px-5 sm:px-8 md:px-14 py-16 md:py-[120px] max-w-[1440px] mx-auto">
-        <SectionEyebrow label="WHAT PEOPLE SAY" />
+        <SectionEyebrow label="FROM THE MAKER" />
         <h2 className="font-display uppercase text-[clamp(56px,8vw,112px)] leading-[0.88] tracking-[0.002em] m-0 mb-6" data-lp-reveal>
-          From the people
-          <br />
-          who{" "}
+          Why I{" "}
           <span className="font-serif italic normal-case tracking-[-0.015em] text-[var(--ink-2)]">
-            use it.
+            built this.
           </span>
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-[18px] mt-14">
-          <Testimonial
-            q="I cancelled my Letterboxd Pro the same week I found moodflix. The AI picks felt like a friend who actually knows me."
-            name="Sara Lee"
-            handle="@saralike"
-            av={32}
-          />
-          <Testimonial
-            q="The mood input is a real product, not a gimmick. I asked for 'wedding cancelled, need to feel okay,' and it gave me Junebloom. Did not know I needed Junebloom."
-            name="Adi Mehta"
-            handle="@adimoves"
-            av={47}
-          />
-          <Testimonial
-            q="The interface alone is worth opening every day. It just feels nice."
-            name="Mae Castellanos"
-            handle="@maeshot"
-            av={5}
-          />
-          <Testimonial
-            q="Finally a film tracker that doesn't try to be a social network."
-            name="Felix Roy"
-            handle="@feliix"
-            av={14}
-          />
+        <div
+          className="relative max-w-[760px] p-8 md:p-10 bg-card border border-border rounded-[20px] mt-14"
+          data-lp-reveal
+        >
+          <p className="font-serif italic text-[22px] md:text-[26px] leading-[1.45] text-foreground m-0 mb-5">
+            I kept opening five streaming apps, scrolling for twenty minutes,
+            and watching nothing. Moodflix is the tool I wanted: one place to
+            browse films and series, keep a library that&apos;s actually mine,
+            and — on the nights I can&apos;t decide — ask for a few picks
+            instead of a feed of a thousand.
+          </p>
+          <p className="text-sm text-[var(--ink-2)] leading-[1.6] m-0">
+            It&apos;s early, and it&apos;s just me building it. No fake reviews,
+            no inflated numbers — if you try it, I&apos;d genuinely like to hear
+            what you think.
+          </p>
+          <div className="font-mono text-[11px] text-[var(--ink-3)] mt-6 tracking-[0.06em]">
+            — KEVIN, SOLO MAKER OF MOODFLIX
+          </div>
         </div>
       </section>
 
@@ -678,8 +686,8 @@ export function LandingRevamp({
               </span>
             </div>
             <p className="text-[var(--ink-3)] text-[13px] max-w-[280px] leading-[1.6] m-0">
-              A movie tracker that listens. Made by two people in two cities,
-              for everyone who watches.
+              A movie and series tracker that listens. Built solo, for everyone
+              who&apos;d rather watch than scroll.
             </p>
           </div>
           <FooterCol
@@ -725,6 +733,29 @@ function SectionEyebrow({ label }: { label: string }) {
       data-lp-reveal
     >
       <span>{label}</span>
+    </div>
+  );
+}
+
+function ProblemStat({
+  big,
+  label,
+  accent,
+}: {
+  big: string;
+  label: string;
+  accent?: boolean;
+}) {
+  return (
+    <div className="flex flex-col p-6 bg-card border border-border rounded-[16px]">
+      <div
+        className={`font-display text-[40px] leading-[0.9] mb-2 ${
+          accent ? "text-primary" : "text-foreground"
+        }`}
+      >
+        {big}
+      </div>
+      <div className="text-sm text-[var(--ink-2)] leading-[1.45]">{label}</div>
     </div>
   );
 }
@@ -821,29 +852,29 @@ function MoodDemoCard({ movies }: { movies: LandingMovie[] }) {
       </div>
 
       <div className="pt-8">
-        <div className={`${EYEBROW} text-primary`}>● LIVE DEMO</div>
+        <div className={`${EYEBROW} text-primary`}>● PREVIEW</div>
         <h3 className="font-display uppercase text-[36px] leading-[0.95] tracking-[0.005em] mt-3 mb-4">
-          Five picks.
+          A few picks.
           <br />
           One sentence each.
         </h3>
         <p className="text-[var(--ink-2)] text-sm leading-[1.6] m-0">
-          Not a list of 200. Not a row of &quot;popular.&quot; We pick five
-          films we believe in, and we tell you why — in language you can argue
-          with.
+          Not a list of 200. Not a row of &quot;popular.&quot; A short shortlist
+          of films and series we think fit — and a sentence on why, in language
+          you can argue with.
         </p>
         <div className="flex gap-8 mt-8 pt-6 border-t border-border">
           <div>
             <div className="font-display text-[44px] leading-[0.9] text-foreground">
-              2.4s
+              5
             </div>
-            <div className={EYEBROW}>AVG RESPONSE</div>
+            <div className={EYEBROW}>PICKS, NOT 200</div>
           </div>
           <div>
             <div className="font-display text-[44px] leading-[0.9] text-foreground">
-              97%
+              1
             </div>
-            <div className={EYEBROW}>RELEVANCE</div>
+            <div className={EYEBROW}>REASON EACH</div>
           </div>
         </div>
       </div>
@@ -879,46 +910,6 @@ function FeatureCard({
         {title}
       </h3>
       <p className="text-sm text-[var(--ink-2)] leading-[1.55] m-0">{desc}</p>
-    </div>
-  );
-}
-
-function Testimonial({
-  q,
-  name,
-  handle,
-  av,
-}: {
-  q: string;
-  name: string;
-  handle: string;
-  av: number;
-}) {
-  return (
-    <div
-      className="relative p-7 bg-card border border-border rounded-[20px]"
-      data-lp-reveal
-    >
-      <div className="absolute top-4 right-6 font-serif italic text-[88px] leading-[0.6] text-primary opacity-60">
-        &ldquo;
-      </div>
-      <p className="font-serif italic text-[22px] leading-[1.4] text-foreground m-0 mb-6 pr-10">
-        {q}
-      </p>
-      <div className="flex gap-3 items-center">
-        <div
-          className="w-9 h-9 rounded-full bg-cover bg-center"
-          style={{
-            backgroundImage: `url(https://i.pravatar.cc/80?img=${av})`,
-          }}
-        />
-        <div>
-          <div className="font-medium text-[13px]">{name}</div>
-          <div className="font-mono text-[11px] text-[var(--ink-3)]">
-            {handle}
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

@@ -7,13 +7,13 @@ import { getTrendingMovies } from "@/lib/tmdb";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "Moodflix — Discover Movies That Match Your Mood",
+  title: "Moodflix — Discover Movies & Series You'll Love",
   description:
-    "Tell our AI how you're feeling and get personalized movie recommendations instantly. Browse thousands of titles with TMDB, build your personal watchlist, and never miss a great film.",
+    "Browse and track thousands of movies and series with TMDB, build your personal watchlist, and see where to stream. When you can't decide, AI picks titles that match your mood.",
   openGraph: {
-    title: "Moodflix — Discover Movies That Match Your Mood",
+    title: "Moodflix — Discover Movies & Series You'll Love",
     description:
-      "Tell our AI how you're feeling and get personalized movie recommendations instantly. Browse thousands of titles with TMDB, build your personal watchlist, and never miss a great film.",
+      "Browse and track thousands of movies and series with TMDB, build your personal watchlist, and see where to stream. When you can't decide, AI picks titles that match your mood.",
   },
 };
 
@@ -60,7 +60,7 @@ export default async function Home() {
     "@type": "WebApplication",
     name: "Moodflix",
     description:
-      "AI-powered movie library and mood-based discovery platform.",
+      "Movie and series discovery and watchlist platform, with AI-powered mood-based suggestions.",
     url: "https://moodflix.app",
     applicationCategory: "EntertainmentApplication",
     operatingSystem: "Web",

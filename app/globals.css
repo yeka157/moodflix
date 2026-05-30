@@ -575,6 +575,13 @@ body.cinematic-skin.no-grain::after {
 .landing-page {
   position: relative;
   color: var(--ink);
+  /* Marketing landing is a brand surface — keep crimson regardless of the
+     in-app accent the user picks in Settings (set via [data-accent] on <html>).
+     Re-declaring the vars on this subtree beats the inherited <html> value. */
+  --red: #ff3b3f;
+  --red-deep: #d61a1f;
+  --red-soft: rgba(255, 59, 63, 0.16);
+  --primary: #ff3b3f;
 }
 
 /* NAV */
@@ -617,23 +624,19 @@ body.cinematic-skin.no-grain::after {
   color: var(--ink);
 }
 
-/* HERO — pinned scroll */
+/* HERO — single clean screen (min-height grows instead of clipping) */
 .lp-hero {
   position: relative;
-  height: 220vh;
-  overflow: visible;
 }
 .lp-hero-stick {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  min-height: 720px;
+  position: relative;
+  min-height: 100vh;
   overflow: hidden;
   display: flex;
   align-items: safe center;
   justify-content: center;
-  padding-top: 96px;
-  padding-bottom: 24px;
+  padding-top: 120px;
+  padding-bottom: 56px;
 }
 .lp-hero-bg {
   position: absolute;
