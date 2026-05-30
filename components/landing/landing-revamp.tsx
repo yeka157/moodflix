@@ -370,7 +370,7 @@ export function LandingRevamp({
       </div>
 
       {/* MOOD AI DEMO */}
-      <section className="px-14 py-[120px] max-w-[1440px] mx-auto" id="how">
+      <section className="px-5 sm:px-8 md:px-14 py-16 md:py-[120px] max-w-[1440px] mx-auto" id="how">
         <SectionEyebrow label="HOW IT FEELS" />
         <h2 className="font-display uppercase text-[clamp(56px,8vw,112px)] leading-[0.88] tracking-[0.002em] m-0 mb-6" data-lp-reveal>
           Type a feeling.
@@ -475,7 +475,7 @@ export function LandingRevamp({
       </section>
 
       {/* FEATURES */}
-      <section className="px-14 py-[120px] max-w-[1440px] mx-auto" id="features">
+      <section className="px-5 sm:px-8 md:px-14 py-16 md:py-[120px] max-w-[1440px] mx-auto" id="features">
         <SectionEyebrow label="WHAT YOU GET" />
         <h2 className="font-display uppercase text-[clamp(56px,8vw,112px)] leading-[0.88] tracking-[0.002em] m-0 mb-6" data-lp-reveal>
           Everything a{" "}
@@ -527,7 +527,7 @@ export function LandingRevamp({
       </section>
 
       {/* MANIFESTO */}
-      <section className="px-14 py-40 text-center border-y border-border" id="manifesto">
+      <section className="px-5 sm:px-8 md:px-14 py-20 md:py-40 text-center border-y border-border" id="manifesto">
         <div className="inline-flex items-center justify-center font-mono text-[11px] text-muted-foreground tracking-[0.14em] uppercase mb-6" data-lp-reveal>
           <span>MANIFESTO</span>
         </div>
@@ -562,7 +562,7 @@ export function LandingRevamp({
       </section>
 
       {/* TESTIMONIALS */}
-      <section className="px-14 py-[120px] max-w-[1440px] mx-auto">
+      <section className="px-5 sm:px-8 md:px-14 py-16 md:py-[120px] max-w-[1440px] mx-auto">
         <SectionEyebrow label="WHAT PEOPLE SAY" />
         <h2 className="font-display uppercase text-[clamp(56px,8vw,112px)] leading-[0.88] tracking-[0.002em] m-0 mb-6" data-lp-reveal>
           From the people
@@ -601,7 +601,7 @@ export function LandingRevamp({
       </section>
 
       {/* PRICING */}
-      <section className="px-14 py-[120px] max-w-[1440px] mx-auto" id="pricing">
+      <section className="px-5 sm:px-8 md:px-14 py-16 md:py-[120px] max-w-[1440px] mx-auto" id="pricing">
         <SectionEyebrow label="PRICING" />
         <h2 className="font-display uppercase text-[clamp(56px,8vw,112px)] leading-[0.88] tracking-[0.002em] m-0 mb-6" data-lp-reveal>
           Two plans. Both{" "}
@@ -705,7 +705,7 @@ export function LandingRevamp({
             ]}
           />
         </div>
-        <div className="max-w-[1440px] mx-auto px-14 py-6 border-t border-border flex justify-between flex-wrap gap-3">
+        <div className="max-w-[1440px] mx-auto px-5 sm:px-8 md:px-14 py-6 border-t border-border flex justify-between flex-wrap gap-3">
           <div className="font-mono text-[11px] text-[var(--ink-3)]">
             © 2026 moodflix labs · v2.0 · made with film and patience
           </div>
@@ -805,15 +805,13 @@ function MoodDemoCard({ movies }: { movies: LandingMovie[] }) {
                   <img src={m.posterUrl} alt="" />
                   <div>
                     <div className="text-sm font-medium mb-1">{m.title}</div>
-                    <div className={`${EYEBROW} mb-1.5`}>
-                      {m.year} · drama
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className={EYEBROW}>{m.year} · drama</span>
+                      <span className="font-mono text-[11px] text-[var(--ink-3)]">★ 8.4</span>
                     </div>
                     <p className="text-xs text-[var(--ink-2)] leading-[1.5] m-0">
                       {sentences[i]}
                     </p>
-                  </div>
-                  <div className="font-mono text-[13px] text-[var(--ink-3)]">
-                    ★ 8.4
                   </div>
                 </div>
               ))}
