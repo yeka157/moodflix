@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/next";
 
 const STORAGE_KEY = "mf:analytics";
 
@@ -31,5 +32,10 @@ function getServerEnabled(): boolean {
 export function AnalyticsGate() {
   const enabled = useSyncExternalStore(subscribe, getEnabled, getServerEnabled);
   if (!enabled) return null;
-  return <SpeedInsights />;
+  return (
+    <>
+      <SpeedInsights />
+      <Analytics />
+    </>
+  );
 }
