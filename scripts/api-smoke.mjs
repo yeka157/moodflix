@@ -78,10 +78,107 @@ async function testBearer(token) {
   check("200 with bearer token", withAuth.status === 200, `got ${withAuth.status}`);
 }
 
+async function testWatchlist(token) {
+  console.log("watchlist:");
+  const unauth = await req("/api/watchlist");
+  check("401 without token", unauth.status === 401, `got ${unauth.status}`);
+
+  const added = await req("/api/watchlist", {
+    method: "POST",
+    token,
+    body: { tmdbId: 27205, title: "Inception", posterPath: null, mediaType: "movie" },
+  });
+  check(
+    "POST add returns 201 + item",
+    added.status === 201 && added.json?.item?.tmdbId === 27205,
+    `got ${added.status} ${JSON.stringify(added.json)}`,
+  );
+
+  const dup = await req("/api/watchlist", {
+    method: "POST",
+    token,
+    body: { tmdbId: 27205, title: "Inception", posterPath: null, mediaType: "movie" },
+  });
+  check("duplicate add returns 409", dup.status === 409, `got ${dup.status}`);
+
+  const badBody = await req("/api/watchlist", {
+    method: "POST",
+    token,
+    body: { tmdbId: "not-a-number" },
+  });
+  check("invalid body returns 400", badBody.status === 400, `got ${badBody.status}`);
+
+  const list = await req("/api/watchlist", { token });
+  check(
+    "GET list contains item",
+    list.status === 200 && list.json?.items?.length === 1,
+    `got ${list.status}`,
+  );
+
+  const lookup = await req("/api/watchlist/lookup?tmdbId=27205&mediaType=movie", { token });
+  check(
+    "GET lookup finds item",
+    lookup.status === 200 && lookup.json?.item?.tmdbId === 27205,
+    `got ${lookup.status}`,
+  );
+
+  const id = added.json?.item?.id;
+  const patched = await req(`/api/watchlist/${id}`, {
+    method: "PATCH",
+    token,
+    body: { status: "watched", rating: 1 },
+  });
+  check(
+    "PATCH status+rating",
+    patched.status === 200 &&
+      patched.json?.item?.status === "watched" &&
+      patched.json?.item?.rating === 1,
+    `got ${patched.status} ${JSON.stringify(patched.json)}`,
+  );
+
+  const badPatch = await req(`/api/watchlist/${id}`, {
+    method: "PATCH",
+    token,
+    body: { rating: 5 },
+  });
+  check("PATCH invalid rating 400", badPatch.status === 400, `got ${badPatch.status}`);
+
+  const stats = await req("/api/watchlist/stats", { token });
+  check(
+    "GET stats watched=1",
+    stats.status === 200 && stats.json?.watched === 1,
+    `got ${stats.status} ${JSON.stringify(stats.json)}`,
+  );
+
+  const ids = await req("/api/watchlist/ids", { token });
+  check(
+    "GET ids returns entry",
+    ids.status === 200 && ids.json?.entries?.length === 1,
+    `got ${ids.status}`,
+  );
+
+  const missingPatch = await req(
+    "/api/watchlist/00000000-0000-0000-0000-000000000000",
+    { method: "PATCH", token, body: { rating: 1 } },
+  );
+  check("PATCH unknown id 404", missingPatch.status === 404, `got ${missingPatch.status}`);
+
+  const deleted = await req(`/api/watchlist/${id}`, { method: "DELETE", token });
+  check("DELETE returns 200", deleted.status === 200, `got ${deleted.status}`);
+
+  const empty = await req("/api/watchlist", { token });
+  check(
+    "list empty after delete",
+    empty.status === 200 && empty.json?.items?.length === 0,
+    `got ${empty.status}`,
+  );
+}
+
 const section = process.argv[2] ?? "all";
 const { userId, token } = await createTestUser();
 try {
   if (section === "bearer" || section === "all") await testBearer(token);
+  if (section === "watchlist" || section === "all") await testWatchlist(token);
 } finally {
   await deleteTestUser(userId);
 }

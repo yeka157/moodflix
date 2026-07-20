@@ -132,14 +132,21 @@ export async function addToWatchlist(
 
     return { item: serializeItem(rows[0]) };
   } catch (err: unknown) {
-    if (
-      err instanceof Error &&
-      err.message.includes("watchlist_user_tmdb_media_unique")
-    ) {
+    if (isUniqueConstraintViolation(err, "watchlist_user_tmdb_media_unique")) {
       return { error: "Already in library" };
     }
     return { error: "Failed to add to library" };
   }
+}
+
+function isUniqueConstraintViolation(
+  err: unknown,
+  constraintName: string,
+): boolean {
+  if (!(err instanceof Error)) return false;
+  if (err.message.includes(constraintName)) return true;
+  const cause = err.cause;
+  return cause instanceof Error && cause.message.includes(constraintName);
 }
 
 export async function removeFromWatchlist(
