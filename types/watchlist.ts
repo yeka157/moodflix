@@ -43,3 +43,9 @@ export type WatchlistActionResult =
 export type WatchlistDeleteResult =
   | { success: true; error?: never }
   | { success?: never; error: string };
+
+export type WatchlistStats = {
+  inLibrary: number;
+  watched: number;
+  thisYear: number;
+};
