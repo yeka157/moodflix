@@ -34,6 +34,7 @@ npm run db:generate  # Generate SQL migration files from schema changes
 npm run db:migrate   # Apply pending migrations to the database
 npm run db:push      # Push schema directly (prototyping only)
 npm run db:studio    # Open Drizzle Studio to browse/edit data
+node scripts/api-smoke.mjs [bearer|watchlist|notifications|all]  # API integration smoke tests (dev server must be running)
 ```
 
 See [DRIZZLE_GUIDE.md](./DRIZZLE_GUIDE.md) for the full migration workflow.
@@ -71,6 +72,8 @@ VAPID_SUBJECT=              # mailto: address
 - `app/api/movies/` — TMDB proxy (search, category, genre, multi-search, details)
 - `app/api/tv/` — TMDB TV proxy
 - `app/api/ai/recommend/` — Streaming AI recommendation endpoint
+- `app/api/watchlist/` — Watchlist REST API (list/add, `[id]` patch/delete, `stats`, `ids`, `lookup`) — bearer or cookie auth, consumed by mobile clients
+- `app/api/notifications/` — Inbox REST API (list, `unread-count`, `read`) alongside existing `subscribe`/`subscribed-ids`
 - `app/api/notifications/subscribe`, `subscribed-ids` — Per-movie release alert subscriptions
 - `app/api/push/subscribe` — Browser push device tokens
 - `app/api/cron/release-notifications` — Vercel cron job (fires releases, inserts inbox rows)
@@ -104,6 +107,8 @@ VAPID_SUBJECT=              # mailto: address
 - `drizzle/migrations/` — Generated SQL migrations
 - `drizzle/rls-policies.sql` — RLS policies (apply manually in Supabase SQL Editor)
 - `lib/supabase/{client,server,middleware}.ts` — Supabase clients
+- `lib/supabase/api-auth.ts` — `getApiUser(request)`: bearer-token OR cookie auth for API routes (mobile + web)
+- `lib/services/` — Shared business logic (watchlist, notifications) taking explicit `userId`; wrapped by both server actions (web) and REST routes (mobile)
 - `lib/tmdb.ts` — TMDB API client (server-only, Bearer auth, 5min ISR cache)
 - `lib/ai.ts` — Vercel AI SDK config
 - `lib/web-push.ts` — Web Push helper
