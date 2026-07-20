@@ -188,6 +188,9 @@ async function testNotifications(token) {
     `got ${list.status} ${JSON.stringify(list.json)}`,
   );
 
+  const badCursor = await req("/api/notifications?cursor=garbage", { token });
+  check("invalid cursor returns 400", badCursor.status === 400, `got ${badCursor.status}`);
+
   const count = await req("/api/notifications/unread-count", { token });
   check(
     "GET unread-count = 0 for fresh user",

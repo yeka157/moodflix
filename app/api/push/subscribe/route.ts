@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { eq, and } from "drizzle-orm";
 import { getApiUser } from "@/lib/supabase/api-auth";
+import { checkWindowedLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { db } from "@/drizzle";
 import { pushSubscriptions } from "@/drizzle/schema";
 
@@ -10,6 +11,8 @@ export async function POST(request: Request) {
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const rate = checkWindowedLimit(`push:${user.id}`, 60, 60_000);
+  if (!rate.allowed) return rateLimitResponse(rate);
 
   const body: unknown = await request.json();
 
@@ -59,6 +62,8 @@ export async function DELETE(request: Request) {
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const rate = checkWindowedLimit(`push:${user.id}`, 60, 60_000);
+  if (!rate.allowed) return rateLimitResponse(rate);
 
   const body: unknown = await request.json();
 

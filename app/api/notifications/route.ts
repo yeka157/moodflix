@@ -12,6 +12,10 @@ export async function GET(request: NextRequest) {
   if (!rate.allowed) return rateLimitResponse(rate);
 
   const cursor = request.nextUrl.searchParams.get("cursor");
+  if (cursor && Number.isNaN(Date.parse(cursor))) {
+    return Response.json({ error: "Invalid cursor" }, { status: 400 });
+  }
+
   const limitParam = Number(request.nextUrl.searchParams.get("limit"));
   const limit =
     Number.isInteger(limitParam) && limitParam > 0 ? limitParam : undefined;
