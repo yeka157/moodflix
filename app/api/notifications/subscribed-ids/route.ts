@@ -1,14 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
-import { createClient } from "@/lib/supabase/server";
+import { getApiUser } from "@/lib/supabase/api-auth";
 import { db } from "@/drizzle";
 import { notificationSubscriptions } from "@/drizzle/schema";
 
-export async function GET() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export async function GET(request: NextRequest) {
+  const user = await getApiUser(request);
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

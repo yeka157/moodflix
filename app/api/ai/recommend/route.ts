@@ -7,7 +7,7 @@ import {
   createUIMessageStreamResponse,
 } from "ai";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
+import { getApiUser } from "@/lib/supabase/api-auth";
 import { geminiModel } from "@/lib/ai";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { searchMulti } from "@/lib/tmdb";
@@ -168,10 +168,7 @@ async function getWatchlistContext(userId: string): Promise<string> {
 export async function POST(request: Request) {
   try {
     // 1. Auth check
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await getApiUser(request);
 
     if (!user) {
       return Response.json(

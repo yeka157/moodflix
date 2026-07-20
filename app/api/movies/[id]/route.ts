@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { getCachedMovieDetails } from "@/lib/tmdb-cache";
 import { getCountryFromHeaders } from "@/lib/country";
-import { createClient } from "@/lib/supabase/server";
+import { getApiUser } from "@/lib/supabase/api-auth";
 import { checkWindowedLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function GET(
@@ -9,10 +9,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await getApiUser(request);
     if (!user) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
