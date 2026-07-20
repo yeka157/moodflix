@@ -174,11 +174,55 @@ async function testWatchlist(token) {
   );
 }
 
+async function testNotifications(token) {
+  console.log("notifications:");
+  const unauth = await req("/api/notifications");
+  check("401 without token", unauth.status === 401, `got ${unauth.status}`);
+
+  const list = await req("/api/notifications", { token });
+  check(
+    "GET list shape",
+    list.status === 200 &&
+      Array.isArray(list.json?.items) &&
+      "nextCursor" in (list.json ?? {}),
+    `got ${list.status} ${JSON.stringify(list.json)}`,
+  );
+
+  const count = await req("/api/notifications/unread-count", { token });
+  check(
+    "GET unread-count = 0 for fresh user",
+    count.status === 200 && count.json?.count === 0,
+    `got ${count.status} ${JSON.stringify(count.json)}`,
+  );
+
+  const markAll = await req("/api/notifications/read", {
+    method: "POST",
+    token,
+    body: { all: true },
+  });
+  check("POST read all", markAll.status === 200, `got ${markAll.status}`);
+
+  const markIds = await req("/api/notifications/read", {
+    method: "POST",
+    token,
+    body: { ids: ["00000000-0000-0000-0000-000000000000"] },
+  });
+  check("POST read ids (no-op ok)", markIds.status === 200, `got ${markIds.status}`);
+
+  const badBody = await req("/api/notifications/read", {
+    method: "POST",
+    token,
+    body: {},
+  });
+  check("POST read empty body 400", badBody.status === 400, `got ${badBody.status}`);
+}
+
 const section = process.argv[2] ?? "all";
 const { userId, token } = await createTestUser();
 try {
   if (section === "bearer" || section === "all") await testBearer(token);
   if (section === "watchlist" || section === "all") await testWatchlist(token);
+  if (section === "notifications" || section === "all") await testNotifications(token);
 } finally {
   await deleteTestUser(userId);
 }
