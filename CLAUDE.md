@@ -15,7 +15,7 @@ Guidance for Claude Code when working in this repository.
 | Database      | Supabase (PostgreSQL) with Row Level Security                           |
 | ORM           | Drizzle ORM with postgres-js driver                                     |
 | Auth          | Supabase Auth (email/password, Google OAuth, Passkey)                   |
-| AI            | Google Gemini via Vercel AI SDK v5                                      |
+| AI            | Google Gemini via Vercel AI SDK v6 (`ai@6`, docs bundled at `node_modules/ai/docs/`) |
 | AI UI         | prompt-kit (shadcn/ui-based AI components)                              |
 | Data Fetching | TanStack Query (client), Next.js fetch + server actions (server)        |
 | Command UI    | cmdk (Spotlight-style search palette)                                   |

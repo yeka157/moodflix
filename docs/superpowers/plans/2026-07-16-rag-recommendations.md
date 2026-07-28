@@ -20,8 +20,15 @@ a per-user taste vector, runs pgvector cosine top-30, and a
 candidate set before the UI renders them.
 
 **Tech stack:** pgvector (Supabase), Drizzle ORM 0.45 (`vector` type,
-`cosineDistance`), AI SDK (`ai@6`, note: CLAUDE.md says v5 — v5 API shapes
-still apply), `@ai-sdk/google` embeddings (`gemini-embedding-001`, 768 dims).
+`cosineDistance`), AI SDK **v6** — installed is `ai@6.0.101`; CLAUDE.md still
+says v5 and is stale. Use v6 idioms: `ToolLoopAgent`, `stopWhen`, `prepareStep`
++ `activeTools`, `InferAgentUIMessage`. Docs are bundled locally at
+`node_modules/ai/docs/03-agents/`. Embeddings via `@ai-sdk/google`
+(`gemini-embedding-001`, 768 dims).
+
+**No orchestration framework** (settled 2026-07-28 — see spec Decisions log).
+Retrieval hides behind `searchCatalog()` so the orchestrator stays a one-file
+swap; compare any alternative empirically on Task 3's smoke queries.
 
 ## Global constraints
 
@@ -41,15 +48,16 @@ still apply), `@ai-sdk/google` embeddings (`gemini-embedding-001`, 768 dims).
 
 | File | Status | Responsibility |
 |---|---|---|
-| `drizzle/schema.ts` | modify | `media_embeddings` table; `taste_vector` on profiles; `mood_embedding` on ai_recommendations |
-| `drizzle/rls-policies.sql` | modify | RLS for `media_embeddings` |
-| `lib/embeddings.ts` | create | Embed helpers: `embedQuery`, `embedDocuments`, `composeMediaText`, `normalize` |
+| `drizzle/schema.ts` | modify | `media_embeddings` + `recommendation_events` tables; `taste_vector` on profiles; `mood_embedding` on ai_recommendations; `search_tsv` on tmdb_media |
+| `drizzle/rls-policies.sql` | modify | RLS for `media_embeddings` + `recommendation_events` |
+| `lib/embeddings.ts` | create | Embed helpers: `embedQuery`, `embedDocuments`, `composeMediaText`, `normalize`. Also the single home of `EMBEDDING_MODEL` / `EMBEDDING_DIMS` / `VECTOR_KIND` — every read and write site references these constants, never literals |
 | `scripts/seed-embeddings.ts` | create | One-off corpus seed (TMDB exports → hydrate → embed → insert) |
 | `scripts/test-retrieval.ts` | create | Retrieval-quality smoke script (15 fixed queries) |
 | `lib/taste-vector.ts` | create | Taste weights + `recomputeTasteVector(userId)` |
 | `actions/watchlist.ts` | modify | Fire-and-forget taste recompute after mutations |
 | `lib/retrieval.ts` | create | `searchCatalog()` — blend + pgvector query + exclusions |
-| `app/api/ai/recommend/route.ts` | modify | `recommend_titles` + `present_recommendations` tools, prompt, fallback |
+| `app/api/ai/recommend/route.ts` | modify | `recommend_titles` + `present_recommendations` tools, prompt, fallback; log `recommendation_events` |
+| `lib/recommendation-events.ts` | create | `logRecommendationEvent()` — fire-and-forget, never throws into the stream |
 | `types/ai.ts` | modify | `RecommendedTitle`, `RecommendationsResult` |
 | `hooks/use-ai.ts` | modify | Extract picks from tool parts |
 | `components/ai/recommendation-cards.tsx` | create | Poster cards + reasons |
@@ -66,9 +74,21 @@ with `type "vector" does not exist`.
 **Files:** Modify `drizzle/schema.ts`, `drizzle/rls-policies.sql`.
 
 **Produces (later tasks rely on):** `mediaEmbeddings` table object with columns
-`tmdbId`, `mediaType`, `embedding`, `originCountries`, `embeddedAt`;
+`tmdbId`, `mediaType`, `kind`, `embeddingModel`, `dims`, `embedding`,
+`originCountries`, `embeddedAt`; `recommendationEvents` table;
 `profiles.tasteVector`, `profiles.tasteUpdatedAt`;
-`aiRecommendations.moodEmbedding`.
+`aiRecommendations.moodEmbedding`; `tmdbMedia.searchTsv`.
+
+**Long-term hooks in this task (added 2026-07-28).** Four columns/tables that
+cost ~30 lines now and are painful-to-impossible to retrofit. Do not drop them
+to "keep v1 lean" — three of the four are unused in v1 *by design*:
+
+| Hook | Used in v1? | Why now |
+|---|---|---|
+| `embedding_model` + `dims`, in the unique key | yes (written, filtered) | model migration needs dual-write; without it, hard cutover with search down |
+| `kind` | yes (constant `'summary'`) | multi-vector per title later without a table rewrite |
+| `recommendation_events` | **written, never read** | cannot be backfilled — the training set for reranker / collab filtering / evals |
+| `tmdb_media.search_tsv` | **no** | makes hybrid RRF a query change, not a migration |
 
 - [ ] **Step 1: Enable extension** — Supabase Dashboard → SQL Editor:
 
@@ -97,6 +117,15 @@ export const mediaEmbeddings = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     tmdbId: integer("tmdb_id").notNull(),
     mediaType: mediaTypeEnum("media_type").notNull(),
+    // vector granularity. 'summary' = one vector per title (v1). Later:
+    // 'plot' (Wikipedia sections), 'review', 'poster'. Keeps multi-vector
+    // per title from needing a table rewrite.
+    kind: text("kind").notNull().default("summary"),
+    // which model produced this vector — lets a future model migration
+    // dual-write both generations and cut over per-query instead of
+    // truncating the table and taking search down.
+    embeddingModel: text("embedding_model").notNull(),
+    dims: smallint("dims").notNull(),
     embedding: vector("embedding", { dimensions: 768 }).notNull(),
     // denormalized from TMDB details so retrieval can filter by country
     // without a JSONB join (deviation from spec: spec had no column; the
@@ -106,9 +135,14 @@ export const mediaEmbeddings = pgTable(
     embeddedAt: timestamp("embedded_at").defaultNow().notNull(),
   },
   (table) => [
-    uniqueIndex("media_embeddings_tmdb_media_unique").on(
+    // NOTE: kind + embeddingModel are part of the key on purpose. A narrow
+    // (tmdbId, mediaType) unique would block both multi-vector-per-title and
+    // staged model migration, and widening it later means a table rewrite.
+    uniqueIndex("media_embeddings_tmdb_media_kind_model_unique").on(
       table.tmdbId,
       table.mediaType,
+      table.kind,
+      table.embeddingModel,
     ),
     index("media_embeddings_cosine_idx").using(
       "hnsw",
@@ -116,14 +150,73 @@ export const mediaEmbeddings = pgTable(
     ),
   ],
 );
+
+// Append-only retrieval telemetry. Written fire-and-forget by
+// present_recommendations (Task 6); NOT read by any v1 code path. Exists
+// because user behavior cannot be backfilled — this becomes the training set
+// for a learned reranker, collaborative filtering, and the eval suite.
+export const recommendationEvents = pgTable(
+  "recommendation_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    // the model-distilled search query, not the raw user mood text
+    distilledQuery: text("distilled_query").notNull(),
+    // the post-blend vector actually used for search
+    moodEmbedding: vector("mood_embedding", { dimensions: 768 }),
+    candidateTmdbIds: integer("candidate_tmdb_ids").array(),
+    picks: jsonb("picks"), // [{ tmdbId, mediaType, reason, rank }]
+    embeddingModel: text("embedding_model").notNull(),
+    promptVersion: text("prompt_version").notNull(),
+    // null on the happy path; else retrieval_unavailable | zero_candidates |
+    // invalid_picks — so fallback rate is measurable without log scraping
+    fallbackReason: text("fallback_reason"),
+    latencyMs: integer("latency_ms"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  },
+  (table) => [
+    index("recommendation_events_user_id_idx").on(table.userId),
+    index("recommendation_events_created_at_idx").on(table.createdAt),
+  ],
+);
 ```
+
+Import `smallint` alongside `vector`, `index`, `uniqueIndex` from
+`drizzle-orm/pg-core`. Attribution (did the user add a recommended title?) is
+joined against `watchlist` after the fact — no extra columns here.
 
 - [ ] **Step 3: Generate + apply migration**
 
 Run: `npm run db:generate` → inspect the new file in `drizzle/migrations/`
-(expect `CREATE TABLE media_embeddings`, `vector(768)`, `USING hnsw`), then
-`npm run db:migrate`.
+(expect `CREATE TABLE media_embeddings`, `CREATE TABLE recommendation_events`,
+`vector(768)`, `USING hnsw`).
+
+**Before** `npm run db:migrate`, hand-append the `search_tsv` statements to
+that same generated migration file (Drizzle 0.45 has no native `tsvector`
+column type — expressing it in `schema.ts` needs `customType`, which is more
+machinery than a column no v1 code reads. Raw SQL in the migration is the
+honest version; revisit if/when the fusion query lands):
+
+```sql
+--> statement-breakpoint
+ALTER TABLE "tmdb_media" ADD COLUMN "search_tsv" tsvector
+  GENERATED ALWAYS AS (
+    to_tsvector('english', coalesce(title,'') || ' ' || coalesce(overview,''))
+  ) STORED;
+--> statement-breakpoint
+CREATE INDEX "tmdb_media_search_tsv_idx" ON "tmdb_media" USING GIN ("search_tsv");
+```
+
+Then `npm run db:migrate`.
 Expected: applies cleanly (extension already enabled in Step 1).
+
+Because `search_tsv` is not in `schema.ts`, the next `db:generate` will try to
+drop it. Leave a comment in `schema.ts` next to `tmdbMedia` recording that the
+column exists in the DB and is intentionally schema-invisible — and check
+generated SQL for a stray `DROP COLUMN search_tsv` before applying any future
+migration.
 
 - [ ] **Step 4: RLS** — append to `drizzle/rls-policies.sql` and run the block
 in Supabase SQL Editor:
@@ -131,6 +224,10 @@ in Supabase SQL Editor:
 ```sql
 -- media_embeddings: server-only (Drizzle owner connection); no client access
 ALTER TABLE public.media_embeddings ENABLE ROW LEVEL SECURITY;
+
+-- recommendation_events: server-only telemetry. Zero policies — clients must
+-- never read other users' retrieval history, and nothing needs client reads.
+ALTER TABLE public.recommendation_events ENABLE ROW LEVEL SECURITY;
 ```
 
 No policies on purpose — RLS enabled with zero policies denies all
@@ -140,13 +237,17 @@ PostgREST/client access; the Drizzle connection bypasses RLS as table owner.
 
 ```bash
 psql "$DATABASE_URL_DIRECT" -c "\d media_embeddings"
-psql "$DATABASE_URL_DIRECT" -c "select relrowsecurity from pg_class where relname='media_embeddings';"
+psql "$DATABASE_URL_DIRECT" -c "\d recommendation_events"
+psql "$DATABASE_URL_DIRECT" -c "select relname, relrowsecurity from pg_class where relname in ('media_embeddings','recommendation_events');"
+psql "$DATABASE_URL_DIRECT" -c "select column_name, is_generated from information_schema.columns where table_name='tmdb_media' and column_name='search_tsv';"
 ```
 
-Expected: table with `embedding | vector(768)`, hnsw index listed,
-`relrowsecurity = t`. Then `npm run build` passes.
+Expected: `media_embeddings` with `embedding | vector(768)`, hnsw index, and the
+4-column unique on `(tmdb_id, media_type, kind, embedding_model)`;
+`recommendation_events` present; `relrowsecurity = t` for both;
+`search_tsv` with `is_generated = ALWAYS`. Then `npm run build` passes.
 
-- [ ] **Step 6: Commit** — `feat(db): add media_embeddings + taste/mood vector columns`
+- [ ] **Step 6: Commit** — `feat(db): add media_embeddings + recommendation_events + taste/mood vectors`
 
 ---
 
@@ -169,14 +270,22 @@ scores in a sane, comparable range. Normalize everything on the way out.
 - `embedDocuments(texts: string[]): Promise<number[][]>` — RETRIEVAL_DOCUMENT, normalized
 - `composeMediaText(input: MediaTextInput): string`
 - `normalize(v: number[]): number[]`
-- `EMBEDDING_DIMS = 768`
+- `EMBEDDING_MODEL = "gemini-embedding-001"`, `EMBEDDING_DIMS = 768`,
+  `VECTOR_KIND = "summary"` — the identity triple stamped on every write and
+  filtered on every read
 
 ```ts
 import { google } from "@ai-sdk/google";
 import { embed, embedMany } from "ai";
 
+// The three identity constants. Every media_embeddings write stamps them and
+// every read filters on them — never inline the literals at a call site, or a
+// future model/kind change silently mixes generations in one result set.
+export const EMBEDDING_MODEL = "gemini-embedding-001";
 export const EMBEDDING_DIMS = 768;
-const model = google.embedding("gemini-embedding-001");
+export const VECTOR_KIND = "summary";
+
+const model = google.embedding(EMBEDDING_MODEL);
 
 export function normalize(v: number[]): number[] {
   const norm = Math.sqrt(v.reduce((s, x) => s + x * x, 0));
@@ -318,6 +427,9 @@ async function fetchExport(kind: "movie" | "tv_series"): Promise<ExportRow[]> {
 
 // 3. Main loop, resumable:
 //    - const done = new Set of (tmdbId, mediaType) already in media_embeddings
+//      WHERE kind = VECTOR_KIND AND embedding_model = EMBEDDING_MODEL
+//      (scoping the resume check matters: without it, a future model migration
+//      would see old-model rows as "done" and skip re-embedding everything)
 //    - candidates = top MOVIE_COUNT movies + top TV_COUNT tv, minus done
 //    - process in chunks of 100:
 //        a. hydrate chunk with concurrency ~20 (Promise.all over sub-chunks;
@@ -328,8 +440,12 @@ async function fetchExport(kind: "movie" | "tv_series"): Promise<ExportRow[]> {
 //        c. composeMediaText per title; embedDocuments(texts) — the AI SDK
 //           splits into API-sized batches itself; on rate-limit error wait
 //           30s and retry the chunk
-//        d. insert media_embeddings rows (embedding, originCountries from
-//           details origin_country ?? [production country codes])
+//        d. insert media_embeddings rows: embedding, originCountries from
+//           details origin_country ?? [production country codes], plus
+//           kind: VECTOR_KIND, embeddingModel: EMBEDDING_MODEL,
+//           dims: EMBEDDING_DIMS — all three stamped from the constants,
+//           never literals. onConflictDoNothing on the 4-column unique keeps
+//           re-runs idempotent.
 //        e. console.log(`${processed}/${total}`)
 ```
 
@@ -400,8 +516,11 @@ const MIN_NORM = 1e-6;
 ```
 
 `recomputeTasteVector(userId)`:
-1. Join user's `watchlist` rows × `mediaEmbeddings` on (tmdbId, mediaType) →
-   `{ embedding, rating, status }[]`.
+1. Join user's `watchlist` rows × `mediaEmbeddings` on (tmdbId, mediaType),
+   also filtering `kind = VECTOR_KIND` and `embeddingModel = EMBEDDING_MODEL`
+   → `{ embedding, rating, status }[]`. Without those filters the join
+   fans out once a second kind or model generation exists, double-counting
+   every title in the weighted average.
 2. Fetch last `MOOD_LIMIT` `aiRecommendations` rows for user where
    `moodEmbedding is not null` and `createdAt > now − MOOD_WINDOW_DAYS`.
 3. Weight per row: rating 1 → `liked`; rating −1 → `disliked`; else by status.
@@ -442,6 +561,19 @@ timestamp advances. Remove all watchlist items → `has_taste = f` (NULL path).
 
 **Why:** The retrieval core, isolated from route plumbing so
 `test-retrieval.ts`-style scripts and any future "For you" row reuse it.
+
+**This file is also the orchestrator escape hatch.** Keep the exported surface
+to `searchCatalog(query, filters, userId) → CatalogCandidate[]` and let nothing
+above it know how retrieval works. That boundary is what makes swapping in a
+LangChain retriever (or a hybrid RRF query, or a learned reranker) a one-file
+change — and it is why the no-framework decision does not need to be right
+today. Any alternative gets judged on Task 3's 15 smoke queries, not in the
+abstract.
+
+**Every query must filter `kind = VECTOR_KIND` and
+`embedding_model = EMBEDDING_MODEL`** (constants from `lib/embeddings.ts`).
+Skipping these works fine today with one model and one kind, and silently
+returns mixed-generation garbage the day either changes.
 
 **Files:** Create `lib/retrieval.ts`.
 
@@ -496,6 +628,11 @@ const rows = await db
     eq(tmdbMedia.mediaType, mediaEmbeddings.mediaType),
   ))
   .where(and(
+    // identity filters — NOT optional. Without them a second `kind` or a
+    // dual-written model generation silently doubles the candidate pool with
+    // incomparable vectors.
+    eq(mediaEmbeddings.kind, VECTOR_KIND),
+    eq(mediaEmbeddings.embeddingModel, EMBEDDING_MODEL),
     params.mediaType ? eq(mediaEmbeddings.mediaType, params.mediaType) : undefined,
     params.originCountry
       ? sql`${mediaEmbeddings.originCountries} @> ARRAY[${params.originCountry}]::text[]`
@@ -532,9 +669,34 @@ filters → heist films. `npm run build` + `npm run lint` pass.
 the hallucination guarantee: `present_recommendations` can only bless ids that
 `recommend_titles` actually returned *in this request*.
 
-**Files:** Modify `app/api/ai/recommend/route.ts`, `types/ai.ts`.
+**Files:** Modify `app/api/ai/recommend/route.ts`, `types/ai.ts`. Create
+`lib/recommendation-events.ts`.
 
-**Consumes:** `searchCatalog` (Task 5), `embedQuery` (Task 2).
+**Consumes:** `searchCatalog` (Task 5), `embedQuery` (Task 2),
+`recommendationEvents` (Task 1).
+
+**Two v6 notes (added 2026-07-28), both optional for a first pass:**
+
+1. **`ToolLoopAgent` extraction.** The route is already 503 lines. Moving the
+   model + instructions + tools into `lib/agents/mood-agent.ts` and exporting
+   `type MoodUIMessage = InferAgentUIMessage<typeof moodAgent>` shrinks the
+   route to auth + rate limit + `.stream()`, and gives the React Native client
+   a typed contract to copy instead of hand-maintaining tool-part shapes. The
+   tool definitions below are unchanged either way — do this as a refactor
+   commit before or after, not tangled into the feature.
+2. **`prepareStep` + `activeTools`** is a cheaper fix than prompt-begging for
+   "model called `present_recommendations` before retrieving": gate step 0 to
+   retrieval tools and later steps to `present_recommendations`. Reach for it
+   only if the failure actually shows up in testing.
+
+**Telemetry (not optional).** In `present_recommendations`, after validation,
+fire-and-forget `logRecommendationEvent({ distilledQuery, moodEmbedding,
+candidateTmdbIds, picks, embeddingModel, promptVersion, fallbackReason,
+latencyMs })`. Must never throw into the stream — wrap in
+`void log(...).catch(() => {})`. Also log on every fallback path with the
+matching `fallbackReason` so the fallback rate is measurable. Nothing reads
+this table in v1; that is expected. Bump `promptVersion` (a constant) whenever
+the system prompt changes, otherwise the rows stop being comparable.
 
 **Produces (UI contract, Task 7 depends on the exact shape):** the
 `present_recommendations` tool output:
