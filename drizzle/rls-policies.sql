@@ -147,3 +147,17 @@ ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can view own notifications" ON public.notifications;
 CREATE POLICY "Users can view own notifications" ON public.notifications
   FOR SELECT USING (auth.uid() = user_id);
+
+-- ============================================================================
+-- media_embeddings, recommendation_events — NOT HERE ON PURPOSE.
+--
+-- Both are server-only with zero policies, and both declare `.enableRLS()` in
+-- drizzle/schema.ts instead. drizzle-kit emits the ENABLE ROW LEVEL SECURITY
+-- statements (see migration 0012), so `db:migrate` alone is sufficient — no
+-- dashboard step, and RLS cannot drift from the schema.
+--
+-- Prefer this pattern for new tables. The policy blocks above predate
+-- drizzle-orm's RLS support (pgPolicy/enableRLS, available since 0.36) and stay
+-- here because migrating live policies into schema.ts is riskier than leaving
+-- them; they still need manual application on a fresh DB.
+-- ============================================================================
