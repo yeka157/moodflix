@@ -364,6 +364,20 @@ Expected: `dims: 768 norm: 1.000000`. Delete the throwaway script after.
 at call time, and plain `tsx` doesn't load `.env.local` (same reason
 `drizzle.config.ts` uses dotenv).
 
+**Gotcha (hit during execution): use the `.mts` extension for every script in
+`scripts/`, not `.ts`.** `package.json` has no `"type": "module"`, so tsx
+transforms `.ts` as CJS and top-level `await` fails with
+`Top-level await is currently not supported with the "cjs" output format`.
+`.mts` forces ESM. Consistent with the existing `scripts/api-smoke.mjs`.
+Applies to Task 3's seed and retrieval scripts too.
+
+**Measured on real output (2026-07-28):** dims 768, norm exactly `1.000000`
+after re-normalization, `embedMany` batching works. Also observed — **Gemini
+cosine scores cluster tightly**, ~0.57–0.59 between unrelated query/document
+pairs rather than spreading across [0,1]. Consequence: never gate retrieval on
+an absolute similarity threshold (`> 0.7` etc.). Rank and take top-N; the LLM
+rerank stage is what enforces relevance.
+
 - [ ] **Step 3: Commit** — `feat(ai): add embedding helpers (gemini-embedding-001, 768d)`
 
 ---
@@ -374,9 +388,10 @@ at call time, and plain `tsx` doesn't load `.env.local` (same reason
 retrieval searches them. Idempotency is the design's crash-recovery: "skip ids
 already embedded" makes re-run = resume = delta refresh, all the same code path.
 
-**Files:** Create `scripts/seed-embeddings.ts`, `scripts/test-retrieval.ts`.
-Add npm scripts: `"db:seed-embeddings": "tsx scripts/seed-embeddings.ts"`,
-`"test:retrieval": "tsx scripts/test-retrieval.ts"`.
+**Files:** Create `scripts/seed-embeddings.mts`, `scripts/test-retrieval.mts`
+(`.mts`, not `.ts` — see the Task 2 gotcha). Add npm scripts:
+`"db:seed-embeddings": "tsx scripts/seed-embeddings.mts"`,
+`"test:retrieval": "tsx scripts/test-retrieval.mts"`.
 
 **Consumes:** `embedDocuments`, `composeMediaText` (Task 2); `mediaEmbeddings`,
 `tmdbMedia` (Task 1).
