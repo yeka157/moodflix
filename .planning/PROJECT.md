@@ -10,7 +10,7 @@ Users can discover movies and TV shows that match their mood and manage what the
 
 ## Current Milestone: v0.4 Watchlist & Polish
 
-**Goal:** Enable TV show watchlisting, fix watchlist UX bugs, improve discovery navigation, add AI guardrails and logging, and introduce My Top 100 personal lists.
+**Goal:** Enable TV show watchlisting, fix watchlist UX bugs, improve discovery navigation, and add AI guardrails and logging.
 
 **Target features:**
 - TV show watchlisting (schema migration + full CRUD)
@@ -18,7 +18,6 @@ Users can discover movies and TV shows that match their mood and manage what the
 - Discovery UX (TV search, rename Discover → Movies, rating display)
 - AI polish (origin country filtering, off-topic guardrails)
 - AI conversation logging for analytics
-- My Top 100 personal curated list
 
 ## Current State
 
@@ -75,7 +74,6 @@ Users can discover movies and TV shows that match their mood and manage what the
 - [ ] AI origin country support for specific recommendations (K-drama, etc.)
 - [ ] AI guardrails for off-topic restriction
 - [ ] AI full conversation logging for analytics
-- [ ] My Top 100 personal curated list
 
 ### Out of Scope
 

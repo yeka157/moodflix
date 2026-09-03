@@ -39,15 +39,15 @@ Requirements for v0.4 Watchlist & Polish milestone. Each maps to roadmap phases.
 - [x] **AIPOL-05**: Full AI conversation (all user + assistant messages) logged to database for analytics when genre suggestion is made
 - [x] **AIPOL-06**: AI conversation logging is fire-and-forget — does not add latency to streaming response
 
-### My Top 100
+### My Top 100 — DROPPED 2026-09-03 (feature cut, Phase 13 removed)
 
-- [ ] **TOP-01**: User can create a personal "My Top 100" ranked list of movies and TV shows
-- [ ] **TOP-02**: User can add a movie or TV show to their Top 100 from the detail page or library
-- [ ] **TOP-03**: User can remove an item from their Top 100
-- [ ] **TOP-04**: User can reorder items in their Top 100 using move up/down controls
-- [ ] **TOP-05**: Top 100 list enforces maximum 100 items per user
-- [ ] **TOP-06**: Same movie/TV show cannot be added twice to Top 100
-- [ ] **TOP-07**: Top 100 accessible as a tab within the library page or a sub-route (/library/top-100)
+- [~] **TOP-01** (dropped): User can create a personal "My Top 100" ranked list of movies and TV shows
+- [~] **TOP-02** (dropped): User can add a movie or TV show to their Top 100 from the detail page or library
+- [~] **TOP-03** (dropped): User can remove an item from their Top 100
+- [~] **TOP-04** (dropped): User can reorder items in their Top 100 using move up/down controls
+- [~] **TOP-05** (dropped): Top 100 list enforces maximum 100 items per user
+- [~] **TOP-06** (dropped): Same movie/TV show cannot be added twice to Top 100
+- [~] **TOP-07** (dropped): Top 100 accessible as a tab within the library page or a sub-route (/library/top-100)
 
 ## Future Requirements
 
@@ -111,17 +111,17 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AIPOL-04 | Phase 12 | Complete |
 | AIPOL-05 | Phase 9 | Complete |
 | AIPOL-06 | Phase 9 | Complete |
-| TOP-01 | Phase 13 | Pending |
-| TOP-02 | Phase 13 | Pending |
-| TOP-03 | Phase 13 | Pending |
-| TOP-04 | Phase 13 | Pending |
-| TOP-05 | Phase 13 | Pending |
-| TOP-06 | Phase 13 | Pending |
-| TOP-07 | Phase 13 | Pending |
+| TOP-01 | — | Dropped |
+| TOP-02 | — | Dropped |
+| TOP-03 | — | Dropped |
+| TOP-04 | — | Dropped |
+| TOP-05 | — | Dropped |
+| TOP-06 | — | Dropped |
+| TOP-07 | — | Dropped |
 
 **Coverage:**
-- v0.4 requirements: 27 total
-- Mapped to phases: 27
+- v0.4 requirements: 20 active (7 TOP-* dropped 2026-09-03)
+- Mapped to phases: 20
 - Unmapped: 0 ✓
 
 ---

@@ -4,7 +4,7 @@
 
 - ✅ **v0.2 Alpha Polish** — Phases 1–3 (shipped 2026-02-19)
 - ✅ **v0.3 Content Expansion** — Phases 4–8 (shipped 2026-02-28)
-- 🚧 **v0.4 Watchlist & Polish** — Phases 9–13 (in progress)
+- 🚧 **v0.4 Watchlist & Polish** — Phases 9–12.4 (all phases complete; Phase 13 cut)
 
 ## Phases
 
@@ -35,7 +35,9 @@ See: `.planning/milestones/v0.3-ROADMAP.md` for full details.
 
 ### v0.4 Watchlist & Polish (In Progress)
 
-**Milestone Goal:** Enable TV show watchlisting, fix watchlist UX bugs, improve discovery navigation, add AI guardrails and origin country filtering with conversation logging, and introduce My Top 100 personal lists.
+**Milestone Goal:** Enable TV show watchlisting, fix watchlist UX bugs, improve discovery navigation, and add AI guardrails and origin country filtering with conversation logging.
+
+**Cut 2026-09-03:** Phase 13 (My Top 100) dropped — feature cut, requirements TOP-01…TOP-07 retired. The `top_hundred` table stays in the schema (0 rows, unused).
 
 - [x] **Phase 9: Schema Migration** — Add media_type to watchlist, update unique constraint, add messages column to ai_recommendations, create top_hundred table (completed 2026-03-02)
 - [x] **Phase 10: TV Watchlisting & Watchlist UX** — Full TV watchlist CRUD from the TV detail page, library card routing, type badges, instant sync, and media type filter (completed 2026-03-03)
@@ -46,7 +48,6 @@ See: `.planning/milestones/v0.3-ROADMAP.md` for full details.
 - [x] **Phase 12.2: Content Discovery & AI Shazam** — Coming Soon rows, TMDB lazy caching, movie/TV identification from descriptions (INSERTED) (completed 2026-03-07)
 - [x] **Phase 12.3: Push Notifications** — Daily cron to notify users when watchlisted upcoming movies/TV shows are released (INSERTED) (completed 2026-03-08)
 - [x] **Phase 12.4: Full AI Conversation Logging & Cache Performance** — Full AI message logging + TanStack Query cache optimization (INSERTED) (completed 2026-03-10)
-- [ ] **Phase 13: My Top 100** — Personal ranked list of up to 100 movies and TV shows with CRUD and move up/down reordering
 
 ## Phase Details
 
@@ -182,18 +183,6 @@ Plans:
 - [ ] 12.4-01-PLAN.md — Full AI conversation logging with onFinish callback + metadata column
 - [ ] 12.4-02-PLAN.md — SSR prefetch + HydrationBoundary for /discover and /series pages
 
-### Phase 13: My Top 100
-**Goal**: Users can build and maintain a personal ranked list of up to 100 favorite movies and TV shows, accessible from within the library.
-**Depends on**: Phase 9
-**Requirements**: TOP-01, TOP-02, TOP-03, TOP-04, TOP-05, TOP-06, TOP-07
-**Success Criteria** (what must be TRUE):
-  1. User can add a movie or TV show to their Top 100 from the detail page or from the library — the item appears in the ranked list immediately
-  2. User can remove an item from their Top 100 — it disappears from the list immediately
-  3. User can move an item up or down in rank using arrow controls — adjacent items swap rank instantly
-  4. Attempting to add a 101st item shows an error — the list enforces a maximum of 100 items
-  5. Attempting to add the same movie or TV show twice shows "Already in your Top 100" — no duplicate entries exist
-  6. My Top 100 is accessible at `/library/top-100` or as a tab within the library page
-**Plans**: TBD
 
 ## Progress
 
@@ -217,4 +206,3 @@ Plans:
 | 12.2. Content Discovery & AI Shazam | 4/4 | Complete    | 2026-03-07 | - |
 | 12.3. Push Notifications | 3/3 | Complete    | 2026-03-08 | - |
 | 12.4. Full AI Conversation Logging & Cache Performance | 2/2 | Complete    | 2026-03-10 | - |
-| 13. My Top 100 | v0.4 | 0/TBD | Not started | - |

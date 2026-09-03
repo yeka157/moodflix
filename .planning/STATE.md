@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Watchlist & Polish
-status: Not started
+status: Phases complete (Phase 13 cut) — milestone wrap-up pending
 stopped_at: Completed 12.4-02-PLAN.md
-last_updated: "2026-03-10T08:12:49.069Z"
-last_activity: "2026-03-10 - Completed quick task 2: Improve UX for movies with no watch providers - contextual availability messages"
+last_updated: "2026-09-03T00:00:00.000Z"
+last_activity: "2026-09-03 - Phase 13 (My Top 100) cut from v0.4; roadmap and requirements updated"
 progress:
   total_phases: 12
-  completed_phases: 11
+  completed_phases: 12
   total_plans: 26
   completed_plans: 26
 ---
@@ -20,16 +20,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Users can discover movies and TV shows that match their mood and manage what they've watched — the library and discovery experience must feel instant and intuitive.
-**Current focus:** v0.4 Phase 12.4 — Full AI Conversation Logging & Cache Performance
+**Current focus:** v0.4 wrap-up — all phases complete, Phase 13 (My Top 100) cut 2026-09-03
 
 ## Current Position
 
-Phase: 12.4 of 13 (Full AI Conversation Logging & Cache Performance)
-Plan: 0 of TBD
-Status: Not started
+Phase: 12.4 of 12.4 — last phase of v0.4 (Phase 13 cut)
+Plan: 2 of 2
+Status: Complete
 Last activity: 2026-03-10 - Completed quick task 2: Improve UX for movies with no watch providers - contextual availability messages
 
-Progress: [████████████████████] 24/24 plans + Phase 12.4 pending
+Progress: [████████████████████] 26/26 plans — all v0.4 phases complete
 
 ## Accumulated Context
 
@@ -123,6 +123,7 @@ None.
 - Phase 12.2 inserted after Phase 12.1: Content Discovery & AI Shazam (URGENT)
 - Phase 12.3 inserted after Phase 12.2: Push Notifications (URGENT)
 - Phase 12.4 inserted after Phase 12.3: Full AI Conversation Logging & Cache Performance (URGENT)
+- Phase 13 (My Top 100) removed 2026-09-03 — feature cut; TOP-01…TOP-07 retired, `top_hundred` table left in schema unused
 
 ### Blockers/Concerns
 
@@ -140,4 +141,4 @@ None.
 Last session: 2026-03-10T07:22:10.088Z
 Stopped at: Completed 12.4-02-PLAN.md
 Resume file: None
-Next step: Phase 13 (My Top 100) or milestone wrap-up
+Next step: v0.4 milestone wrap-up, or continue RAG plan (docs/superpowers/plans/2026-07-16-rag-recommendations.md, Task 3)
