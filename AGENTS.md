@@ -174,3 +174,7 @@ What to sync: Project Status table, Key Directories, Route Structure, and any ne
 
 - Commit messages: `feat:`, `fix:`, `style:`, `refactor:`, `docs:`
 - Branch names: `feature/`, `fix/`, `refactor/`
+
+## Linting and formatting
+
+Use Ultracite with Biome: `npm run lint` checks, `npm run lint:fix` applies fixes, and `npm run format` formats supported files. Run `npm run lint:framework` as well to retain the existing Next.js ESLint checks. `quality` runs both. Existing source violations are not suppressed by the tooling migration; review fixes before applying them broadly.
