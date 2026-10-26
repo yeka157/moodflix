@@ -1,95 +1,134 @@
 # Moodflix
 
-AI-powered movie & TV discovery app. Tell it your mood, get genre-aware recommendations streamed back, and curate a personal watchlist with status tracking and like/dislike ratings.
+Moodflix helps you decide what to watch. Describe how you feel in a sentence, get films and series that fit, keep a library of what you want to watch and what you've seen, and see where each title is streaming in your country.
 
-Built as a portfolio project to exercise modern full-stack patterns: streaming AI tool calls, RLS-secured Postgres via Drizzle, App Router server components, and a PWA-ready offline experience.
+**Try it:** [moodflix.yuliuskevin.com](https://moodflix.yuliuskevin.com). It's free and needs only an email address or a Google account.
 
-**Live:** _coming soon_
+![The Moodflix home screen: an AI mood prompt that turned "Just got home, it's raining. I want a quiet, slow film" into Drama and Romance picks](docs/screenshots/ai-mood.jpg)
 
-## Features
+Moodflix is an early-stage project built and run by one person. Expect rough edges, and expect features to change.
 
-- **Mood-based AI recommendations** — natural-language prompt → Gemini streams genre suggestions via tool calls → TMDB discover renders matching titles with infinite scroll
-- **Browse & search** — trending, popular, top-rated rows + genre filters, powered by TMDB with ISR caching
-- **Netflix-style detail modal** — backdrop, cast, region-aware watch providers
-- **Watchlist** — add/remove, status tracking (`want_to_watch` / `watching` / `watched`), like/dislike rating, optimistic updates
-- **Auth** — email/password, Google OAuth, Passkey via Supabase Auth
-- **PWA** — installable, offline page, service worker via Serwist, push notifications
-- **Responsive shell** — hover-expand sidebar (desktop) + bottom tab bar (mobile), dark-only crimson theme
+## What you can do
 
-## Tech Stack
+| | |
+| --- | --- |
+| **Ask by mood.** Type a feeling ("something cozy for a rainy evening") or tap a suggestion. The AI picks matching genres and opens a page of titles. Follow-up messages refine the picks. | **Search everything.** Press <kbd>⌘</kbd> <kbd>K</kbd> (<kbd>Ctrl</kbd> <kbd>K</kbd> on Windows and Linux) to search films and series from any page. |
+| ![AI recommendations for a quiet, slow film on a rainy day](docs/screenshots/recommendations.jpg) | ![The search palette showing results for "spirited"](docs/screenshots/search.jpg) |
+| **Open any title.** See the synopsis, cast, trailer, rating, runtime, and the services streaming it in your region. | **Keep a library.** Save films and series as *Want to watch* or *Watched*, give them a thumbs up or down, and filter by type. |
+| ![The detail page for Dune: Part Two](docs/screenshots/movie-detail.jpg) | ![A library with five titles to watch and three watched](docs/screenshots/library.jpg) |
 
-| Layer        | Stack                                                         |
-| ------------ | ------------------------------------------------------------- |
-| Framework    | Next.js 16 (App Router), React 19, TypeScript                 |
-| Styling      | Tailwind CSS v4, shadcn/ui (new-york), Framer Motion          |
-| Database     | Supabase Postgres + Row Level Security                        |
-| ORM          | Drizzle ORM (postgres-js, transaction pooler)                 |
-| Auth         | Supabase Auth (email, Google, Passkey)                        |
-| AI           | Google Gemini via Vercel AI SDK v5 (streaming + tool calls)   |
-| Data         | TanStack Query (client), Server Actions + `fetch` (server)    |
-| Movie data   | TMDB API                                                      |
-| Rate limit   | `lru-cache` (10 req/day per user)                             |
-| Observability| Sentry, Vercel Speed Insights                                 |
-| PWA          | Serwist + Web Push                                            |
+You can also:
 
-## Architecture Highlights
+- **Browse** trending, popular and top-rated rows, or filter films and series by genre, on the *Movies* and *Series* tabs.
+- **Get a release alert** for an upcoming film. Tap the bell on its page and Moodflix sends one push notification when it's released.
+- **Install it as an app** on your phone or desktop. It works like a native app and shows an offline page when you lose your connection.
 
-- **Server-first data fetching** — TMDB rows rendered in Server Components with ISR; client hooks only for interactive surfaces (search, infinite scroll, watchlist mutations)
-- **AI streaming with tools** — `/api/ai/recommend` uses `streamText` + `tool()` so the model emits structured `suggest_genres` calls the UI consumes mid-stream
-- **Drizzle + RLS** — direct connection bypasses Supabase RLS, so every server action enforces `eq(userId, user.id)` explicitly
-- **Optimistic watchlist** — TanStack Query mutations roll forward instantly, reconcile with server response, roll back on error
-- **Region-aware watch providers** — country detected from `x-vercel-ip-country`, falls back to US
-- **Type discipline** — zero `any`, all types live under `types/`, narrow `unknown` over loose typing
+## Getting started
 
-## Project Structure
+1. Open [moodflix.yuliuskevin.com](https://moodflix.yuliuskevin.com) and choose **Start free**.
+2. Sign up with an email and password, or continue with Google. There's no confirmation email; you go straight to your home screen.
+3. Under **Tell me your mood**, describe what you're in the mood for and press <kbd>Enter</kbd>. When genres appear, choose **Show me the picks**.
+4. Open a title you like and choose **Add to library**. Change its status to *Watched* later from the title page or from **Library**.
 
-```
-app/
-  (auth)/            login, signup, OAuth callback
-  (app)/             protected shell — home, discover, series, library, settings
-  api/movies/        TMDB proxy
-  api/ai/recommend/  Streaming Gemini endpoint
-actions/             Server actions (auth, watchlist)
-components/          ui/, layout/, movies/, watchlist/, ai/
-drizzle/             schema.ts, migrations/, rls-policies.sql
-hooks/               TanStack Query hooks
-lib/                 supabase clients, tmdb, ai, rate-limit, country
-types/               Movie, Watchlist, Auth, AI types
-```
+### Keyboard shortcuts
 
-## Local Development
+| Keys | What it does |
+| --- | --- |
+| <kbd>⌘</kbd> <kbd>K</kbd> / <kbd>Ctrl</kbd> <kbd>K</kbd> | Open search |
+| <kbd>↑</kbd> <kbd>↓</kbd> | Move through search results |
+| <kbd>Enter</kbd> | Open the selected result |
+| <kbd>⌘</kbd> <kbd>Enter</kbd> / <kbd>Ctrl</kbd> <kbd>Enter</kbd> | Add the selected result to your library without leaving search |
+| <kbd>Esc</kbd> | Close search |
+
+Search remembers your recent queries on that device. Use **Clear** in the search palette to forget them. Signing out clears them too.
+
+### Install the app
+
+- **Chrome, Edge (desktop or Android):** open the site and choose the install icon in the address bar, or *Install app* from the browser menu.
+- **Safari on iPhone or iPad:** tap **Share**, then **Add to Home Screen**.
+
+## How the mood search works
+
+When you send a mood, Moodflix passes your message and recent conversation to Google Gemini. The model answers with a set of [TMDB](https://www.themoviedb.org/) genres, and for some requests a country of origin (for example, "K-drama" means Korean series). Moodflix then asks TMDB for titles in those genres. Titles already in your library tell the model what you liked, so it can personalize its answer.
+
+- Each account can send **10 mood requests per day**. Search, browsing and your library have no daily limit.
+- Messages are text only, up to 500 characters each.
+- The assistant only talks about films and series. Off-topic questions get a short redirect.
+
+## Release alerts
+
+Release alerts use your browser's push notifications.
+
+1. On the page of a film that hasn't been released yet, tap the bell.
+2. Allow notifications when your browser asks.
+3. Moodflix checks for releases once a day. When the film is out, you get one notification and an entry in the bell menu at the top of the app.
+
+Tap the bell again to cancel. Each account can follow up to 100 upcoming films and register up to 5 devices.
+
+Supported: Chrome, Edge, Firefox, and Safari 16.4 or later (on iPhone and iPad, install the app to the Home Screen first). Browsers that use a different push service, such as some Chromium-based browsers, show *Notifications aren't supported on this browser*.
+
+## Your data
+
+| What | Where it goes |
+| --- | --- |
+| Account (email, sign-in method) | Supabase Auth |
+| Library, ratings, release alerts, notification inbox | Moodflix database (Supabase Postgres) |
+| Mood messages and the genres returned | Sent to Google Gemini to produce an answer, and stored with your account |
+| Recent searches | Only in your browser, separated per account |
+| Error reports | Sentry, with request bodies, headers, cookies, IP addresses and text in session replays removed |
+
+Moodflix doesn't sell data or show ads. Where-to-watch results use your approximate country from your connection and default to the United States. See the [privacy policy](https://moodflix.yuliuskevin.com/privacy) for details. To delete your account and its data, email [hello@yuliuskevin.com](mailto:hello@yuliuskevin.com).
+
+## Troubleshooting
+
+**The mood search says I've hit the limit.**
+The allowance of 10 requests resets within 24 hours. Search, browsing and your library keep working in the meantime.
+
+**The bell does nothing, or says notifications are blocked.**
+Notifications were denied for this site. Allow them in your browser's site settings, then tap the bell again.
+
+**A streaming service is missing from a title.**
+Availability comes from JustWatch through TMDB and varies by country. Some titles have no data for your region yet.
+
+**I see "Updating session…".**
+You signed in or out in another tab. The page reloads with the current account.
+
+## Run it yourself
+
+Moodflix is a [Next.js](https://nextjs.org/) 16 app. To run your own copy, you need Node.js 22 or newer and accounts for [Supabase](https://supabase.com/), [TMDB](https://www.themoviedb.org/settings/api), and [Google AI Studio](https://aistudio.google.com/) (for Gemini).
 
 ```bash
+git clone https://github.com/yeka157/moodflix.git
+cd moodflix
 npm install
-npm run dev          # localhost:3000
-npm run build        # prod build + typecheck
-npm run lint
-npm run db:generate  # generate migration from schema diff
-npm run db:migrate   # apply migrations
-npm run db:studio    # browse data
+cp .env.example .env.local   # then fill in the values below
+npm run db:migrate
+npm run dev                  # http://localhost:3000
 ```
 
-### Environment
+| Variable | What it's for |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` | Supabase project URL and publishable key |
+| `SUPABASE_SECRET_KEY` | Server-side Supabase admin access |
+| `DATABASE_URL` | Supabase transaction pooler (port 6543), used at runtime |
+| `DATABASE_URL_DIRECT` | Supabase session pooler (port 5432), used for migrations |
+| `TMDB_API_READ_KEY` | TMDB **API Read Access Token** (not the v3 API key) |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini API key |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Web push keys (`npx web-push generate-vapid-keys`) and a `mailto:` contact |
+| `CRON_SECRET` | Protects the daily release-alert job |
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=
-SUPABASE_SECRET_KEY=
-DATABASE_URL=           # transaction pooler (6543) — runtime
-DATABASE_URL_DIRECT=    # session pooler (5432) — migrations
-TMDB_API_READ_KEY=
-GOOGLE_GENERATIVE_AI_API_KEY=
-```
+On a new database, run `drizzle/seed.sql` and `drizzle/rls-policies.sql` in the Supabase SQL Editor after migrating. [DRIZZLE_GUIDE.md](DRIZZLE_GUIDE.md) covers schema changes.
 
-After first migration, run `drizzle/seed.sql` and `drizzle/rls-policies.sql` in the Supabase SQL Editor.
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Start the development server |
+| `npm run build` | Production build, including type checks |
+| `npm run quality` | Biome (Ultracite) and Next.js ESLint checks |
+| `npm run test:security` | Offline regression tests for API validation and limits |
+| `npm run db:generate` / `db:migrate` / `db:studio` | Create migrations, apply them, browse data |
 
-## Roadmap
+Built with Next.js, React 19, Tailwind CSS v4, shadcn/ui, Supabase, Drizzle ORM, the Vercel AI SDK with Gemini, TanStack Query and Serwist. It's deployed on Vercel, which also runs the daily release check.
 
-- v0.2 Alpha Polish — shipped
-- v0.3 Content Expansion (TV series, detail pages, sidebar nav) — shipped
-- v0.4 Watchlist & Polish + PWA — shipped
-- Next: notifications, social features, deployment
+## Credits
 
----
-
-Built by [Yulius Kevin](https://github.com/yeka157).
+Film and series data, images and streaming availability come from [TMDB](https://www.themoviedb.org/), with streaming data from [JustWatch](https://www.justwatch.com/). This product uses the TMDB API but is not endorsed or certified by TMDB.
