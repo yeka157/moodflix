@@ -94,11 +94,10 @@ CREATE POLICY "Users can insert own push subscriptions"
   ON public.push_subscriptions FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+-- Removed: its USING clause only checked auth.role(), letting any signed-in
+-- user reassign every account's devices. Device hand-off happens server-side
+-- in /api/push/subscribe. Kept as a DROP so re-running this file removes it.
 DROP POLICY IF EXISTS "Users can claim push subscriptions on device switch" ON public.push_subscriptions;
-CREATE POLICY "Users can claim push subscriptions on device switch"
-  ON public.push_subscriptions FOR UPDATE
-  USING (auth.role() = 'authenticated')
-  WITH CHECK (auth.uid() = user_id);
 
 DROP POLICY IF EXISTS "Users can delete own push subscriptions" ON public.push_subscriptions;
 CREATE POLICY "Users can delete own push subscriptions"
