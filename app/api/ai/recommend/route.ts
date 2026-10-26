@@ -7,6 +7,7 @@ import {
   createUIMessageStreamResponse,
 } from "ai";
 import { z } from "zod";
+import { chatRequestSchema } from "@/lib/chat-request";
 import { getApiUser } from "@/lib/supabase/api-auth";
 import { geminiModel } from "@/lib/ai";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -178,13 +179,8 @@ export async function POST(request: Request) {
     }
 
     // 2. Parse body
-    const body: unknown = await request.json();
-    const parsed = z
-      .object({
-        messages: z.array(z.unknown()).min(1),
-        conversationId: z.string().optional(),
-      })
-      .safeParse(body);
+    const body: unknown = await request.json().catch(() => null);
+    const parsed = chatRequestSchema.safeParse(body);
 
     if (!parsed.success) {
       return Response.json({ error: "Invalid request" }, { status: 400 });
@@ -193,10 +189,7 @@ export async function POST(request: Request) {
     const conversationId = parsed.data.conversationId;
 
     // 3. Validate last message length (UIMessages have `parts`, not `content`)
-    const uiMessages = parsed.data.messages as Array<{
-      role: string;
-      parts?: Array<{ type: string; text?: string }>;
-    }>;
+    const uiMessages = parsed.data.messages;
     const lastMessage = uiMessages[uiMessages.length - 1];
     const lastMessageText =
       lastMessage?.role === "user"

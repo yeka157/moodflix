@@ -58,7 +58,7 @@ export function usePushSubscription() {
 
     const json = subscription.toJSON();
 
-    await fetch("/api/push/subscribe", {
+    const res = await fetch("/api/push/subscribe", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -69,6 +69,19 @@ export function usePushSubscription() {
         },
       }),
     });
+    // Server rejects unsupported push services and enforces a device cap;
+    // without a stored device the release alert could never be delivered.
+    if (!res.ok) {
+      const { error } = (await res.json().catch(() => ({}))) as {
+        error?: string;
+      };
+      toast.error(
+        res.status === 409 && error
+          ? error
+          : "Notifications aren't supported on this browser",
+      );
+      return null;
+    }
 
     subscriptionRef.current = subscription;
     return subscription;
@@ -142,6 +155,7 @@ export function useNotificationSubscription(tmdbId: number) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ tmdbId: input.tmdbId }),
         });
+        if (!res.ok) throw new Error("Failed to update notification preference");
         return (await res.json()) as { subscribed: boolean };
       } else {
         const res = await fetch("/api/notifications/subscribe", {
@@ -154,6 +168,7 @@ export function useNotificationSubscription(tmdbId: number) {
             releaseDate: input.releaseDate,
           }),
         });
+        if (!res.ok) throw new Error("Failed to update notification preference");
         return (await res.json()) as { subscribed: boolean };
       }
     },

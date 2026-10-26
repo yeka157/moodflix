@@ -1,27 +1,36 @@
 export interface PushSubscriptionRecord {
-  id: string;
-  userId: string;
-  endpoint: string;
-  p256dh: string;
   auth: string;
   createdAt: Date | null;
+  endpoint: string;
+  id: string;
+  p256dh: string;
+  userId: string;
 }
 
 export interface NotificationSubscription {
+  createdAt: Date | null;
   id: string;
-  userId: string;
-  tmdbId: number;
-  title: string;
+  lastNotifiedAt: Date | null;
   posterPath: string | null;
   releaseDate: string | null;
-  lastNotifiedAt: Date | null;
-  createdAt: Date | null;
+  title: string;
+  tmdbId: number;
+  userId: string;
 }
 
 export interface PushPayload {
-  title: string;
-  body: string;
-  url: string;
-  icon?: string;
   badge?: string;
+  body: string;
+  icon?: string;
+  title: string;
+  url: string;
+}
+
+export interface ReleaseMatch {
+  catalogId: number | null;
+  id: string;
+  posterPath: string | null;
+  title: string | null;
+  tmdbId: number;
+  userId: string;
 }

@@ -11,6 +11,7 @@ const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 async function tmdbFetch<T>(
   endpoint: string,
   params?: Record<string, string>,
+  signal?: AbortSignal,
 ): Promise<T> {
   const url = new URL(`${TMDB_BASE_URL}${endpoint}`);
   if (params) {
@@ -20,6 +21,7 @@ async function tmdbFetch<T>(
   }
 
   const response = await fetch(url.toString(), {
+    signal,
     headers: {
       Authorization: `Bearer ${process.env.TMDB_API_READ_KEY}`,
       "Content-Type": "application/json",
@@ -70,10 +72,10 @@ export async function searchTV(query: string, page = 1) {
   });
 }
 
-export async function getMovieDetails(id: number) {
+export async function getMovieDetails(id: number, signal?: AbortSignal) {
   return tmdbFetch<MovieDetailsWithExtras>(`/movie/${id}`, {
     append_to_response: "credits,watch/providers,release_dates",
-  });
+  }, signal);
 }
 
 export async function discoverMoviesByGenre(genreIds: string, page = 1, originCountry?: string) {

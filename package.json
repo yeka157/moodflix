@@ -15,7 +15,8 @@
     "lint:framework": "eslint",
     "format": "biome format --write .",
     "format:check": "biome format .",
-    "quality": "npm run lint && npm run lint:framework"
+    "quality": "npm run lint && npm run lint:framework",
+    "test:security": "node --import tsx --test tests/*.test.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.26",

@@ -1,9 +1,10 @@
+import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { eq, and } from "drizzle-orm";
-import { getApiUser } from "@/lib/supabase/api-auth";
-import { checkWindowedLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { db } from "@/drizzle";
-import { pushSubscriptions } from "@/drizzle/schema";
+import { profiles, pushSubscriptions } from "@/drizzle/schema";
+import { MAX_PUSH_DEVICES, pushSubscriptionSchema } from "@/lib/push-policy";
+import { checkWindowedLimit, rateLimitResponse } from "@/lib/rate-limit";
+import { getApiUser } from "@/lib/supabase/api-auth";
 
 export async function POST(request: Request) {
   const user = await getApiUser(request);
@@ -12,46 +13,58 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const rate = checkWindowedLimit(`push:${user.id}`, 60, 60_000);
-  if (!rate.allowed) return rateLimitResponse(rate);
-
-  const body: unknown = await request.json();
-
-  if (
-    !body ||
-    typeof body !== "object" ||
-    !("endpoint" in body) ||
-    !("keys" in body)
-  ) {
-    return NextResponse.json(
-      { error: "Missing endpoint or keys" },
-      { status: 400 },
-    );
+  if (!rate.allowed) {
+    return rateLimitResponse(rate);
   }
 
-  const { endpoint, keys } = body as {
-    endpoint: string;
-    keys: { p256dh: string; auth: string };
-  };
-
-  if (!endpoint || !keys?.p256dh || !keys?.auth) {
+  const parsed = pushSubscriptionSchema.safeParse(
+    await request.json().catch(() => null)
+  );
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: "Missing required fields: endpoint, keys.p256dh, keys.auth" },
-      { status: 400 },
+      { error: "Invalid or unsupported push subscription" },
+      { status: 400 }
     );
   }
-
-  await db
-    .insert(pushSubscriptions)
-    .values({
-      userId: user.id,
-      endpoint,
-      p256dh: keys.p256dh,
-      auth: keys.auth,
-    })
-    .onConflictDoUpdate({
-      target: pushSubscriptions.endpoint,
-      set: { userId: user.id, p256dh: keys.p256dh, auth: keys.auth },
-    });
+  const { endpoint, keys } = parsed.data;
+  const stored = await db.transaction(async (tx) => {
+    // Serialize registrations for this account so concurrent requests cannot
+    // pass the device cap together. No schema migration is required.
+    await tx
+      .select({ id: profiles.id })
+      .from(profiles)
+      .where(eq(profiles.id, user.id))
+      .for("update");
+    const existing = await tx
+      .select({ endpoint: pushSubscriptions.endpoint })
+      .from(pushSubscriptions)
+      .where(eq(pushSubscriptions.userId, user.id));
+    if (
+      !existing.some((device) => device.endpoint === endpoint) &&
+      existing.length >= MAX_PUSH_DEVICES
+    ) {
+      return false;
+    }
+    await tx
+      .insert(pushSubscriptions)
+      .values({
+        auth: keys.auth,
+        endpoint,
+        p256dh: keys.p256dh,
+        userId: user.id,
+      })
+      .onConflictDoUpdate({
+        set: { auth: keys.auth, p256dh: keys.p256dh, userId: user.id },
+        target: pushSubscriptions.endpoint,
+      });
+    return true;
+  });
+  if (!stored) {
+    return NextResponse.json(
+      { error: `Maximum ${MAX_PUSH_DEVICES} push devices per account` },
+      { status: 409 }
+    );
+  }
 
   return NextResponse.json({ success: true });
 }
@@ -63,7 +76,9 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const rate = checkWindowedLimit(`push:${user.id}`, 60, 60_000);
-  if (!rate.allowed) return rateLimitResponse(rate);
+  if (!rate.allowed) {
+    return rateLimitResponse(rate);
+  }
 
   const body: unknown = await request.json();
 
@@ -78,8 +93,8 @@ export async function DELETE(request: Request) {
     .where(
       and(
         eq(pushSubscriptions.endpoint, endpoint),
-        eq(pushSubscriptions.userId, user.id),
-      ),
+        eq(pushSubscriptions.userId, user.id)
+      )
     );
 
   return NextResponse.json({ success: true });

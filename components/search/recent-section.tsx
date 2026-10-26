@@ -2,7 +2,7 @@
 
 import { History, X } from "lucide-react";
 import { CommandGroup, CommandItem } from "@/components/ui/command";
-import type { RecentEntry } from "./search-recent";
+import type { RecentEntry } from "@/types/session";
 
 interface RecentSectionProps {
   entries: RecentEntry[];

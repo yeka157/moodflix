@@ -67,7 +67,7 @@ export default async function RecommendationsPage({
 
           {mood && (
             <p className="text-muted-foreground text-sm max-w-lg">
-              Based on your mood: &ldquo;{decodeURIComponent(mood)}&rdquo;
+              Based on your mood: &ldquo;{mood}&rdquo;
             </p>
           )}
 

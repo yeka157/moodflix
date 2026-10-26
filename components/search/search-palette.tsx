@@ -11,13 +11,14 @@ import {
   CommandEmpty,
 } from "@/components/ui/command";
 import { VisuallyHidden } from "radix-ui";
+import { useAccountId } from "@/components/providers";
+import type { RecentEntry } from "@/types/session";
 import { useSearchMulti } from "@/hooks/use-search-multi";
 import { useAddToWatchlist } from "@/hooks/use-watchlist";
 import {
   getRecent,
   addRecent,
   clearRecent,
-  type RecentEntry,
 } from "./search-recent";
 import { RecentSection } from "./recent-section";
 import { TrendingSection } from "./trending-section";
@@ -31,6 +32,7 @@ interface SearchPaletteProps {
 
 export function SearchPalette({ open, onOpenChange }: SearchPaletteProps) {
   const router = useRouter();
+  const userId = useAccountId();
   const [query, setQuery] = useState("");
   const [recent, setRecent] = useState<RecentEntry[]>([]);
   const { mutate: addToLibrary } = useAddToWatchlist();
@@ -41,20 +43,20 @@ export function SearchPalette({ open, onOpenChange }: SearchPaletteProps) {
   useEffect(() => {
     if (open) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- loading localStorage state on dialog open is intentional
-      setRecent(getRecent());
+      setRecent(getRecent(userId));
     } else {
       setQuery("");
     }
-  }, [open]);
+  }, [open, userId]);
 
   const closeAndPersist = useCallback(
     (persistQuery: string | null) => {
       if (persistQuery && persistQuery.trim()) {
-        addRecent(persistQuery);
+        addRecent(userId, persistQuery);
       }
       onOpenChange(false);
     },
-    [onOpenChange],
+    [onOpenChange, userId],
   );
 
   const handleSelectResult = useCallback(
@@ -80,9 +82,9 @@ export function SearchPalette({ open, onOpenChange }: SearchPaletteProps) {
   }, []);
 
   const handleClearRecent = useCallback(() => {
-    clearRecent();
+    clearRecent(userId);
     setRecent([]);
-  }, []);
+  }, [userId]);
 
   // Cmd/Ctrl+Enter: inline add top result to library
   const handleInputKeyDown = useCallback(

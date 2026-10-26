@@ -161,3 +161,26 @@ CREATE POLICY "Users can view own notifications" ON public.notifications
 -- here because migrating live policies into schema.ts is riskier than leaving
 -- them; they still need manual application on a fresh DB.
 -- ============================================================================
+
+-- Security: never bypass the validated subscription API, even if other
+-- permissive policies grant writes. Keep aligned with
+-- security/2026-09-29-subscription-writes.sql.
+ALTER TABLE public.push_subscriptions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Subscription inserts require server validation" ON public.push_subscriptions;
+CREATE POLICY "Subscription inserts require server validation"
+  ON public.push_subscriptions AS RESTRICTIVE FOR INSERT TO anon, authenticated
+  WITH CHECK (false);
+DROP POLICY IF EXISTS "Subscription updates require server validation" ON public.push_subscriptions;
+CREATE POLICY "Subscription updates require server validation"
+  ON public.push_subscriptions AS RESTRICTIVE FOR UPDATE TO anon, authenticated
+  USING (false) WITH CHECK (false);
+
+ALTER TABLE public.notification_subscriptions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Subscription inserts require server validation" ON public.notification_subscriptions;
+CREATE POLICY "Subscription inserts require server validation"
+  ON public.notification_subscriptions AS RESTRICTIVE FOR INSERT TO anon, authenticated
+  WITH CHECK (false);
+DROP POLICY IF EXISTS "Subscription updates require server validation" ON public.notification_subscriptions;
+CREATE POLICY "Subscription updates require server validation"
+  ON public.notification_subscriptions AS RESTRICTIVE FOR UPDATE TO anon, authenticated
+  USING (false) WITH CHECK (false);

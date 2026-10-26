@@ -1,5 +1,4 @@
-import { eq, and, sql, notInArray } from "drizzle-orm";
-
+import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/drizzle";
 import {
   notificationSubscriptions,
@@ -7,39 +6,43 @@ import {
   pushSubscriptions,
   tmdbMedia,
 } from "@/drizzle/schema";
+import {
+  MAX_PUSH_DEVICES,
+  MAX_PUSH_SENDS_PER_RUN,
+  MAX_PUSH_SENDS_PER_USER,
+  MAX_RELEASES_PER_RUN,
+  PUSH_JOB_BUDGET_MS,
+  PUSH_TIMEOUT_MS,
+} from "@/lib/push-policy";
+import { getMovieDetails } from "@/lib/tmdb";
 import { sendPushNotification } from "@/lib/web-push";
-import type { PushPayload } from "@/types/push";
+import type { PushSubscriptionRecord, ReleaseMatch } from "@/types/push";
 
 export const maxDuration = 30;
 
-interface ReleaseMatch {
-  userId: string;
-  tmdbId: number;
-  title: string;
-  posterPath: string | null;
-}
-
 export async function GET(request: Request) {
-  // 1. Auth guard (Vercel Cron)
-  const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (
+    !process.env.CRON_SECRET ||
+    request.headers.get("authorization") !== `Bearer ${process.env.CRON_SECRET}`
+  ) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  // 2. Today's date in UTC as YYYY-MM-DD
+  const deadline = Date.now() + PUSH_JOB_BUDGET_MS;
   const today = new Date().toISOString().slice(0, 10);
-  const startOfToday = `${today}T00:00:00.000Z`;
-
-  // 3. Find movies releasing today via tmdb_media join
-  const tmdbMatches = await db
+  // Include overdue, unsent releases so work deferred by the budget survives
+  // the next day's run. Bound the read as well as the outgoing requests.
+  const matches = await db
     .select({
-      userId: notificationSubscriptions.userId,
-      tmdbId: notificationSubscriptions.tmdbId,
-      title: tmdbMedia.title,
+      catalogId: tmdbMedia.tmdbId,
+      id: notificationSubscriptions.id,
       posterPath: tmdbMedia.posterPath,
+      title: tmdbMedia.title,
+      tmdbId: notificationSubscriptions.tmdbId,
+      userId: notificationSubscriptions.userId,
     })
     .from(notificationSubscriptions)
-    .innerJoin(
+    .leftJoin(
       tmdbMedia,
       and(
         eq(tmdbMedia.tmdbId, notificationSubscriptions.tmdbId),
@@ -48,188 +51,169 @@ export async function GET(request: Request) {
     )
     .where(
       and(
-        eq(tmdbMedia.releaseDate, today),
-        sql`(${notificationSubscriptions.lastNotifiedAt} IS NULL OR ${notificationSubscriptions.lastNotifiedAt} < ${startOfToday})`
+        isNull(notificationSubscriptions.lastNotifiedAt),
+        sql`exists (select 1 from ${pushSubscriptions} where ${pushSubscriptions.userId} = ${notificationSubscriptions.userId})`,
+        sql`(case when ${tmdbMedia.tmdbId} is not null then ${tmdbMedia.releaseDate} else ${notificationSubscriptions.releaseDate} end) <= ${today}`
       )
-    );
+    )
+    .orderBy(
+      asc(notificationSubscriptions.createdAt),
+      asc(notificationSubscriptions.id)
+    )
+    .limit(MAX_RELEASES_PER_RUN);
 
-  // Collect tmdbIds already matched via tmdb_media
-  const matchedTmdbIds = tmdbMatches.map((m) => m.tmdbId);
+  let attempted = 0;
+  let notified = 0;
+  let staleRemoved = 0;
+  let processed = 0;
+  const userAttempts = new Map<string, number>();
 
-  // 4. Fallback: notification_subscriptions with releaseDate = today but no tmdb_media row
-  const fallbackMatches =
-    matchedTmdbIds.length > 0
-      ? await db
-          .select({
-            userId: notificationSubscriptions.userId,
-            tmdbId: notificationSubscriptions.tmdbId,
-            title: notificationSubscriptions.title,
-            posterPath: notificationSubscriptions.posterPath,
-          })
-          .from(notificationSubscriptions)
-          .where(
-            and(
-              eq(notificationSubscriptions.releaseDate, today),
-              notInArray(notificationSubscriptions.tmdbId, matchedTmdbIds),
-              sql`(${notificationSubscriptions.lastNotifiedAt} IS NULL OR ${notificationSubscriptions.lastNotifiedAt} < ${startOfToday})`
-            )
-          )
-      : await db
-          .select({
-            userId: notificationSubscriptions.userId,
-            tmdbId: notificationSubscriptions.tmdbId,
-            title: notificationSubscriptions.title,
-            posterPath: notificationSubscriptions.posterPath,
-          })
-          .from(notificationSubscriptions)
-          .where(
-            and(
-              eq(notificationSubscriptions.releaseDate, today),
-              sql`(${notificationSubscriptions.lastNotifiedAt} IS NULL OR ${notificationSubscriptions.lastNotifiedAt} < ${startOfToday})`
-            )
-          );
+  for (const match of matches) {
+    if (
+      Date.now() + PUSH_TIMEOUT_MS >= deadline ||
+      attempted >= MAX_PUSH_SENDS_PER_RUN
+    ) {
+      break;
+    }
+    const userCount = userAttempts.get(match.userId) ?? 0;
+    if (userCount >= MAX_PUSH_SENDS_PER_USER) {
+      continue;
+    }
 
-  const allMatches: ReleaseMatch[] = [...tmdbMatches, ...fallbackMatches];
+    // biome-ignore lint/performance/noAwaitInLoops: sequential release groups enforce the push concurrency budget
+    const release = await verifyRelease(match, today);
+    if (!release || Date.now() + PUSH_TIMEOUT_MS >= deadline) {
+      continue;
+    }
+    const { title, posterPath } = release;
 
-  if (allMatches.length === 0) {
-    return Response.json({ success: true, notified: 0, movies: 0 });
-  }
-
-  // 5. Group by userId
-  const userMovies = new Map<string, ReleaseMatch[]>();
-  for (const match of allMatches) {
-    const existing = userMovies.get(match.userId) ?? [];
-    existing.push(match);
-    userMovies.set(match.userId, existing);
-  }
-
-  const uniqueMovieIds = new Set(allMatches.map((m) => m.tmdbId));
-  let totalNotificationsSent = 0;
-  let staleSubscriptionsRemoved = 0;
-  const notifiedPairs: { userId: string; tmdbId: number }[] = [];
-
-  // 6-7. For each user, get devices and send notifications
-  for (const [userId, movies] of userMovies) {
     const devices = await db
       .select()
       .from(pushSubscriptions)
-      .where(eq(pushSubscriptions.userId, userId));
-
-    if (devices.length === 0) continue;
-
-    // One notification per movie per device
-    const sendPromises: {
-      promise: Promise<unknown>;
-      endpoint: string;
-      tmdbId: number;
-    }[] = [];
-
-    for (const movie of movies) {
-      const payload: PushPayload = {
-        title: "Now Available!",
-        body: movie.title,
-        url: `/movie/${movie.tmdbId}`,
-        icon: "/icons/icon-192x192.png",
-        badge: "/icons/icon-72x72.png",
-      };
-
-      for (const device of devices) {
-        sendPromises.push({
-          promise: sendPushNotification(
-            {
-              endpoint: device.endpoint,
-              p256dh: device.p256dh,
-              auth: device.auth,
-            },
-            payload
-          ),
-          endpoint: device.endpoint,
-          tmdbId: movie.tmdbId,
-        });
-      }
+      .where(eq(pushSubscriptions.userId, match.userId))
+      .orderBy(asc(pushSubscriptions.createdAt))
+      .limit(MAX_PUSH_DEVICES);
+    if (Date.now() + PUSH_TIMEOUT_MS >= deadline) {
+      break;
     }
-
-    const results = await Promise.allSettled(
-      sendPromises.map((s) => s.promise)
-    );
-
-    for (let i = 0; i < results.length; i++) {
-      const result = results[i];
-      const { endpoint, tmdbId } = sendPromises[i];
-
-      if (result.status === "fulfilled") {
-        totalNotificationsSent++;
-        notifiedPairs.push({ userId, tmdbId });
-      } else {
-        // Stale subscription cleanup
-        const error = result.reason as { statusCode?: number };
-        if (error.statusCode === 410 || error.statusCode === 404) {
-          await db
-            .delete(pushSubscriptions)
-            .where(eq(pushSubscriptions.endpoint, endpoint));
-          staleSubscriptionsRemoved++;
-        }
-      }
+    // Keep the full device group together; partial groups must not mark a
+    // release sent while silently dropping devices due to a work budget.
+    if (
+      attempted + devices.length > MAX_PUSH_SENDS_PER_RUN ||
+      userCount + devices.length > MAX_PUSH_SENDS_PER_USER
+    ) {
+      continue;
     }
-
-    // Insert one notifications inbox row per (userId, tmdbId) that succeeded
-    const successfulTmdbIds = new Set(
-      notifiedPairs
-        .filter((p) => p.userId === userId)
-        .map((p) => p.tmdbId),
-    );
-
-    for (const movie of movies) {
-      if (!successfulTmdbIds.has(movie.tmdbId)) continue;
-      try {
-        await db.insert(notifications).values({
-          userId,
-          type: "release",
-          title: `${movie.title} is now available`,
-          body: null,
-          posterPath: movie.posterPath,
-          href: `/movie/${movie.tmdbId}`,
-          tmdbId: movie.tmdbId,
-          mediaType: "movie",
-        });
-      } catch (error) {
-        console.error(
-          "[cron/release-notifications] failed to insert notification row",
-          { userId, tmdbId: movie.tmdbId, error },
-        );
-        // Do not throw — push already delivered; row absence is acceptable
-      }
+    attempted += devices.length;
+    userAttempts.set(match.userId, userCount + devices.length);
+    const sent = await deliverRelease(devices, match, title);
+    notified += sent.notified;
+    staleRemoved += sent.staleRemoved;
+    if (!sent.notified) {
+      continue;
     }
-  }
-
-  // 8. Update lastNotifiedAt for notified subscriptions
-  const uniqueNotified = new Map<string, Set<number>>();
-  for (const pair of notifiedPairs) {
-    const set = uniqueNotified.get(pair.userId) ?? new Set<number>();
-    set.add(pair.tmdbId);
-    uniqueNotified.set(pair.userId, set);
-  }
-
-  for (const [userId, tmdbIds] of uniqueNotified) {
-    for (const tmdbId of tmdbIds) {
-      await db
+    // Persist progress per release, so later slow sends cannot discard all of
+    // this run's progress.
+    await db.transaction(async (tx) => {
+      await tx.insert(notifications).values({
+        body: null,
+        href: `/movie/${match.tmdbId}`,
+        mediaType: "movie",
+        posterPath,
+        title: `${title} is now available`,
+        tmdbId: match.tmdbId,
+        type: "release",
+        userId: match.userId,
+      });
+      await tx
         .update(notificationSubscriptions)
         .set({ lastNotifiedAt: new Date() })
+        .where(eq(notificationSubscriptions.id, match.id));
+    });
+    processed += 1;
+  }
+  return Response.json({
+    attempted,
+    deferred: matches.length - processed,
+    notified,
+    processed,
+    staleRemoved,
+    success: true,
+  });
+}
+
+async function verifyRelease(match: ReleaseMatch, today: string) {
+  if (match.catalogId !== null) {
+    return match.title
+      ? { posterPath: match.posterPath, title: match.title }
+      : null;
+  }
+  // Existing fallback rows predate server-side metadata validation.
+  try {
+    const movie = await getMovieDetails(
+      match.tmdbId,
+      AbortSignal.timeout(PUSH_TIMEOUT_MS)
+    );
+    await db
+      .update(notificationSubscriptions)
+      .set({
+        posterPath: movie.poster_path,
+        releaseDate: movie.release_date || null,
+        title: movie.title,
+      })
+      .where(eq(notificationSubscriptions.id, match.id));
+    if (!movie.release_date || movie.release_date > today) {
+      return null;
+    }
+    return { posterPath: movie.poster_path, title: movie.title };
+  } catch {
+    return null;
+  }
+}
+
+function isExpiredPushError(error: unknown) {
+  return (
+    error !== null &&
+    typeof error === "object" &&
+    "statusCode" in error &&
+    (error.statusCode === 404 || error.statusCode === 410)
+  );
+}
+
+async function deliverRelease(
+  devices: PushSubscriptionRecord[],
+  match: ReleaseMatch,
+  title: string
+) {
+  const results = await Promise.allSettled(
+    devices.map((device) =>
+      sendPushNotification(device, {
+        badge: "/icons/icon-72x72.png",
+        body: title,
+        icon: "/icons/icon-192x192.png",
+        title: "Now Available!",
+        url: `/movie/${match.tmdbId}`,
+      })
+    )
+  );
+  const stale = devices.filter((_, index) => {
+    const result = results[index];
+    return result.status === "rejected" && isExpiredPushError(result.reason);
+  });
+  await Promise.all(
+    stale.map((device) =>
+      db
+        .delete(pushSubscriptions)
         .where(
           and(
-            eq(notificationSubscriptions.userId, userId),
-            eq(notificationSubscriptions.tmdbId, tmdbId)
+            eq(pushSubscriptions.id, device.id),
+            eq(pushSubscriptions.userId, match.userId)
           )
-        );
-    }
-  }
-
-  // 9. Return summary
-  return Response.json({
-    success: true,
-    movies: uniqueMovieIds.size,
-    users: userMovies.size,
-    notified: totalNotificationsSent,
-    staleRemoved: staleSubscriptionsRemoved,
-  });
+        )
+    )
+  );
+  return {
+    notified: results.filter((result) => result.status === "fulfilled").length,
+    staleRemoved: stale.length,
+  };
 }
